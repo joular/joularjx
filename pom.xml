@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2021, Adel Noureddine, Université de Pays et des Pays de l'Adour.
+  ~ All rights reserved. This program and the accompanying materials
+  ~ are made available under the terms of the
+  ~ GNU General Public License v3.0 only (GPL-3.0-only)
+  ~ which accompanies this distribution, and is available at
+  ~ https://www.gnu.org/licenses/gpl-3.0.en.html
+  ~
+  ~ Author : Adel Noureddine
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.noureddine</groupId>
+    <artifactId>joularjx</artifactId>
+    <version>1.0-BETA</version>
+
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+
+    <description>JoularJX is a Java agent for software energy monitoring at the source code level</description>
+    <inceptionYear>2021</inceptionYear>
+
+    <url>https://gitlab.com/joular/joularjx</url>
+
+    <licenses>
+        <license>
+            <name>The GNU General Public License v3.0 only (GPL-3.0-only)</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.en.html</url>
+        </license>
+    </licenses>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <encoding>UTF-8</encoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                    <debug>true</debug>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>jalenx.Agent</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Agent-Class>jalenx.Agent</Agent-Class>
+                            <Premain-Class>jalenx.Agent</Premain-Class>
+                            <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
