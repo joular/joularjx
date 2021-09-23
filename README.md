@@ -15,7 +15,7 @@ JoularJX is a Java-based agent for software power monitoring at the source code 
 
 ## :package: Installation
 
-You can just use the provided compiled Jar package for JoularJX.
+You can just use the compiled Jar package for JoularJX.
 To get power readings, JoularJX uses [PowerJoular](https://gitlab.com/joular/powerjoular), and therefore you need to install it first.
 
 ## :bulb: Usage
