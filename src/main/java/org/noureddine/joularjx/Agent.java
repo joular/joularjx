@@ -9,7 +9,7 @@
  * Author : Adel Noureddine
  */
 
-package jalenx;
+package org.noureddine.joularjx;
 
 import java.io.*;
 import java.lang.instrument.Instrumentation;
