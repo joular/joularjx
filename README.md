@@ -7,4 +7,4 @@ JoularJX is a Java-based agent for software power monitoring at the source code 
 
 We have two version:
 - [JoularJX (PowerJoular version)](https://gitlab.com/joular/joularjx/-/tree/main/joularjx-powerjoular): that uses PowerJoular for getting power reading of hardware and processes.
-- [JoularJX (RAPL version)](./-/tree/main/joularjx-rapl): that uses Intel RAPL (through powercap itnerface) for getting power reading of hardware.
+- [JoularJX (RAPL version)](https://gitlab.com/joular/joularjx/-/tree/main/joularjx-rapl): that uses Intel RAPL (through powercap itnerface) for getting power reading of hardware.
