@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2022, Adel Noureddine, Université de Pays et des Pays de l'Adour.
+  ~ Copyright (c) 2021-2022, Adel Noureddine, Université de Pays et des Pays de l'Adour.
   ~ All rights reserved. This program and the accompanying materials
   ~ are made available under the terms of the
   ~ GNU General Public License v3.0 only (GPL-3.0-only)
@@ -17,16 +17,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.noureddine</groupId>
-    <artifactId>joularjx-rapl</artifactId>
-    <version>1.0-BETA</version>
+    <artifactId>joularjx</artifactId>
+    <version>1.0</version>
 
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
 
-    <description>JoularJX (RAPL version) is a Java agent for software energy monitoring at the source code level</description>
-    <inceptionYear>2022</inceptionYear>
+    <description>JoularJX is a Java agent for software energy monitoring at the source code level</description>
+    <inceptionYear>2021</inceptionYear>
 
-    <url>https://gitlab.com/joular/joularjx-rapl</url>
+    <url>https://gitlab.com/joular/joularjx</url>
 
     <licenses>
         <license>
@@ -36,8 +36,8 @@
     </licenses>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>14</maven.compiler.source>
+        <maven.compiler.target>14</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -49,8 +49,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>14</source>
+                    <target>14</target>
                     <debug>true</debug>
                 </configuration>
             </plugin>
