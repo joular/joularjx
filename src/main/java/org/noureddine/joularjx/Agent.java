@@ -160,7 +160,7 @@ public class Agent {
      * will be called. Then the real application main method will be called.
      */
     public static void premain(String args, Instrumentation inst) {
-        Thread.currentThread().setName("JalenX Agent Thread");
+        Thread.currentThread().setName("JoularJX Agent Thread");
         System.out.println("+---------------------------------+");
         System.out.println("| JoularJX Agent Version 1.0      |");
         System.out.println("+---------------------------------+");
@@ -272,7 +272,7 @@ public class Agent {
          */
         new Thread() {
             public void run() {
-                Thread.currentThread().setName("JalenX Agent Computation");
+                Thread.currentThread().setName("JoularJX Agent Computation");
                 System.out.println("Started monitoring application with ID " + appPid);
 
                 // CPU time for each thread
