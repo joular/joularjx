@@ -43,7 +43,7 @@ However, ```config.properties``` must be copied to the same folder as where you 
 
 ## :floppy_disk: Compilation
 
-To build JoularJX, you need Java 14+ and Maven, then just build:
+To build JoularJX, you need Java 11+ and Maven, then just build:
 
 ```mvn clean install```
 
