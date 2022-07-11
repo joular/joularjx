@@ -248,7 +248,7 @@ public class Agent {
         int i = 0;
         System.out.println("Please wait while initializing JoularJX...");
         while (i < 2) {
-            osMxBean.getCpuLoad();
+            osMxBean.getSystemCpuLoad();
             osMxBean.getProcessCpuLoad();
             if (Agent.energySensor.equals("windows")) {
                 // On windows, start power monitoring a few seconds to initialize
@@ -355,7 +355,7 @@ public class Agent {
 
                         double energyAfter = 0.0;
                         double CPUEnergy = 0.0;
-                        double cpuLoad = osMxBean.getCpuLoad();
+                        double cpuLoad = osMxBean.getSystemCpuLoad();
                         double processCpuLoad = osMxBean.getProcessCpuLoad();
 
                         switch (Agent.energySensor) {
