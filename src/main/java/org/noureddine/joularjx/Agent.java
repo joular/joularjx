@@ -248,7 +248,7 @@ public class Agent {
         int i = 0;
         System.out.println("Please wait while initializing JoularJX...");
         while (i < 2) {
-            osMxBean.getSystemCpuLoad();
+            osMxBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
             osMxBean.getProcessCpuLoad();
             if (Agent.energySensor.equals("windows")) {
                 // On windows, start power monitoring a few seconds to initialize
@@ -355,7 +355,7 @@ public class Agent {
 
                         double energyAfter = 0.0;
                         double CPUEnergy = 0.0;
-                        double cpuLoad = osMxBean.getSystemCpuLoad();
+                        double cpuLoad = osMxBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
                         double processCpuLoad = osMxBean.getProcessCpuLoad();
 
                         switch (Agent.energySensor) {
