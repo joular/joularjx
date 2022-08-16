@@ -25,7 +25,7 @@ JoularJX depend on the following software or packages in order to get get power 
 - On Windows, JoularJX uses a custom power monitor program that uses Intel Power Gadget API on Windows, and therefore require installing the [Intel Power Gadget tool](https://www.intel.com/content/www/us/en/developer/articles/tool/power-gadget.html) and using a supported Intel CPU.
 - On PC/server GNU/Linux, JoularJX uses Intel RAPL interface through powercap, and therefore requires running on an Intel CPU or an AMD Ryzen CPU.
 - On Raspberry Pi devices on GNU/Linux, JoularJX uses our own research-based regression models to estimate CPU power consumption with support for the following device models:
-    - Model Zero W (rev 1.1), for 32 bits OS
+  - Model Zero W (rev 1.1), for 32 bits OS
   - Model 1 B (rev 2), for 32 bits OS
   - Model 1 B+ (rev 1.2), for 32 bits OS
   - Model 2 B (rev 1.1), for 32 bits OS
