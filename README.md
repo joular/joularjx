@@ -3,6 +3,8 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses/gpl-3.0)
 [![Java](https://img.shields.io/badge/Made%20with-Java-orange)](https://openjdk.java.net)
 
+![JoularJX Logo](joularjx.png)
+
 JoularJX is a Java-based agent for software power monitoring at the source code level.
 
 ## :rocket: Features
