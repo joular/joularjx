@@ -12,5 +12,12 @@
 package org.noureddine.joularjx.power;
 
 public interface CPU {
-    
+    /**
+     * Start our power monitoring program on Windows
+     * Only used for Intel Windows
+     * Will return null for other operating systems and platforms
+     * @param programPath Path for our power monitor program
+     * @return Process to run power monitor on Windows, null for other OS
+     */
+    public Process startPowerMonitoring(String programPath);
 }

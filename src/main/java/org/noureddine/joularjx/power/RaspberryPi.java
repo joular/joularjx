@@ -208,4 +208,10 @@ public class RaspberryPi implements CPU {
 
         return result;
     }
+
+    @Override
+    public Process startPowerMonitoring(String programPath) {
+        // Nothing to do for Raspberry Pi
+        return null;
+    }
 }

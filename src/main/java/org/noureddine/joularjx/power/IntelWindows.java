@@ -11,6 +11,19 @@
 
 package org.noureddine.joularjx.power;
 
+import java.io.IOException;
+
 public class IntelWindows implements CPU {
-    
+
+    @Override
+    public Process startPowerMonitoring(String programPath) {
+        try {
+            return Runtime.getRuntime().exec(programPath);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            System.out.println("Can't start power monitor on Windows. Existing...");
+            System.exit(1);
+        }
+        return null;
+    }
 }

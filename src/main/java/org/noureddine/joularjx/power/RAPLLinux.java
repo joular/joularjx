@@ -82,4 +82,10 @@ public class RAPLLinux implements CPU {
     private static double calculateProcessCPUEnergy(Double totalCPUUsage, Double processCPUUSage, Double CPUEnergy) {
         return (processCPUUSage * CPUEnergy) / totalCPUUsage;
     }
+
+    @Override
+    public Process startPowerMonitoring(String programPath) {
+        // Nothing to do for RAPL Linux
+        return null;
+    }
 }
