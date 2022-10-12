@@ -11,19 +11,63 @@
 
 package org.noureddine.joularjx.power;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class IntelWindows implements CPU {
 
+    /**
+     * Path for our power monitor program on Windows
+     */
+    private final String programPath;
+
+    /**
+     * Process to run power monitor on Windows
+     */
+    private Process process;
+
+    /**
+     * If the monitoring process was initialized
+     */
+    private boolean initialized;
+
+    public IntelWindows(final String programPath) {
+        this.programPath = programPath;
+    }
+
     @Override
-    public Process startPowerMonitoring(String programPath) {
+    public void initialize() {
+        if (initialized) {
+            // Do not initialize the same instance multiple times
+            return;
+        }
         try {
-            return Runtime.getRuntime().exec(programPath);
+            process = Runtime.getRuntime().exec(programPath);
+            initialized = true;
         } catch (IOException ex) {
             ex.printStackTrace();
             System.out.println("Can't start power monitor on Windows. Existing...");
             System.exit(1);
         }
-        return null;
+    }
+
+    @Override
+    public double getPower(final double cpuLoad) {
+        try {
+            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line = input.readLine();
+            return Double.parseDouble(line);
+        } catch (Exception ignoredException) {
+            ignoredException.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public void close() {
+        if (initialized) {
+            process.destroy();
+        }
     }
 }

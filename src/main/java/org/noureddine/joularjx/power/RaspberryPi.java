@@ -11,13 +11,17 @@
 
 package org.noureddine.joularjx.power;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-
 public class RaspberryPi implements CPU {
+
+    /**
+     * Raspberry Pi model name
+     */
+    private final String rpiModel;
+
+    public RaspberryPi(final String rpiModel) {
+        this.rpiModel = rpiModel;
+    }
+
     /**
      * Calculate CPU energy consumption for last second (power) on supported Raspberry Pi devices
      * @param rpiModel Raspberry Pi model name
@@ -153,65 +157,18 @@ public class RaspberryPi implements CPU {
         return result;
     }
 
-    /**
-     * Get model name of Raspberry Pi
-     * @param osArch OS Architecture (arm, aarch64)
-     * @return Raspberry Pi model name
-     */
-    private static String getRPiModelName(String osArch) {
-        String deviceTreeModel = "/proc/device-tree/model";
-        File deviceTreeModelFile = new File(deviceTreeModel);
-        String result = "";
-
-        if (deviceTreeModelFile.exists()) {
-            Path procstatPath = Path.of(deviceTreeModel);
-            try {
-                // Read only first line of stat file
-                // We need to read values at index 1, 2, 3 and 4 (assuming index starts at 0)
-                // Example of line: cpu  83141 56 28074 2909632 3452 10196 3416 0 0 0
-                // Split the first line over spaces to get each column
-                List<String> allLines = Files.readAllLines(procstatPath);
-                for (String currentLine : allLines) {
-                    if (currentLine.contains("Raspberry Pi 400 Rev 1.0")) {
-                        if (osArch.contains("aarch64")) {
-                            return "rbp4001.0-64";
-                        }
-                    }
-                    if (currentLine.contains("Raspberry Pi 4 Model B Rev 1.2")) {
-                        if (osArch.contains("aarch64")) {
-                            return "rbp4b1.2-64";
-                        } else {
-                            return "rbp4b1.2";
-                        }
-                    } else if (currentLine.contains("Raspberry Pi 4 Model B Rev 1.1")) {
-                        if (osArch.contains("aarch64")) {
-                            return "rbp4b1.1-64";
-                        } else {
-                            return "rbp4b1.1";
-                        }
-                    } else if (currentLine.contains("Raspberry Pi 3 Model B Plus Rev 1.3")) {
-                        return "rbp3b+1.3";
-                    } else if (currentLine.contains("Raspberry Pi 3 Model B Rev 1.2")) {
-                        return "rbp3b1.2";
-                    } else if (currentLine.contains("Raspberry Pi 2 Model B Rev 1.1")) {
-                        return "rbp2b1.1";
-                    } else if (currentLine.contains("Raspberry Pi Model B Plus Rev 1.2")) {
-                        return "rbp1b+1.2";
-                    } else if (currentLine.contains("Raspberry Pi Model B Rev 2")) {
-                        return "rbp1b2";
-                    } else if (currentLine.contains("Raspberry Pi Zero W Rev 1.1")) {
-                        return "rbpzw1.1";
-                    }
-                }
-            } catch (IOException ignored) {}
-        }
-
-        return result;
+    @Override
+    public void initialize() {
+        // Nothing to do for Raspberry Pi
     }
 
     @Override
-    public Process startPowerMonitoring(String programPath) {
+    public double getPower(final double cpuLoad) {
+        return calculateCPUEnergyForRaspberryPi(rpiModel, cpuLoad);
+    }
+
+    @Override
+    public void close() {
         // Nothing to do for Raspberry Pi
-        return null;
     }
 }

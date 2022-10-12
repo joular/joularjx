@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class RAPLLinux implements CPU {
+
     /**
      * Get energy readings from RAPL through powercap
      * Calculates the best energy reading as supported by CPU (psys, or pkg+dram, or pkg)
@@ -26,7 +27,7 @@ public class RAPLLinux implements CPU {
         String psys = "/sys/class/powercap/intel-rapl/intel-rapl:1/energy_uj";
         String pkg = "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj";
         String dram = "/sys/class/powercap/intel-rapl/intel-rapl:0/intel-rapl:0:2/energy_uj";
-        Double energyData = 0.0;
+        double energyData = 0.0;
 
         try {
             File psysFile = new File(psys);
@@ -72,20 +73,18 @@ public class RAPLLinux implements CPU {
         return energyData;
     }
 
-    /**
-     * Calculate process energy consumption
-     * @param totalCPUUsage Total CPU usage
-     * @param processCPUUSage Process CPU usage
-     * @param CPUEnergy CPU energy
-     * @return Process energy consumption
-     */
-    private static double calculateProcessCPUEnergy(Double totalCPUUsage, Double processCPUUSage, Double CPUEnergy) {
-        return (processCPUUSage * CPUEnergy) / totalCPUUsage;
+    @Override
+    public void initialize() {
+        // Nothing to do for RAPL Linux
     }
 
     @Override
-    public Process startPowerMonitoring(String programPath) {
+    public double getPower(final double cpuLoad) {
+        return getRAPLEnergy();
+    }
+
+    @Override
+    public void close() {
         // Nothing to do for RAPL Linux
-        return null;
     }
 }
