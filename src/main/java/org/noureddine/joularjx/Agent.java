@@ -16,8 +16,10 @@ import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import com.sun.management.OperatingSystemMXBean;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import org.noureddine.joularjx.power.CPU;
+import org.noureddine.joularjx.power.CPUFactory;
+import org.noureddine.joularjx.power.RAPLLinux;
+
 import java.util.*;
 
 public class Agent {
@@ -40,7 +42,7 @@ public class Agent {
     /**
      * List of methods to filter for energy
      */
-    private static List<String> filterMethodNames = new ArrayList<String>();
+    private static List<String> filterMethodNames = new ArrayList<>();
 
     /**
      * Size of list containing methods to filter for energy
@@ -53,24 +55,9 @@ public class Agent {
     private static Map<String, Double> methodsEnergyFiltered = new HashMap<>();
 
     /**
-     * Sensor to use for monitor CPU energy/power consumption
+     * Monitoring the agent will use to monitor the energy usage
      */
-    private static String energySensor = "";
-
-    /**
-     * Raspberry Pi model name
-     */
-    private static String raspberryPiModel = "";
-
-    /**
-     * Path for our power monitor program on Windows
-     */
-    private static String powerMonitorPathWindows = "";
-
-    /**
-     * Process to run power monitor on Windows
-     */
-    private static Process powerMonitorWindowsProcess;
+    private static CPU cpuMonitoring;
 
     /**
      * Check if methodName starts with one of the filtered method names
@@ -118,51 +105,6 @@ public class Agent {
         // Get Process ID of current application
         Long appPid = ProcessHandle.current().pid();
 
-        // Get OS
-        String osName = System.getProperty("os.name").toLowerCase();
-        String osArch = System.getProperty("os.arch").toLowerCase();
-        Agent.raspberryPiModel = Agent.getRPiModelName(osArch);
-
-        if (osName.contains("linux")) {
-            // GNU/Linux
-            if (osArch.contains("aarch64") || osArch.contains("arm")) {
-                // Check if Raspberry Pi and use formulas
-                if (! Agent.raspberryPiModel.equals("")) {
-                    Agent.energySensor = "raspberry";
-                } else {
-                    // Platform not supported
-                    System.out.println("Platform not supported. Existing...");
-                    System.exit(1);
-                }
-            } else {
-                // Suppose it's x86/64, check for powercap RAPL
-                try {
-                    String raplFolderPath = "/sys/class/powercap/intel-rapl/intel-rapl:0";
-                    File raplFolder = new File(raplFolderPath);
-                    if (raplFolder.exists()) {
-                        // Rapl is supported
-                        Agent.energySensor = "rapl";
-                    } else {
-                        // If no RAPL, then no support
-                        System.out.println("Platform not supported. Existing...");
-                        System.exit(1);
-                    }
-                } catch (Exception e) {
-                    // If no RAPL, then no support
-                    System.out.println("Platform not supported. Existing...");
-                    System.exit(1);
-                }
-            }
-        } else if (osName.contains("win")) {
-            // Windows
-            // Check for Intel Power Gadget, and PowerJoular Windows
-            Agent.energySensor = "windows";
-        } else {
-            // Other platforms not supported
-            System.out.println("Platform not supported. Existing...");
-            System.exit(1);
-        }
-
         // Read properties file
         Properties prop = new Properties();
         FileInputStream fis = null;
@@ -181,10 +123,11 @@ public class Agent {
             }
         }
 
+        cpuMonitoring = CPUFactory.getCpu(prop);
+
         // Get filtered methods
         Agent.filterMethodNames = Arrays.asList(prop.getProperty("filter-method-names").split(","));
         Agent.sizeFilterMethodNames = Agent.filterMethodNames.size();
-        Agent.powerMonitorPathWindows = prop.getProperty("powermonitor-path");
 
         // Get OS MxBean to collect CPU and Process loads
         OperatingSystemMXBean osMxBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
@@ -195,16 +138,9 @@ public class Agent {
         while (i < 2) {
             osMxBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
             osMxBean.getProcessCpuLoad();
-            if (Agent.energySensor.equals("windows")) {
-                // On windows, start power monitoring a few seconds to initialize
-                try {
-                    Agent.powerMonitorWindowsProcess = Runtime.getRuntime().exec(Agent.powerMonitorPathWindows);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    System.out.println("Can't start power monitor on Windows. Existing...");
-                    System.exit(1);
-                }
-            }
+
+            cpuMonitoring.initialize();
+
             i++;
             try {
                 Thread.sleep(500);
@@ -229,22 +165,12 @@ public class Agent {
                         Map<Long, Map<String, Integer>> methodsStatsFiltered = new HashMap<>();
                         Set<Thread> threads = Thread.getAllStackTraces().keySet();
 
-                        double energyBefore = 0.0;
-                        switch (Agent.energySensor) {
-                            case "rapl":
-                                // Get CPU energy consumption with Intel RAPL
-                                energyBefore = getRAPLEnergy();
-                                break;
-                            case "raspberry":
-                                // Get CPU energy consumption with Raspberry Pi power models
-                                // Nothing to do here, energy will be calculated after
-                                break;
-                            case "windows":
-                                // Get CPU energy consumption on Windows using program monitor
-                                // Nothing to do here, energy will be calculated after
-                                break;
-                            default:
-                                break;
+                        final double energyBefore;
+                        if (cpuMonitoring instanceof RAPLLinux) {
+                            // Get CPU energy consumption with Intel RAPL
+                            energyBefore = cpuMonitoring.getPower(0);
+                        } else {
+                            energyBefore = 0.0;
                         }
 
                         int duration = 0;
@@ -302,35 +228,11 @@ public class Agent {
                             Thread.sleep(10);
                         }
 
-                        double energyAfter = 0.0;
-                        double CPUEnergy = 0.0;
                         double cpuLoad = osMxBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
                         double processCpuLoad = osMxBean.getProcessCpuLoad();
 
-                        switch (Agent.energySensor) {
-                            case "rapl":
-                                // At the end of the monitoring loop
-                                energyAfter = getRAPLEnergy();
-                                // Calculate total energy consumed in the monitoring loop
-                                CPUEnergy = energyAfter - energyBefore;
-                                break;
-                            case "raspberry":
-                                // Get CPU energy consumption with Raspberry Pi power models
-                                CPUEnergy = calculateCPUEnergyForRaspberryPi(Agent.raspberryPiModel, cpuLoad);
-                                break;
-                            case "windows":
-                                // Get CPU energy consumption on Windows using program monitor
-                                try {
-                                    BufferedReader input = new BufferedReader(new InputStreamReader(Agent.powerMonitorWindowsProcess.getInputStream()));
-                                    String line = input.readLine();
-                                    CPUEnergy = Double.parseDouble(line);
-                                } catch (Exception ignoredException) {
-                                    ignoredException.printStackTrace();
-                                }
-                                break;
-                            default:
-                                break;
-                        }
+                        final double energyAfter = cpuMonitoring.getPower(cpuLoad);
+                        final double CPUEnergy = energyAfter - energyBefore;
 
                         // Calculate CPU energy consumption of the process of the JVM all its apps
                         double ProcessEnergy = Agent.calculateProcessCPUEnergy(cpuLoad, processCpuLoad, CPUEnergy);
@@ -432,10 +334,10 @@ public class Agent {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                // Kill power monitor on Windows process if ever used
+                // Close monitoring implementation to release all resources
                 try {
-                    Agent.powerMonitorWindowsProcess.destroy();
-                } catch (Exception ignoredException) {}
+                    cpuMonitoring.close();
+                } catch (Exception e) {}
 
                 System.out.println("+---------------------------------+");
                 System.out.println("JoularJX finished monitoring application with ID " + appPid);
@@ -486,6 +388,17 @@ public class Agent {
     public static final Object GLOBALLOCK = new GlobalLock();
 
     public static class GlobalLock {
+    }
+
+    /**
+     * Calculate process energy consumption
+     * @param totalCPUUsage Total CPU usage
+     * @param processCPUUSage Process CPU usage
+     * @param CPUEnergy CPU energy
+     * @return Process energy consumption
+     */
+    private static double calculateProcessCPUEnergy(Double totalCPUUsage, Double processCPUUSage, Double CPUEnergy) {
+        return (processCPUUSage * CPUEnergy) / totalCPUUsage;
     }
 
     /**
