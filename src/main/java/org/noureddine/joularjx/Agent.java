@@ -508,14 +508,9 @@ public class Agent {
                         while (duration < 1000) {
                             for (Thread t : threads) {
                                 long threadID = t.getId();
-                                if (! methodsStats.containsKey(t.getId())) {
-                                    methodsStats.put(threadID, new HashMap<>());
-                                }
+                                methodsStats.computeIfAbsent(threadID, tID -> new HashMap<>());
+                                methodsStatsFiltered.computeIfAbsent(threadID, tID -> new HashMap<>());
 
-                                if (! methodsStatsFiltered.containsKey(t.getId())) {
-                                    methodsStatsFiltered.put(threadID, new HashMap<>());
-                                }
-                                
                                 // Only check runnable threads (not waiting or blocked)
                                 if (t.getState() == State.RUNNABLE) {
                                     int onlyFirst = 0;
