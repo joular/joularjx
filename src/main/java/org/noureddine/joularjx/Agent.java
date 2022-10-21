@@ -612,7 +612,7 @@ public class Agent {
                                 double methPower = threadsPower.get(threadID) * (methEntry.getValue() / 100.0);
                                 // Add power (for 1 sec = energy) to total method energy
                                 methodsEnergy.merge(methName, methPower, Double::sum);
-                                bufMeth.append(methName + "," + methPower + "\n");
+                                bufMeth.append(methName).append(',').append(methPower).append("\n");
                             }
                         }
 
@@ -627,7 +627,7 @@ public class Agent {
                                 double methPower = threadsPower.get(threadID) * (methEntry.getValue() / 100.0);
                                 // Add power (for 1 sec = energy) to total method energy
                                 methodsEnergyFiltered.merge(methName, methPower, Double::sum);
-                                bufMethFiltered.append(methName + "," + methPower + "\n");
+                                bufMethFiltered.append(methName).append(',').append(methPower).append("\n");
                             }
                         }
 
@@ -676,7 +676,7 @@ public class Agent {
                 for (Map.Entry<String, Double> entry : methodsEnergy.entrySet()) {
                     String key = entry.getKey();
                     Double value = entry.getValue();
-                    buf.append(key + "," + value + "\n");
+                    buf.append(key).append(',').append(value).append("\n");
                 }
 
                 // Write to CSV file
@@ -692,7 +692,7 @@ public class Agent {
                 for (Map.Entry<String, Double> entry : methodsEnergyFiltered.entrySet()) {
                     String key = entry.getKey();
                     Double value = entry.getValue();
-                    bufFil.append(key + "," + value + "\n");
+                    bufFil.append(key).append(',').append(value).append("\n");
                 }
 
                 // Write to CSV file for filtered methods
