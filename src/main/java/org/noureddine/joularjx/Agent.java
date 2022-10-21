@@ -520,12 +520,7 @@ public class Agent {
                                         if (onlyFirst == 0) {
                                             synchronized (GLOBALLOCK) {
                                                 Map<String, Integer> methData = methodsStats.get(threadID);
-                                                if (methData.containsKey(methName)) {
-                                                    int methNumber = methData.get(methName) + 1;
-                                                    methData.put(methName, methNumber);
-                                                } else {
-                                                    methData.put(methName, 1);
-                                                }
+                                                methData.merge(methName, 1, Integer::sum);
                                             }
                                         }
                                         onlyFirst++;
@@ -535,12 +530,7 @@ public class Agent {
                                             if (onlyFirstFiltered == 0) {
                                                 synchronized (GLOBALLOCK) {
                                                     Map<String, Integer> methData = methodsStatsFiltered.get(threadID);
-                                                    if (methData.containsKey(methName)) {
-                                                        int methNumber = methData.get(methName) + 1;
-                                                        methData.put(methName, methNumber);
-                                                    } else {
-                                                        methData.put(methName, 1);
-                                                    }
+                                                    methData.merge(methName, 1, Integer::sum);
                                                 }
                                             }
                                             onlyFirstFiltered++;
@@ -599,11 +589,9 @@ public class Agent {
                             long threadCPUTime = mxbean.getThreadCpuTime(t.getId());
 
                             // If thread already monitored, then calculate CPU time since last time
-                            if (threadsCPUTime.containsKey(t.getId())) {
-                                threadCPUTime -= threadsCPUTime.get(t.getId());
-                            }
+                            threadCPUTime = threadsCPUTime.merge(t.getId(), threadCPUTime,
+                                    (present, newValue) -> newValue - present);
 
-                            threadsCPUTime.put(t.getId(), threadCPUTime);
                             totalThreadsCPUTime += threadCPUTime;
                         }
 
@@ -622,13 +610,8 @@ public class Agent {
                             for (Map.Entry<String, Integer> methEntry : entry.getValue().entrySet()) {
                                 String methName = methEntry.getKey();
                                 double methPower = threadsPower.get(threadID) * (methEntry.getValue() / 100.0);
-                                if (methodsEnergy.containsKey(methEntry.getKey())) {
-                                    // Add power (for 1 sec = energy) to total method energy
-                                    double newMethEnergy = methodsEnergy.get(methName) + methPower;
-                                    methodsEnergy.put(methName, newMethEnergy);
-                                } else {
-                                    methodsEnergy.put(methName, methPower);
-                                }
+                                // Add power (for 1 sec = energy) to total method energy
+                                methodsEnergy.merge(methName, methPower, Double::sum);
                                 bufMeth.append(methName + "," + methPower + "\n");
                             }
                         }
@@ -642,13 +625,8 @@ public class Agent {
                             for (Map.Entry<String, Integer> methEntry : entry.getValue().entrySet()) {
                                 String methName = methEntry.getKey();
                                 double methPower = threadsPower.get(threadID) * (methEntry.getValue() / 100.0);
-                                if (methodsEnergyFiltered.containsKey(methEntry.getKey())) {
-                                    // Add power (for 1 sec = energy) to total method energy
-                                    double newMethEnergy = methodsEnergyFiltered.get(methName) + methPower;
-                                    methodsEnergyFiltered.put(methName, newMethEnergy);
-                                } else {
-                                    methodsEnergyFiltered.put(methName, methPower);
-                                }
+                                // Add power (for 1 sec = energy) to total method energy
+                                methodsEnergyFiltered.merge(methName, methPower, Double::sum);
                                 bufMethFiltered.append(methName + "," + methPower + "\n");
                             }
                         }
