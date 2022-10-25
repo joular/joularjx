@@ -11,13 +11,14 @@
 
 package org.noureddine.joularjx.power;
 
+import org.noureddine.joularjx.utils.AgentProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 
 /**
  * Factory class for the {@link CPU} implementation
@@ -36,7 +37,7 @@ public class CPUFactory {
      * @param properties the properties passed to the agent
      * @return the selected CPU implementation
      */
-    public static CPU getCpu(final Properties properties) {
+    public static CPU getCpu(final AgentProperties properties) {
         // Get OS
         final String osName = System.getProperty("os.name").toLowerCase();
         final String osArch = System.getProperty("os.arch").toLowerCase();
@@ -75,7 +76,7 @@ public class CPUFactory {
         } else if (osName.contains("win")) {
             // Windows
             // Check for Intel Power Gadget, and PowerJoular Windows
-            return new IntelWindows(properties.getProperty("powermonitor-path"));
+            return new IntelWindows(properties.getPowerMonitorPath());
         } else {
             // Other platforms not supported
             System.out.println("Platform not supported. Exiting...");

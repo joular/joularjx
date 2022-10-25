@@ -19,7 +19,9 @@ import com.sun.management.OperatingSystemMXBean;
 import org.noureddine.joularjx.power.CPU;
 import org.noureddine.joularjx.power.CPUFactory;
 import org.noureddine.joularjx.power.RAPLLinux;
+import org.noureddine.joularjx.utils.AgentProperties;
 
+import java.nio.file.FileSystems;
 import java.util.*;
 
 public class Agent {
@@ -45,11 +47,6 @@ public class Agent {
     private static List<String> filterMethodNames = new ArrayList<>();
 
     /**
-     * Size of list containing methods to filter for energy
-     */
-    private static int sizeFilterMethodNames = 0;
-
-    /**
      * Map to store total energy for filtered methods
      */
     private static Map<String, Double> methodsEnergyFiltered = new HashMap<>();
@@ -67,7 +64,7 @@ public class Agent {
     private static boolean isStartsFilterMethodNames(String methodName) {
         // In most cases, there will be one filtered method name
         // So we check that to gain performance and avoid looping the list
-        if (Agent.sizeFilterMethodNames == 1) {
+        if (Agent.filterMethodNames.size() == 1) {
             return methodName.startsWith(Agent.filterMethodNames.get(0));
         } else {
             // Check for every filtered method name if methodName start with any of them
@@ -105,29 +102,12 @@ public class Agent {
         // Get Process ID of current application
         Long appPid = ProcessHandle.current().pid();
 
-        // Read properties file
-        Properties prop = new Properties();
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream("./config.properties");
-            prop.load(fis);
-        } catch (IOException e) {
-            System.exit(1);
-        } finally {
-            try {
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        final AgentProperties prop = new AgentProperties(FileSystems.getDefault());
 
         cpuMonitoring = CPUFactory.getCpu(prop);
 
         // Get filtered methods
-        Agent.filterMethodNames = Arrays.asList(prop.getProperty("filter-method-names").split(","));
-        Agent.sizeFilterMethodNames = Agent.filterMethodNames.size();
+        Agent.filterMethodNames = prop.getFilterMethodNames();
 
         // Get OS MxBean to collect CPU and Process loads
         OperatingSystemMXBean osMxBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
