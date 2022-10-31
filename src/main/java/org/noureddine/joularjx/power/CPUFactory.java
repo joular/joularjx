@@ -11,6 +11,7 @@
 
 package org.noureddine.joularjx.power;
 
+import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.utils.AgentProperties;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 
 /**
  * Factory class for the {@link CPU} implementation
@@ -51,7 +53,7 @@ public class CPUFactory {
                     return new RaspberryPi(rPiModelName.get());
                 } else {
                     // Platform not supported
-                    System.out.println("Platform not supported. Exiting...");
+                    Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
                     System.exit(1);
                 }
             } else {
@@ -64,12 +66,12 @@ public class CPUFactory {
                         return new RAPLLinux();
                     } else {
                         // If no RAPL, then no support
-                        System.out.println("Platform not supported. Exiting...");
+                        Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
                         System.exit(1);
                     }
                 } catch (Exception e) {
                     // If no RAPL, then no support
-                    System.out.println("Platform not supported. Exiting...");
+                    Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
                     System.exit(1);
                 }
             }
@@ -79,7 +81,7 @@ public class CPUFactory {
             return new IntelWindows(properties.getPowerMonitorPath());
         } else {
             // Other platforms not supported
-            System.out.println("Platform not supported. Exiting...");
+            Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
             System.exit(1);
         }
         // Should never reach here because we stop the agent. But the compiler needs the return to compile the code.

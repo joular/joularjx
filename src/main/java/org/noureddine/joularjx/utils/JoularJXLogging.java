@@ -11,6 +11,8 @@
 
 package org.noureddine.joularjx.utils;
 
+import org.noureddine.joularjx.Agent;
+
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +25,7 @@ public class JoularJXLogging {
         ConsoleHandler ch = new ConsoleHandler();
         ch.setFormatter(new JoularJXFormatter());
         ch.setLevel(loggerLevel);
-        this.jxlogger = Logger.getLogger(org.noureddine.joularjx.Agent.class.getName());
+        this.jxlogger = Logger.getAnonymousLogger();
         this.jxlogger.addHandler(ch);
         this.jxlogger.setLevel(Level.CONFIG);
         this.jxlogger.setUseParentHandlers(false);

@@ -11,10 +11,13 @@
 
 package org.noureddine.joularjx.power;
 
+import org.noureddine.joularjx.Agent;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.Level;
 
 public class RAPLLinux implements CPU {
 
@@ -64,7 +67,7 @@ public class RAPLLinux implements CPU {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Failed to get RAPL energy readings. Did you run JoularJX with elevated privileges (sudo)?");
+            Agent.jxlogger.log(Level.SEVERE, "Failed to get RAPL energy readings. Did you run JoularJX with elevated privileges (sudo)?");
             System.exit(1);
         }
 

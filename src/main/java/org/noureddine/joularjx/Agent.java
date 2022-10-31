@@ -97,12 +97,10 @@ public class Agent {
         System.out.println("| JoularJX Agent Version 2.0      |");
         System.out.println("+---------------------------------+");
 
-        jxlogger.log(Level.INFO, "JoularJX Agent Version 2.0");
-
         ThreadMXBean mxbean = ManagementFactory.getThreadMXBean();
         // Check if CPU Time measurement is supported by the JVM. Quit otherwise
         if (!mxbean.isThreadCpuTimeSupported()) {
-            System.out.println("Thread CPU Time is not supported on this Java Virtual Machine. Existing...");
+            Agent.jxlogger.log(Level.SEVERE, "Thread CPU Time is not supported on this Java Virtual Machine. Existing...");
             System.exit(1);
         }
 
@@ -123,7 +121,7 @@ public class Agent {
 
         // Loop for a couple of seconds to initialize OSMXBean to get accurate details (first call will return -1)
         int i = 0;
-        System.out.println("Please wait while initializing JoularJX...");
+        Agent.jxlogger.log(Level.INFO, "Please wait while initializing JoularJX...");
         while (i < 2) {
             osMxBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
             osMxBean.getProcessCpuLoad();
@@ -135,7 +133,7 @@ public class Agent {
                 Thread.sleep(500);
             } catch (Exception ignoredException) {}
         }
-        System.out.println("Initialization finished");
+        Agent.jxlogger.log(Level.INFO, "Initialization finished");
 
         /**
          * Thread to calculate at runtime the power consumption per thread following a determined cycle duration
@@ -143,7 +141,7 @@ public class Agent {
         new Thread() {
             public void run() {
                 Thread.currentThread().setName("JoularJX Agent Computation");
-                System.out.println("Started monitoring application with ID " + appPid);
+                Agent.jxlogger.log(Level.INFO, "Started monitoring application with ID " + appPid);
 
                 // CPU time for each thread
                 Map<Long, Long> threadsCPUTime = new HashMap<>();
@@ -238,7 +236,7 @@ public class Agent {
 
                         // Now we have power for each thread, and stats for methods in each thread
                         // We allocated power for each method based on statistics
-                        StringBuffer bufMeth = new StringBuffer();
+                        StringBuilder bufMeth = new StringBuilder();
                         for (Map.Entry<Long, Map<String, Integer>> entry : methodsStats.entrySet()) {
                             long threadID = entry.getKey();
                             for (Map.Entry<String, Integer> methEntry : entry.getValue().entrySet()) {
@@ -253,7 +251,7 @@ public class Agent {
                         // For filtered methods
                         // Now we have power for each thread, and stats for methods in each thread
                         // We allocated power for each method based on statistics
-                        StringBuffer bufMethFiltered = new StringBuffer();
+                        StringBuilder bufMethFiltered = new StringBuilder();
                         for (Map.Entry<Long, Map<String, Integer>> entry : methodsStatsFiltered.entrySet()) {
                             long threadID = entry.getKey();
                             for (Map.Entry<String, Integer> methEntry : entry.getValue().entrySet()) {
@@ -311,12 +309,11 @@ public class Agent {
                     cpuMonitoring.close();
                 } catch (Exception e) {}
 
-                System.out.println("+---------------------------------+");
-                System.out.println("JoularJX finished monitoring application with ID " + appPid);
-                System.out.println("Program consumed " + String.format("%.2f", totalProcessEnergy) + " joules");
+                Agent.jxlogger.log(Level.INFO, "JoularJX finished monitoring application with ID " + appPid);
+                Agent.jxlogger.log(Level.INFO, "Program consumed " + String.format("%.2f", totalProcessEnergy) + " joules");
 
                 // Prepare buffer for methods energy
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 for (Map.Entry<String, Double> entry : methodsEnergy.entrySet()) {
                     String key = entry.getKey();
                     Double value = entry.getValue();
@@ -332,7 +329,7 @@ public class Agent {
                 } catch (Exception ignored) {}
 
                 // Prepare buffer for filtered methods energy
-                StringBuffer bufFil = new StringBuffer();
+                StringBuilder bufFil = new StringBuilder();
                 for (Map.Entry<String, Double> entry : methodsEnergyFiltered.entrySet()) {
                     String key = entry.getKey();
                     Double value = entry.getValue();
@@ -347,8 +344,7 @@ public class Agent {
                     out.close();
                 } catch (Exception ignored) {}
 
-                System.out.println("Energy consumption of methods and filtered methods written to " + fileNameMethods + " and " + fileNameMethodsFiltered + " files");
-                System.out.println("+---------------------------------+");
+                Agent.jxlogger.log(Level.INFO, "Energy consumption of methods and filtered methods written to " + fileNameMethods + " and " + fileNameMethodsFiltered + " files");
             }
         });
     }
