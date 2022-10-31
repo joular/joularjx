@@ -20,10 +20,13 @@ import org.noureddine.joularjx.power.CPU;
 import org.noureddine.joularjx.power.CPUFactory;
 import org.noureddine.joularjx.power.RAPLLinux;
 import org.noureddine.joularjx.utils.AgentProperties;
+import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.nio.file.FileSystems;
 import java.time.Instant;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Agent {
     /**
@@ -57,6 +60,8 @@ public class Agent {
      */
     private static CPU cpuMonitoring;
 
+    public final static Logger jxlogger = JoularJXLogging.getInstance().getLogger();
+
     /**
      * Check if methodName starts with one of the filtered method names
      * @param methodName Name of method
@@ -86,8 +91,10 @@ public class Agent {
     public static void premain(String args, Instrumentation inst) {
         Thread.currentThread().setName("JoularJX Agent Thread");
         System.out.println("+---------------------------------+");
-        System.out.println("| JoularJX Agent Version 1.1      |");
+        System.out.println("| JoularJX Agent Version 2.0      |");
         System.out.println("+---------------------------------+");
+
+        jxlogger.log(Level.INFO, "JoularJX Agent Version 2.0");
 
         ThreadMXBean mxbean = ManagementFactory.getThreadMXBean();
         // Check if CPU Time measurement is supported by the JVM. Quit otherwise
