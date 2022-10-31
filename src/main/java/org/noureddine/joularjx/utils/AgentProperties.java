@@ -30,6 +30,10 @@ public class AgentProperties {
 
     private static final String POWER_MONITOR_PATH_PROPERTY = "powermonitor-path";
 
+    private static final String SAVE_RUNTIME_DATA_PROPERTY = "save-runtime-data";
+
+    private static final String OVERWRITE_RUNTIME_DATA_PROPERTY = "overwrite-runtime-data";
+
     /**
      * Loaded configuration properties
      */
@@ -58,6 +62,22 @@ public class AgentProperties {
 
     public String getPowerMonitorPath() {
         return prop.getProperty(POWER_MONITOR_PATH_PROPERTY);
+    }
+
+    public boolean getSaveRuntimeData() {
+        String propValue = prop.getProperty(SAVE_RUNTIME_DATA_PROPERTY);
+        if (propValue.equals("true")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean getOverwriteRuntimeData() {
+        String propValue = prop.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY);
+        if (propValue.equals("true")) {
+            return true;
+        }
+        return false;
     }
 
 }

@@ -22,6 +22,7 @@ import org.noureddine.joularjx.power.RAPLLinux;
 import org.noureddine.joularjx.utils.AgentProperties;
 
 import java.nio.file.FileSystems;
+import java.time.Instant;
 import java.util.*;
 
 public class Agent {
@@ -256,21 +257,31 @@ public class Agent {
                             }
                         }
 
-                        // Write to CSV file
-                        String fileNameMethods = "joularJX-" + appPid + "-methods-power.csv";
-                        try {
-                            BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethods, false));
-                            out.write(bufMeth.toString());
-                            out.close();
-                        } catch (Exception ignored) {}
+                        if (prop.getSaveRuntimeData()) {
+                            String fileNameMethods = "joularJX-" + appPid + "-methods-power.csv";
+                            String fileNameMethodsFiltered = "joularJX-" + appPid + "-methods-filtered-power.csv";
+                            if (! prop.getOverwriteRuntimeData()) {
+                                long unixTime = Instant.now().getEpochSecond();
+                                fileNameMethods = "joularJX-" + appPid + "-" + unixTime + "-methods-power.csv";
+                                fileNameMethodsFiltered = "joularJX-" + appPid + "-" + unixTime + "-methods-filtered-power.csv";
+                            }
 
-                        // Write to CSV file for filtered methods
-                        String fileNameMethodsFiltered = "joularJX-" + appPid + "-methods-filtered-power.csv";
-                        try {
-                            BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethodsFiltered, false));
-                            out.write(bufMethFiltered.toString());
-                            out.close();
-                        } catch (Exception ignored) {}
+                            // Write to CSV file
+                            try {
+                                BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethods, false));
+                                out.write(bufMeth.toString());
+                                out.close();
+                            } catch (Exception ignored) {
+                            }
+
+                            // Write to CSV file for filtered methods
+                            try {
+                                BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethodsFiltered, false));
+                                out.write(bufMethFiltered.toString());
+                                out.close();
+                            } catch (Exception ignored) {
+                            }
+                        }
 
                         // Sleep for 10 milliseconds
                         Thread.sleep(10);
