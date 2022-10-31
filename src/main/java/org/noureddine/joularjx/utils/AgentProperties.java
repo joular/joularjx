@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 
 /**
  * Agent properties configured by the config.properties file
@@ -33,6 +34,8 @@ public class AgentProperties {
     private static final String SAVE_RUNTIME_DATA_PROPERTY = "save-runtime-data";
 
     private static final String OVERWRITE_RUNTIME_DATA_PROPERTY = "overwrite-runtime-data";
+
+    private static final String LOGGER_LEVEL_PROPERTY = "logger-level";
 
     /**
      * Loaded configuration properties
@@ -78,6 +81,29 @@ public class AgentProperties {
             return true;
         }
         return false;
+    }
+
+    public Level getLoggerLevel() {
+        String loggerLevel = prop.getProperty(LOGGER_LEVEL_PROPERTY);
+        Level loggerLevelEnum = Level.INFO;
+
+        switch (loggerLevel) {
+            case "OFF":
+                loggerLevelEnum = Level.OFF;
+                break;
+            case "WARNING":
+                loggerLevelEnum = Level.WARNING;
+                break;
+            case "SEVERE":
+                loggerLevelEnum = Level.SEVERE;
+                break;
+            case "INFO":
+            default:
+                loggerLevelEnum = Level.INFO;
+                break;
+        }
+
+        return loggerLevelEnum;
     }
 
 }

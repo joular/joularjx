@@ -60,7 +60,7 @@ public class Agent {
      */
     private static CPU cpuMonitoring;
 
-    public final static Logger jxlogger = JoularJXLogging.getInstance().getLogger();
+    public static Logger jxlogger;
 
     /**
      * Check if methodName starts with one of the filtered method names
@@ -90,6 +90,9 @@ public class Agent {
      */
     public static void premain(String args, Instrumentation inst) {
         Thread.currentThread().setName("JoularJX Agent Thread");
+        final AgentProperties prop = new AgentProperties(FileSystems.getDefault());
+        Agent.jxlogger = JoularJXLogging.getInstance(prop.getLoggerLevel()).getLogger();
+
         System.out.println("+---------------------------------+");
         System.out.println("| JoularJX Agent Version 2.0      |");
         System.out.println("+---------------------------------+");
@@ -109,8 +112,6 @@ public class Agent {
 
         // Get Process ID of current application
         Long appPid = ProcessHandle.current().pid();
-
-        final AgentProperties prop = new AgentProperties(FileSystems.getDefault());
 
         cpuMonitoring = CPUFactory.getCpu(prop);
 

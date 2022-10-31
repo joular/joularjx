@@ -19,9 +19,10 @@ public class JoularJXLogging {
     private static JoularJXLogging instance;
     private final Logger jxlogger;
 
-    private JoularJXLogging() {
+    private JoularJXLogging(Level loggerLevel) {
         ConsoleHandler ch = new ConsoleHandler();
         ch.setFormatter(new JoularJXFormatter());
+        ch.setLevel(loggerLevel);
         this.jxlogger = Logger.getLogger(org.noureddine.joularjx.Agent.class.getName());
         this.jxlogger.addHandler(ch);
         this.jxlogger.setLevel(Level.CONFIG);
@@ -32,14 +33,14 @@ public class JoularJXLogging {
         return this.jxlogger;
     }
 
-    public static JoularJXLogging getInstance() {
+    public static JoularJXLogging getInstance(Level loggerLevel) {
         JoularJXLogging result = instance;
         if (result != null) {
             return result;
         }
         synchronized(JoularJXLogging.class) {
             if (instance == null) {
-                instance = new JoularJXLogging();
+                instance = new JoularJXLogging(loggerLevel);
             }
             return instance;
         }
