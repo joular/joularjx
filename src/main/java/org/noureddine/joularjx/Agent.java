@@ -94,7 +94,7 @@ public class Agent {
         Agent.jxlogger = JoularJXLogging.getInstance(prop.getLoggerLevel()).getLogger();
 
         System.out.println("+---------------------------------+");
-        System.out.println("| JoularJX Agent Version 2.0      |");
+        System.out.println("| JoularJX Agent Version 1.5      |");
         System.out.println("+---------------------------------+");
 
         ThreadMXBean mxbean = ManagementFactory.getThreadMXBean();

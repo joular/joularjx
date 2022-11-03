@@ -47,6 +47,9 @@ When the program exits, JoularJX generates two new CSV files with the total ener
 
 JoularJX can be configured by modifying the ```config.properties``` files:
 - ```filter-method-names```: list of strings which will be used to filter the monitored methods (see Generated files below for explanations).
+- ```save-runtime-data```: write runtime methods power consumption in a CSV file.
+- ```overwrite-runtime-data```: overwrite runtime power data files, or if set to false, it will write new files for each monitoring cycle.
+- ```logger-level```: set the level of information (by logger) given by JoularJX in the terminal (allowed values: OFF, INFO, WARNING, SEVERE).
 - ```powermonitor-path```: Full path to the power monitor program (only for Windows).
 
 You can install the jar package (and the PowerMonitor.exe on Windows) wherever you want, and call it in the ```javaagent``` with the full path.

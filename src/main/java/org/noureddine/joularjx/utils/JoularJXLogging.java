@@ -11,8 +11,6 @@
 
 package org.noureddine.joularjx.utils;
 
-import org.noureddine.joularjx.Agent;
-
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
