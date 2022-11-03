@@ -16,23 +16,23 @@ public class RaspberryPi implements CPU {
     /**
      * Raspberry Pi model name
      */
-    private final String rpiModel;
+    private final RPiModels rpiModel;
 
-    public RaspberryPi(final String rpiModel) {
+    public RaspberryPi(final RPiModels rpiModel) {
         this.rpiModel = rpiModel;
     }
 
     /**
      * Calculate CPU energy consumption for last second (power) on supported Raspberry Pi devices
-     * @param rpiModel Raspberry Pi model name
+     * @param rpiModel Raspberry Pi model
      * @param CPUUsage CPU usage
      * @return CPU energy consumption for last second (power)
      */
-    private static double calculateCPUEnergyForRaspberryPi(String rpiModel, double CPUUsage) {
+    private double calculateCPUEnergyForRaspberryPi(final RPiModels rpiModel, final double CPUUsage) {
         double result = 0.0;
 
         switch (rpiModel) {
-            case "rbp4001.0-64":
+            case RPI_400_10_64:
                 result = 2.6630056198236938 + (0.82814554 * CPUUsage) +
                         (-112.17687631 * Math.pow(CPUUsage, 2)) +
                         (1753.99173239 * Math.pow(CPUUsage, 3)) +
@@ -43,7 +43,7 @@ public class RaspberryPi implements CPU {
                         (-38089.87171735 * Math.pow(CPUUsage, 8)) +
                         (8638.45610698 * Math.pow(CPUUsage, 9));
                 break;
-            case "rbp4b1.2-64":
+            case RPI_4B_12_64:
                 result = 3.039940056604439 + (-3.074225 * CPUUsage) +
                         (47.753114 * Math.pow(CPUUsage, 2)) +
                         (-271.974551 * Math.pow(CPUUsage, 3)) +
@@ -52,7 +52,7 @@ public class RaspberryPi implements CPU {
                         (1133.325791 * Math.pow(CPUUsage, 6)) +
                         (-345.134888 * Math.pow(CPUUsage, 7));
                 break;
-            case "rbp4b1.2":
+            case RPI_4B_12:
                 result = 2.58542069543335 + (12.335449 * CPUUsage) +
                         (-248.010554 * Math.pow(CPUUsage, 2)) +
                         (2379.832320 * Math.pow(CPUUsage, 3)) +
@@ -63,7 +63,7 @@ public class RaspberryPi implements CPU {
                         (-30618.557703 * Math.pow(CPUUsage, 8)) +
                         (6752.265368 * Math.pow(CPUUsage, 9));
                 break;
-            case "rbp4b1.1-64":
+            case RPI_4B_11_64:
                 result = 3.405685008777926 + (-11.834416 * CPUUsage) +
                         (137.312822 * Math.pow(CPUUsage, 2)) +
                         (-775.891511 * Math.pow(CPUUsage, 3)) +
@@ -73,7 +73,7 @@ public class RaspberryPi implements CPU {
                         (-2691.923074 * Math.pow(CPUUsage, 7)) +
                         (590.355251 * Math.pow(CPUUsage, 8));
                 break;
-            case "rbp4b1.1":
+            case RPI_4B_11:
                 result = 2.5718068562852086 + (2.794871 * CPUUsage) +
                         (-58.954883 * Math.pow(CPUUsage, 2)) +
                         (838.875781 * Math.pow(CPUUsage, 3)) +
@@ -84,7 +84,7 @@ public class RaspberryPi implements CPU {
                         (-20501.307640 * Math.pow(CPUUsage, 8)) +
                         (4708.331490 * Math.pow(CPUUsage, 9));
                 break;
-            case "rbp3b+1.3":
+            case RPI_3BP_13:
                 result = 2.484396997449118 + (2.933542 * CPUUsage) +
                         (-150.400134 * Math.pow(CPUUsage, 2)) +
                         (2278.690310 * Math.pow(CPUUsage, 3)) +
@@ -95,7 +95,7 @@ public class RaspberryPi implements CPU {
                         (-60432.910139 * Math.pow(CPUUsage, 8)) +
                         (14053.677709 * Math.pow(CPUUsage, 9));
                 break;
-            case "rbp3b1.2":
+            case RPI_3B_12:
                 result = 1.524116907651687 + (10.053851 * CPUUsage) +
                         (-234.186930 * Math.pow(CPUUsage, 2)) +
                         (2516.322119 * Math.pow(CPUUsage, 3)) +
@@ -106,7 +106,7 @@ public class RaspberryPi implements CPU {
                         (-39909.425362 * Math.pow(CPUUsage, 8)) +
                         (8894.110508 * Math.pow(CPUUsage, 9));
                 break;
-            case "rbp2b1.1":
+            case RPI_2B_11:
                 result = 1.3596870187778196 + (5.135090 * CPUUsage) +
                         (-103.296366 * Math.pow(CPUUsage, 2)) +
                         (1027.169748 * Math.pow(CPUUsage, 3)) +
@@ -117,7 +117,7 @@ public class RaspberryPi implements CPU {
                         (-14023.471809 * Math.pow(CPUUsage, 8)) +
                         (3089.786200 * Math.pow(CPUUsage, 9));
                 break;
-            case "rbp1b+1.2":
+            case RPI_1BP_12:
                 result = 1.2513999338064061 + (1.857815 * CPUUsage) +
                         (-18.109537 * Math.pow(CPUUsage, 2)) +
                         (101.531231 * Math.pow(CPUUsage, 3)) +
@@ -128,7 +128,7 @@ public class RaspberryPi implements CPU {
                         (-403.270951 * Math.pow(CPUUsage, 8)) +
                         (79.925932 * Math.pow(CPUUsage, 9));
                 break;
-            case "rbp1b2":
+            case RPI_1B_2:
                 result = 2.826093843916506 + (3.539891 * CPUUsage) +
                         (-43.586963 * Math.pow(CPUUsage, 2)) +
                         (282.488560 * Math.pow(CPUUsage, 3)) +
@@ -139,7 +139,7 @@ public class RaspberryPi implements CPU {
                         (-1692.840870 * Math.pow(CPUUsage, 8)) +
                         (357.800968 * Math.pow(CPUUsage, 9));
                 break;
-            case "rbpzw1.1":
+            case RPI_ZW_11:
                 result = 0.8551610676717238 + (7.207151 * CPUUsage) +
                         (-135.517893 * Math.pow(CPUUsage, 2)) +
                         (1254.808001 * Math.pow(CPUUsage, 3)) +

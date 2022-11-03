@@ -48,7 +48,7 @@ public class CPUFactory {
             // GNU/Linux
             if (osArch.contains("aarch64") || osArch.contains("arm")) {
                 // Check if Raspberry Pi and use formulas
-                final Optional<String> rPiModelName = getRPiModelName(osArch);
+                final Optional<RPiModels> rPiModelName = getRPiModelName(osArch);
                 if (rPiModelName.isPresent()) {
                     return new RaspberryPi(rPiModelName.get());
                 } else {
@@ -93,7 +93,7 @@ public class CPUFactory {
      * @param osArch OS Architecture (arm, aarch64)
      * @return Raspberry Pi model name
      */
-    private static Optional<String> getRPiModelName(String osArch) {
+    private static Optional<RPiModels> getRPiModelName(String osArch) {
         String deviceTreeModel = "/proc/device-tree/model";
         File deviceTreeModelFile = new File(deviceTreeModel);
 
@@ -108,33 +108,33 @@ public class CPUFactory {
                 for (String currentLine : allLines) {
                     if (currentLine.contains("Raspberry Pi 400 Rev 1.0")) {
                         if (osArch.contains("aarch64")) {
-                            return Optional.of("rbp4001.0-64");
+                            return Optional.of(RPiModels.RPI_400_10_64);
                         }
                     }
                     if (currentLine.contains("Raspberry Pi 4 Model B Rev 1.2")) {
                         if (osArch.contains("aarch64")) {
-                            return Optional.of("rbp4b1.2-64");
+                            return Optional.of(RPiModels.RPI_4B_12_64);
                         } else {
-                            return Optional.of("rbp4b1.2");
+                            return Optional.of(RPiModels.RPI_4B_12);
                         }
                     } else if (currentLine.contains("Raspberry Pi 4 Model B Rev 1.1")) {
                         if (osArch.contains("aarch64")) {
-                            return Optional.of("rbp4b1.1-64");
+                            return Optional.of(RPiModels.RPI_4B_11_64);
                         } else {
-                            return Optional.of("rbp4b1.1");
+                            return Optional.of(RPiModels.RPI_4B_11);
                         }
                     } else if (currentLine.contains("Raspberry Pi 3 Model B Plus Rev 1.3")) {
-                        return Optional.of("rbp3b+1.3");
+                        return Optional.of(RPiModels.RPI_3BP_13);
                     } else if (currentLine.contains("Raspberry Pi 3 Model B Rev 1.2")) {
-                        return Optional.of("rbp3b1.2");
+                        return Optional.of(RPiModels.RPI_3B_12);
                     } else if (currentLine.contains("Raspberry Pi 2 Model B Rev 1.1")) {
-                        return Optional.of("rbp2b1.1");
+                        return Optional.of(RPiModels.RPI_2B_11);
                     } else if (currentLine.contains("Raspberry Pi Model B Plus Rev 1.2")) {
-                        return Optional.of("rbp1b+1.2");
+                        return Optional.of(RPiModels.RPI_1BP_12);
                     } else if (currentLine.contains("Raspberry Pi Model B Rev 2")) {
-                        return Optional.of("rbp1b2");
+                        return Optional.of(RPiModels.RPI_1B_2);
                     } else if (currentLine.contains("Raspberry Pi Zero W Rev 1.1")) {
-                        return Optional.of("rbpzw1.1");
+                        return Optional.of(RPiModels.RPI_ZW_11);
                     }
                 }
             } catch (IOException ignored) {}
