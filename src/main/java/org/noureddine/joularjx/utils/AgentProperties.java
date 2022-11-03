@@ -68,25 +68,20 @@ public class AgentProperties {
     }
 
     public boolean getSaveRuntimeData() {
-        String propValue = prop.getProperty(SAVE_RUNTIME_DATA_PROPERTY);
-        if (propValue.equals("true")) {
-            return true;
-        }
-        return false;
+        return "true".equalsIgnoreCase(prop.getProperty(SAVE_RUNTIME_DATA_PROPERTY));
     }
 
     public boolean getOverwriteRuntimeData() {
-        String propValue = prop.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY);
-        if (propValue.equals("true")) {
-            return true;
-        }
-        return false;
+        return "true".equalsIgnoreCase(prop.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY));
     }
 
     public Level getLoggerLevel() {
-        String loggerLevel = prop.getProperty(LOGGER_LEVEL_PROPERTY);
-        Level loggerLevelEnum = Level.INFO;
+        final String loggerLevel = prop.getProperty(LOGGER_LEVEL_PROPERTY);
+        if (loggerLevel == null) {
+            return Level.INFO;
+        }
 
+        final Level loggerLevelEnum;
         switch (loggerLevel) {
             case "OFF":
                 loggerLevelEnum = Level.OFF;
