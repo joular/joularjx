@@ -13,77 +13,114 @@ package org.noureddine.joularjx.power;
 
 import org.noureddine.joularjx.Agent;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 public class RAPLLinux implements CPU {
+
+    static final String RAPL_PSYS = "/sys/class/powercap/intel-rapl/intel-rapl:1/energy_uj";
+
+    static final String RAPL_PKG = "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj";
+
+    static final String RAPL_DRAM = "/sys/class/powercap/intel-rapl/intel-rapl:0/intel-rapl:0:2/energy_uj";
+
+    /**
+     * RAPL files existing on the current system. All files in this list will be used for reading the
+     * energy values.
+     */
+    private final List<Path> raplFilesToRead = new ArrayList<>(3);
+
+    /**
+     * Filesystem where the RAPL files are located.
+     */
+    private final FileSystem fileSystem;
+
+    /**
+     * Create a new energy measurement via RAPL. The files will be read from the default filesystem.
+     */
+    public RAPLLinux() {
+        this(FileSystems.getDefault());
+    }
+
+    /**
+     * Create a new energy measurement via RAPL. The files will be read from the passed filesystem.
+     *
+     * @param fileSystem The filesystem to use for reading the RAPL files
+     */
+    RAPLLinux(final FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
+    }
+
+    /**
+     * Check which RAPL files are available on the system to read the energy values from.
+     */
+    @Override
+    public void initialize() {
+        final Path psysFile = fileSystem.getPath(RAPL_PSYS);
+        if (Files.exists(psysFile)) {
+            checkFileReadable(psysFile);
+            // psys exists, so use this for energy readings
+            raplFilesToRead.add(psysFile);
+        } else {
+            // No psys supported, then check for pkg and dram
+            final Path pkgFile = fileSystem.getPath(RAPL_PKG);
+            if (Files.exists(pkgFile)) {
+                checkFileReadable(pkgFile);
+                // pkg exists, check also for dram
+                raplFilesToRead.add(pkgFile);
+
+                final Path dramFile = fileSystem.getPath(RAPL_DRAM);
+                if (Files.exists(dramFile)) {
+                    checkFileReadable(dramFile);
+                    // dram and pkg exists, then get sum of both
+                    raplFilesToRead.add(dramFile);
+                }
+            }
+        }
+
+        if (raplFilesToRead.isEmpty()) {
+            Agent.jxlogger.log(Level.SEVERE, "Found no RAPL files to read the energy measurement from. Exit ...");
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Check that the passed file can be read by the program. Log error message and exit if reading the file is not
+     * possible.
+     * @param file the file to check the read access
+     */
+    private void checkFileReadable(final Path file) {
+        if (!Files.isReadable(file)) {
+            Agent.jxlogger.log(Level.SEVERE, "Failed to get RAPL energy readings. Did you run JoularJX with elevated privileges (sudo)?");
+            System.exit(1);
+        }
+    }
 
     /**
      * Get energy readings from RAPL through powercap
      * Calculates the best energy reading as supported by CPU (psys, or pkg+dram, or pkg)
      * @return Energy readings from RAPL
      */
-    private static Double getRAPLEnergy() {
-        String psys = "/sys/class/powercap/intel-rapl/intel-rapl:1/energy_uj";
-        String pkg = "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj";
-        String dram = "/sys/class/powercap/intel-rapl/intel-rapl:0/intel-rapl:0:2/energy_uj";
+    @Override
+    public double getPower(final double cpuLoad) {
         double energyData = 0.0;
 
-        try {
-            File psysFile = new File(psys);
-            if (psysFile.exists()) {
-                // psys exists, so use this for energy readings
-                Path psysPath = Path.of(psys);
-                try {
-                    energyData = Double.parseDouble(Files.readString(psysPath));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                // No psys supported, then check for pkg and dram
-                File pkgFile = new File(pkg);
-                if (pkgFile.exists()) {
-                    // pkg exists, check also for dram
-                    Path pkgPath = Path.of(pkg);
-                    try {
-                        energyData = Double.parseDouble(Files.readString(pkgPath));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    File dramFile = new File(dram);
-                    if (dramFile.exists()) {
-                        // dram and pkg exists, then get sum of both
-                        Path dramPath = Path.of(dram);
-                        try {
-                            energyData += Double.parseDouble(Files.readString(dramPath));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+        for (final Path raplFile : raplFilesToRead) {
+            try {
+                energyData += Double.parseDouble(Files.readString(raplFile));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            Agent.jxlogger.log(Level.SEVERE, "Failed to get RAPL energy readings. Did you run JoularJX with elevated privileges (sudo)?");
-            System.exit(1);
         }
 
         // Divide by 1 million to convert microJoules to Joules
-        energyData = energyData / 1000000;
-        return energyData;
-    }
-
-    @Override
-    public void initialize() {
-        // Nothing to do for RAPL Linux
-    }
-
-    @Override
-    public double getPower(final double cpuLoad) {
-        return getRAPLEnergy();
+        return energyData / 1000000;
     }
 
     @Override
