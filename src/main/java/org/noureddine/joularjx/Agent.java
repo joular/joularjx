@@ -12,11 +12,13 @@
 package org.noureddine.joularjx;
 
 import com.sun.management.OperatingSystemMXBean;
+import org.noureddine.joularjx.monitor.MonitoringStatus;
 import org.noureddine.joularjx.power.CPU;
 import org.noureddine.joularjx.power.CPUFactory;
 import org.noureddine.joularjx.power.RAPLLinux;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
+import org.noureddine.joularjx.monitor.ShutdownHandler;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -38,29 +40,14 @@ public class Agent {
     public static final Object GLOBALLOCK = new Object();
 
     /**
-     * Variables to collect the program energy consumption
-     */
-    private static double totalProcessEnergy = 0;
-
-    /**
-     * Map to store total energy for each method
-     */
-    private static Map<String, Double> methodsEnergy = new HashMap<>();
-
-    /**
      * List of methods to filter for energy
      */
     private static List<String> filterMethodNames = new ArrayList<>();
 
     /**
-     * Map to store total energy for filtered methods
-     */
-    private static Map<String, Double> methodsEnergyFiltered = new HashMap<>();
-
-    /**
      * Monitoring the agent will use to monitor the energy usage
      */
-    private static CPU cpuMonitoring;
+    private static CPU cpu;
 
     public static Logger jxlogger;
 
@@ -83,17 +70,18 @@ public class Agent {
         // Get Process ID of current application
         long appPid = ProcessHandle.current().pid();
 
-        cpuMonitoring = CPUFactory.getCpu(properties);
+        cpu = CPUFactory.getCpu(properties);
 
         // Get filtered methods
         Agent.filterMethodNames = properties.getFilterMethodNames();
 
         OperatingSystemMXBean osBean = createOperatingSystemBean();
+        MonitoringStatus status = new MonitoringStatus();
 
         Agent.jxlogger.log(Level.INFO, "Initialization finished");
 
-        new Thread(() -> monitor(appPid, properties, osBean, threadBean)).start();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown(appPid)));
+        new Thread(() -> monitor(appPid, properties, status, osBean, threadBean)).start();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> new ShutdownHandler(appPid, cpu, status)));
     }
 
     private static ThreadMXBean createThreadBean() {
@@ -123,7 +111,7 @@ public class Agent {
             osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
             osBean.getProcessCpuLoad();
 
-            cpuMonitoring.initialize();
+            cpu.initialize();
 
             i++;
             try {
@@ -133,7 +121,7 @@ public class Agent {
         return osBean;
     }
 
-    private static void monitor(long appPid, AgentProperties properties,
+    private static void monitor(long appPid, AgentProperties properties, MonitoringStatus status,
                                 OperatingSystemMXBean osBean, ThreadMXBean threadBean) {
         Thread.currentThread().setName("JoularJX Agent Computation");
         Agent.jxlogger.log(Level.INFO, "Started monitoring application with ID {0}", appPid);
@@ -148,9 +136,9 @@ public class Agent {
                 Set<Thread> threads = Thread.getAllStackTraces().keySet();
 
                 final double energyBefore;
-                if (cpuMonitoring instanceof RAPLLinux) {
+                if (cpu instanceof RAPLLinux) {
                     // Get CPU energy consumption with Intel RAPL
-                    energyBefore = cpuMonitoring.getPower(0);
+                    energyBefore = cpu.getPower(0);
                 } else {
                     energyBefore = 0.0;
                 }
@@ -198,33 +186,33 @@ public class Agent {
                 double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
                 double processCpuLoad = osBean.getProcessCpuLoad();
 
-                final double energyAfter = cpuMonitoring.getPower(cpuLoad);
+                final double energyAfter = cpu.getPower(cpuLoad);
                 final double cpuEnergy = energyAfter - energyBefore;
 
                 // Calculate CPU energy consumption of the process of the JVM all its apps
-                double processEnergy = Agent.calculateProcessCPUEnergy(cpuLoad, processCpuLoad, cpuEnergy);
+                double processEnergy = Agent.calculateProcessCpuEnergy(cpuLoad, processCpuLoad, cpuEnergy);
 
                 // Adds current power to total energy
-                totalProcessEnergy += processEnergy;
+                status.addConsumedEnergy(processEnergy);
 
                 // Now we have:
                 // CPU energy for JVM process
                 // CPU energy for all processes
                 // We need to calculate energy for each thread
-                long totalThreadsCPUTime = 0;
+                long totalThreadsCpuTime = 0;
                 for (Thread thread : threads) {
-                    long threadCPUTime = threadBean.getThreadCpuTime(thread.getId());
+                    long threadCpuTime = threadBean.getThreadCpuTime(thread.getId());
 
                     // If thread already monitored, then calculate CPU time since last time
-                    threadCPUTime = threadsCpuTime.merge(thread.getId(), threadCPUTime,
+                    threadCpuTime = threadsCpuTime.merge(thread.getId(), threadCpuTime,
                             (present, newValue) -> newValue - present);
 
-                    totalThreadsCPUTime += threadCPUTime;
+                    totalThreadsCpuTime += threadCpuTime;
                 }
 
                 Map<Long, Double> threadsPower = new HashMap<>();
                 for (Map.Entry<Long, Long> entry : threadsCpuTime.entrySet()) {
-                    double percentageCpuTime = (entry.getValue() * 100.0) / totalThreadsCPUTime;
+                    double percentageCpuTime = (entry.getValue() * 100.0) / totalThreadsCpuTime;
                     double threadPower = processEnergy * (percentageCpuTime / 100.0);
                     threadsPower.put(entry.getKey(), threadPower);
                 }
@@ -238,7 +226,7 @@ public class Agent {
                         String methodName = methodEntry.getKey();
                         double methodPower = threadsPower.get(threadId) * (methodEntry.getValue() / 100.0);
                         // Add power (for 1 sec = energy) to total method energy
-                        methodsEnergy.merge(methodName, methodPower, Double::sum);
+                        status.addMethodConsumedEnergy(methodName, methodPower);
                         methodBuffer.append(methodName).append(',').append(methodPower).append("\n");
                     }
                 }
@@ -253,7 +241,7 @@ public class Agent {
                         String methodName = methodEntry.getKey();
                         double methodPower = threadsPower.get(threadId) * (methodEntry.getValue() / 100.0);
                         // Add power (for 1 sec = energy) to total method energy
-                        methodsEnergyFiltered.merge(methodName, methodPower, Double::sum);
+                        status.addFilteredMethodConsumedEnergy(methodName, methodPower);
                         methodFilteredBuffer.append(methodName).append(',').append(methodPower).append("\n");
                     }
                 }
@@ -292,47 +280,6 @@ public class Agent {
         }
     }
 
-    private static void shutdown(long appPid) {
-        // Close monitoring implementation to release all resources
-        try {
-            cpuMonitoring.close();
-        } catch (Exception e) {}
-
-        Agent.jxlogger.log(Level.INFO, "JoularJX finished monitoring application with ID {0}", appPid);
-        Agent.jxlogger.log(Level.INFO, "Program consumed {0,number,#.##} joules", totalProcessEnergy);
-
-        // Prepare buffer for methods energy
-        StringBuilder buf = new StringBuilder();
-        for (Map.Entry<String, Double> entry : methodsEnergy.entrySet()) {
-            String key = entry.getKey();
-            Double value = entry.getValue();
-            buf.append(key).append(',').append(value).append("\n");
-        }
-
-        // Write to CSV file
-        String fileNameMethods = "joularJX-" + appPid + "-methods-energy.csv";
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethods, true))) {
-            out.write(buf.toString());
-        } catch (Exception ignored) {}
-
-        // Prepare buffer for filtered methods energy
-        StringBuilder bufFil = new StringBuilder();
-        for (Map.Entry<String, Double> entry : methodsEnergyFiltered.entrySet()) {
-            String key = entry.getKey();
-            Double value = entry.getValue();
-            bufFil.append(key).append(',').append(value).append("\n");
-        }
-
-        // Write to CSV file for filtered methods
-        String fileNameMethodsFiltered = "joularJX-" + appPid + "-methods-energy-filtered.csv";
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethodsFiltered, true))) {
-            out.write(bufFil.toString());
-        } catch (Exception ignored) {}
-
-        Agent.jxlogger.log(Level.INFO, "Energy consumption of methods and filtered methods written to {0} and {1} files",
-                new Object[]{fileNameMethods, fileNameMethodsFiltered});
-    }
-
     /**
      * Calculate process energy consumption
      * @param totalCpuUsage Total CPU usage
@@ -340,7 +287,7 @@ public class Agent {
      * @param cpuEnergy CPU energy
      * @return Process energy consumption
      */
-    private static double calculateProcessCPUEnergy(double totalCpuUsage, double processCpuUsage, double cpuEnergy) {
+    private static double calculateProcessCpuEnergy(double totalCpuUsage, double processCpuUsage, double cpuEnergy) {
         return (processCpuUsage * cpuEnergy) / totalCpuUsage;
     }
 
