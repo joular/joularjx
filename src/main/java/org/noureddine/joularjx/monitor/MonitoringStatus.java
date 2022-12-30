@@ -21,12 +21,6 @@ public class MonitoringStatus {
         this.totalConsumedEnergy = 0;
     }
 
-    public double getTotalConsumedEnergy() {
-        synchronized(consumedEnergyLock) {
-            return totalConsumedEnergy;
-        }
-    }
-
     public void addConsumedEnergy(double delta) {
         synchronized(consumedEnergyLock) {
             totalConsumedEnergy += delta;
@@ -39,6 +33,12 @@ public class MonitoringStatus {
 
     public void addFilteredMethodConsumedEnergy(String methodName, double delta) {
         filteredMethodsConsumedEnergy.merge(methodName, delta, Double::sum);
+    }
+
+    public double getTotalConsumedEnergy() {
+        synchronized(consumedEnergyLock) {
+            return totalConsumedEnergy;
+        }
     }
 
     public Map<String, Double> getMethodsConsumedEnergy() {

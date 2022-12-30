@@ -16,10 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -40,43 +37,84 @@ public class AgentProperties {
     /**
      * Loaded configuration properties
      */
-    private final Properties prop = new Properties();
+    private final Properties properties;
+    private final Collection<String> filterMethodNames;
+    private final String powerMonitorPath;
+    private final boolean saveRuntimeData;
+    private final boolean overwriteRuntimeData;
+    private final Level loggerLevel;
 
     /**
      * Instantiate a new instance which will load the properties
      */
-    public AgentProperties(final FileSystem fileSystem) {
-        // Read properties file
-        try (final InputStream input =
-                     new BufferedInputStream(Files.newInputStream(fileSystem.getPath("config.properties")))) {
-            prop.load(input);
-        } catch (IOException e) {
-            System.exit(1);
+    public AgentProperties(FileSystem fileSystem) {
+        this.properties = loadProperties(fileSystem);
+        this.filterMethodNames = loadFilterMethodNames();
+        this.powerMonitorPath = loadPowerMonitorPath();
+        this.saveRuntimeData = loadSaveRuntimeData();
+        this.overwriteRuntimeData = loadOverwriteRuntimeData();
+        this.loggerLevel = loadLoggerLevel();
+    }
+
+    public boolean filtersMethod(String methodName) {
+        for (String filterMethod : filterMethodNames) {
+            if (methodName.startsWith(filterMethod)) {
+                return true;
+            }
         }
-    }
-
-    public List<String> getFilterMethodNames() {
-        String filterMethods = prop.getProperty(FILTER_METHOD_NAME_PROPERTY);
-        if (filterMethods == null || filterMethods.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.asList(filterMethods.split(","));
-    }
-
-    public String getPowerMonitorPath() {
-        return prop.getProperty(POWER_MONITOR_PATH_PROPERTY);
-    }
-
-    public boolean getSaveRuntimeData() {
-        return "true".equalsIgnoreCase(prop.getProperty(SAVE_RUNTIME_DATA_PROPERTY));
-    }
-
-    public boolean getOverwriteRuntimeData() {
-        return "true".equalsIgnoreCase(prop.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY));
+        return false;
     }
 
     public Level getLoggerLevel() {
-        final String loggerLevel = prop.getProperty(LOGGER_LEVEL_PROPERTY);
+        return loggerLevel;
+    }
+
+    public String getPowerMonitorPath() {
+        return powerMonitorPath;
+    }
+
+    public boolean savesRuntimeData() {
+        return saveRuntimeData;
+    }
+
+    public boolean overwritesRuntimeData() {
+        return overwriteRuntimeData;
+    }
+
+    private Properties loadProperties(FileSystem fileSystem) {
+        Properties result = new Properties();
+
+        // Read properties file
+        try (InputStream input = new BufferedInputStream(Files.newInputStream(fileSystem.getPath("config.properties")))) {
+            result.load(input);
+        } catch (IOException e) {
+            System.exit(1);
+        }
+        return result;
+    }
+
+    private Collection<String> loadFilterMethodNames() {
+        String filterMethods = properties.getProperty(FILTER_METHOD_NAME_PROPERTY);
+        if (filterMethods == null || filterMethods.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Set.of(filterMethods.split(","));
+    }
+
+    public String loadPowerMonitorPath() {
+        return properties.getProperty(POWER_MONITOR_PATH_PROPERTY);
+    }
+
+    public boolean loadSaveRuntimeData() {
+        return "true".equalsIgnoreCase(properties.getProperty(SAVE_RUNTIME_DATA_PROPERTY));
+    }
+
+    public boolean loadOverwriteRuntimeData() {
+        return "true".equalsIgnoreCase(properties.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY));
+    }
+
+    public Level loadLoggerLevel() {
+        final String loggerLevel = properties.getProperty(LOGGER_LEVEL_PROPERTY);
         if (loggerLevel == null) {
             return Level.INFO;
         }
