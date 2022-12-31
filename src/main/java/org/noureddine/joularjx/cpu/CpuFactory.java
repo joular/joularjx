@@ -9,7 +9,7 @@
  * Author : Adel Noureddine
  */
 
-package org.noureddine.joularjx.power;
+package org.noureddine.joularjx.cpu;
 
 import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.utils.AgentProperties;
@@ -23,23 +23,23 @@ import java.util.Optional;
 import java.util.logging.Level;
 
 /**
- * Factory class for the {@link CPU} implementation
+ * Factory class for the {@link Cpu} implementation
  */
-public class CPUFactory {
+public class CpuFactory {
 
     /**
      * Private constructor which hides the default one
      */
-    private CPUFactory() {
+    private CpuFactory() {
         
     }
 
     /**
-     * Select the supported {@link CPU} implementation
+     * Select the supported {@link Cpu} implementation
      * @param properties the properties passed to the agent
      * @return the selected CPU implementation
      */
-    public static CPU getCpu(final AgentProperties properties) {
+    public static Cpu getCpu(final AgentProperties properties) {
         // Get OS
         final String osName = System.getProperty("os.name").toLowerCase();
         final String osArch = System.getProperty("os.arch").toLowerCase();
@@ -48,7 +48,7 @@ public class CPUFactory {
             // GNU/Linux
             if (osArch.contains("aarch64") || osArch.contains("arm")) {
                 // Check if Raspberry Pi and use formulas
-                final Optional<RPiModels> rPiModelName = getRPiModelName(osArch);
+                final Optional<RaspberryPiModels> rPiModelName = getRPiModelName(osArch);
                 if (rPiModelName.isPresent()) {
                     return new RaspberryPi(rPiModelName.get());
                 } else {
@@ -63,7 +63,7 @@ public class CPUFactory {
                     File raplFolder = new File(raplFolderPath);
                     if (raplFolder.exists()) {
                         // Rapl is supported
-                        return new RAPLLinux();
+                        return new RaplLinux();
                     } else {
                         // If no RAPL, then no support
                         Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
@@ -93,7 +93,7 @@ public class CPUFactory {
      * @param osArch OS Architecture (arm, aarch64)
      * @return Raspberry Pi model name
      */
-    private static Optional<RPiModels> getRPiModelName(String osArch) {
+    private static Optional<RaspberryPiModels> getRPiModelName(String osArch) {
         String deviceTreeModel = "/proc/device-tree/model";
         File deviceTreeModelFile = new File(deviceTreeModel);
 
@@ -108,33 +108,33 @@ public class CPUFactory {
                 for (String currentLine : allLines) {
                     if (currentLine.contains("Raspberry Pi 400 Rev 1.0")) {
                         if (osArch.contains("aarch64")) {
-                            return Optional.of(RPiModels.RPI_400_10_64);
+                            return Optional.of(RaspberryPiModels.RPI_400_10_64);
                         }
                     }
                     if (currentLine.contains("Raspberry Pi 4 Model B Rev 1.2")) {
                         if (osArch.contains("aarch64")) {
-                            return Optional.of(RPiModels.RPI_4B_12_64);
+                            return Optional.of(RaspberryPiModels.RPI_4B_12_64);
                         } else {
-                            return Optional.of(RPiModels.RPI_4B_12);
+                            return Optional.of(RaspberryPiModels.RPI_4B_12);
                         }
                     } else if (currentLine.contains("Raspberry Pi 4 Model B Rev 1.1")) {
                         if (osArch.contains("aarch64")) {
-                            return Optional.of(RPiModels.RPI_4B_11_64);
+                            return Optional.of(RaspberryPiModels.RPI_4B_11_64);
                         } else {
-                            return Optional.of(RPiModels.RPI_4B_11);
+                            return Optional.of(RaspberryPiModels.RPI_4B_11);
                         }
                     } else if (currentLine.contains("Raspberry Pi 3 Model B Plus Rev 1.3")) {
-                        return Optional.of(RPiModels.RPI_3BP_13);
+                        return Optional.of(RaspberryPiModels.RPI_3BP_13);
                     } else if (currentLine.contains("Raspberry Pi 3 Model B Rev 1.2")) {
-                        return Optional.of(RPiModels.RPI_3B_12);
+                        return Optional.of(RaspberryPiModels.RPI_3B_12);
                     } else if (currentLine.contains("Raspberry Pi 2 Model B Rev 1.1")) {
-                        return Optional.of(RPiModels.RPI_2B_11);
+                        return Optional.of(RaspberryPiModels.RPI_2B_11);
                     } else if (currentLine.contains("Raspberry Pi Model B Plus Rev 1.2")) {
-                        return Optional.of(RPiModels.RPI_1BP_12);
+                        return Optional.of(RaspberryPiModels.RPI_1BP_12);
                     } else if (currentLine.contains("Raspberry Pi Model B Rev 2")) {
-                        return Optional.of(RPiModels.RPI_1B_2);
+                        return Optional.of(RaspberryPiModels.RPI_1B_2);
                     } else if (currentLine.contains("Raspberry Pi Zero W Rev 1.1")) {
-                        return Optional.of(RPiModels.RPI_ZW_11);
+                        return Optional.of(RaspberryPiModels.RPI_ZW_11);
                     }
                 }
             } catch (IOException ignored) {}

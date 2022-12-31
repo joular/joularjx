@@ -2,32 +2,37 @@ package org.noureddine.joularjx.monitor;
 
 import com.sun.management.OperatingSystemMXBean;
 import org.noureddine.joularjx.Agent;
-import org.noureddine.joularjx.power.CPU;
-import org.noureddine.joularjx.power.RAPLLinux;
+import org.noureddine.joularjx.cpu.Cpu;
+import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.management.ThreadMXBean;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.ObjDoubleConsumer;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 
 public class MonitoringHandler implements Runnable {
 
+    private static final String THREAD_NAME = "JoularJX Agent Computation";
+    private static final long SAMPLE_TIME_MILLISECONDS = 1000;
+    private static final long SAMPLE_RATE_MILLISECONDS = 10;
+    private static final int SAMPLE_ITERATIONS = (int) (SAMPLE_TIME_MILLISECONDS / SAMPLE_RATE_MILLISECONDS);
+
     private final long appPid;
     private final AgentProperties properties;
-    private final CPU cpu;
+    private final ResultWriter resultWriter;
+    private final Cpu cpu;
     private final MonitoringStatus status;
     private final OperatingSystemMXBean osBean;
     private final ThreadMXBean threadBean;
 
-    public MonitoringHandler(long appPid, AgentProperties properties, CPU cpu, MonitoringStatus status,
-                             OperatingSystemMXBean osBean, ThreadMXBean threadBean) {
+    public MonitoringHandler(long appPid, AgentProperties properties, ResultWriter resultWriter, Cpu cpu,
+                             MonitoringStatus status, OperatingSystemMXBean osBean, ThreadMXBean threadBean) {
         this.appPid = appPid;
         this.properties = properties;
+        this.resultWriter = resultWriter;
         this.cpu = cpu;
         this.status = status;
         this.osBean = osBean;
@@ -36,7 +41,7 @@ public class MonitoringHandler implements Runnable {
 
     @Override
     public void run() {
-        Thread.currentThread().setName("JoularJX Agent Computation");
+        Thread.currentThread().setName(THREAD_NAME);
         Agent.jxlogger.log(Level.INFO, "Started monitoring application with ID {0}", appPid);
 
         // CPU time for each thread
@@ -44,59 +49,17 @@ public class MonitoringHandler implements Runnable {
 
         while (true) {
             try {
-                Map<Long, Map<String, Integer>> methodsStats = new HashMap<>();
-                Map<Long, Map<String, Integer>> methodsStatsFiltered = new HashMap<>();
-                Set<Thread> threads = Thread.getAllStackTraces().keySet();
+                double energyBefore = cpu.getInitialPower();
 
-                final double energyBefore;
-                if (cpu instanceof RAPLLinux) {
-                    // Get CPU energy consumption with Intel RAPL
-                    energyBefore = cpu.getPower(0);
-                } else {
-                    energyBefore = 0.0;
-                }
-
-                int duration = 0;
-                while (duration < 1000) {
-                    for (Thread thread : threads) {
-                        long threadId = thread.getId();
-                        methodsStats.computeIfAbsent(threadId, tID -> new HashMap<>());
-                        methodsStatsFiltered.computeIfAbsent(threadId, tID -> new HashMap<>());
-
-                        // Only check runnable threads (not waiting or blocked)
-                        if (thread.getState() == Thread.State.RUNNABLE) {
-                            int onlyFirst = 0;
-                            int onlyFirstFiltered = 0;
-                            for (StackTraceElement ste : thread.getStackTrace()) {
-                                String methodName = ste.getClassName() + "." + ste.getMethodName();
-                                if (onlyFirst == 0) {
-                                    Map<String, Integer> methodData = methodsStats.get(threadId);
-                                    methodData.merge(methodName, 1, Integer::sum);
-                                }
-                                onlyFirst++;
-
-                                // Check filtered methods if in stacktrace
-                                if (properties.filtersMethod(methodName)) {
-                                    if (onlyFirstFiltered == 0) {
-                                        Map<String, Integer> methodData = methodsStatsFiltered.get(threadId);
-                                        methodData.merge(methodName, 1, Integer::sum);
-                                    }
-                                    onlyFirstFiltered++;
-                                }
-                            }
-                        }
-                    }
-
-                    duration += 10;
-                    // Sleep for 10 ms
-                    Thread.sleep(10);
-                }
+                var samples = sample();
+                var methodsStats = extractStats(samples, methodName -> true);
+                var methodsStatsFiltered = extractStats(samples, properties::filtersMethod);
 
                 double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
                 double processCpuLoad = osBean.getProcessCpuLoad();
 
-                final double energyAfter = cpu.getPower(cpuLoad);
-                final double cpuEnergy = energyAfter - energyBefore;
+                double energyAfter = cpu.getCurrentPower(cpuLoad);
+                double cpuEnergy = energyAfter - energyBefore;
 
                 // Calculate CPU energy consumption of the process of the JVM all its apps
                 double processEnergy = calculateProcessCpuEnergy(cpuLoad, processCpuLoad, cpuEnergy);
@@ -108,83 +71,102 @@ public class MonitoringHandler implements Runnable {
                 // CPU energy for JVM process
                 // CPU energy for all processes
                 // We need to calculate energy for each thread
-                long totalThreadsCpuTime = 0;
-                for (Thread thread : threads) {
-                    long threadCpuTime = threadBean.getThreadCpuTime(thread.getId());
+                long totalThreadsCpuTime = updateThreadsCpuTime(threadsCpuTime);
+                var threadCpuTimePercentages = getThreadsCpuTimePercentage(threadsCpuTime, totalThreadsCpuTime, processEnergy);
 
-                    // If thread already monitored, then calculate CPU time since last time
-                    threadCpuTime = threadsCpuTime.merge(thread.getId(), threadCpuTime,
-                            (present, newValue) -> newValue - present);
+                updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy);
+                updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages, status::addFilteredMethodConsumedEnergy);
 
-                    totalThreadsCpuTime += threadCpuTime;
-                }
+                shareResults("all", methodsStats, threadCpuTimePercentages);
+                shareResults("filtered", methodsStatsFiltered, threadCpuTimePercentages);
 
-                Map<Long, Double> threadsPower = new HashMap<>();
-                for (Map.Entry<Long, Long> entry : threadsCpuTime.entrySet()) {
-                    double percentageCpuTime = (entry.getValue() * 100.0) / totalThreadsCpuTime;
-                    double threadPower = processEnergy * (percentageCpuTime / 100.0);
-                    threadsPower.put(entry.getKey(), threadPower);
-                }
+                Thread.sleep(SAMPLE_RATE_MILLISECONDS);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            } catch (IOException exception) {
+                throw new RuntimeException(exception);
+            }
+        }
+    }
 
-                // Now we have power for each thread, and stats for methods in each thread
-                // We allocated power for each method based on statistics
-                StringBuilder methodBuffer = new StringBuilder();
-                for (Map.Entry<Long, Map<String, Integer>> entry : methodsStats.entrySet()) {
-                    long threadId = entry.getKey();
-                    for (Map.Entry<String, Integer> methodEntry : entry.getValue().entrySet()) {
-                        String methodName = methodEntry.getKey();
-                        double methodPower = threadsPower.get(threadId) * (methodEntry.getValue() / 100.0);
-                        // Add power (for 1 sec = energy) to total method energy
-                        status.addMethodConsumedEnergy(methodName, methodPower);
-                        methodBuffer.append(methodName).append(',').append(methodPower).append("\n");
+    private Map<Long, List<StackTraceElement[]>> sample() {
+        Map<Long, List<StackTraceElement[]>> result = new HashMap<>();
+        try {
+            for (int duration = 0; duration < SAMPLE_TIME_MILLISECONDS; duration += SAMPLE_RATE_MILLISECONDS) {
+                for (var entry : Thread.getAllStackTraces().entrySet()) {
+                    // Only check runnable threads (not waiting or blocked)
+                    if (entry.getKey().getState() == Thread.State.RUNNABLE) {
+                        var target = result.computeIfAbsent(entry.getKey().getId(),
+                                t -> new ArrayList<>(SAMPLE_ITERATIONS));
+                        target.add(entry.getValue());
                     }
                 }
 
-                // For filtered methods
-                // Now we have power for each thread, and stats for methods in each thread
-                // We allocated power for each method based on statistics
-                StringBuilder methodFilteredBuffer = new StringBuilder();
-                for (Map.Entry<Long, Map<String, Integer>> entry : methodsStatsFiltered.entrySet()) {
-                    long threadId = entry.getKey();
-                    for (Map.Entry<String, Integer> methodEntry : entry.getValue().entrySet()) {
-                        String methodName = methodEntry.getKey();
-                        double methodPower = threadsPower.get(threadId) * (methodEntry.getValue() / 100.0);
-                        // Add power (for 1 sec = energy) to total method energy
-                        status.addFilteredMethodConsumedEnergy(methodName, methodPower);
-                        methodFilteredBuffer.append(methodName).append(',').append(methodPower).append("\n");
+                Thread.sleep(SAMPLE_RATE_MILLISECONDS);
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+        }
+
+        return result;
+    }
+
+    private Map<Long, Map<String, Integer>> extractStats(Map<Long, List<StackTraceElement[]>> samples,
+                                                           Predicate<String> covers) {
+        Map<Long, Map<String, Integer>> stats = new HashMap<>();
+
+        for (var entry : samples.entrySet()) {
+            Map<String, Integer> target = new HashMap<>();
+            stats.put(entry.getKey(), target);
+
+            for (StackTraceElement[] stackTrace : entry.getValue()) {
+                for (StackTraceElement stackTraceElement : stackTrace) {
+                    String methodName = stackTraceElement.getClassName() + "." + stackTraceElement.getMethodName();
+                    if (covers.test(methodName)) {
+                        target.merge(methodName, 1, Integer::sum);
+                        break;
                     }
                 }
+            }
+        }
 
-                if (properties.savesRuntimeData()) {
-                    String fileNameMethods = "joularJX-" + appPid + "-methods-power.csv";
-                    String fileNameMethodsFiltered = "joularJX-" + appPid + "-methods-filtered-power.csv";
-                    if (!properties.overwritesRuntimeData()) {
-                        long unixTime = Instant.now().getEpochSecond();
-                        fileNameMethods = "joularJX-" + appPid + "-" + unixTime + "-methods-power.csv";
-                        fileNameMethodsFiltered = "joularJX-" + appPid + "-" + unixTime + "-methods-filtered-power.csv";
-                    }
+        return stats;
+    }
 
-                    // Write to CSV file
-                    try {
-                        BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethods, false));
-                        out.write(methodBuffer.toString());
-                        out.close();
-                    } catch (Exception ignored) {
-                    }
+    private long updateThreadsCpuTime(Map<Long, Long> threadsCpuTime) {
+        long totalThreadsCpuTime = 0;
+        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+            long threadCpuTime = threadBean.getThreadCpuTime(thread.getId());
 
-                    // Write to CSV file for filtered methods
-                    try {
-                        BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethodsFiltered, false));
-                        out.write(methodFilteredBuffer.toString());
-                        out.close();
-                    } catch (Exception ignored) {
-                    }
-                }
+            // If thread already monitored, then calculate CPU time since last time
+            threadCpuTime = threadsCpuTime.merge(thread.getId(), threadCpuTime,
+                    (present, newValue) -> newValue - present);
 
-                // Sleep for 10 milliseconds
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            totalThreadsCpuTime += threadCpuTime;
+        }
+        return totalThreadsCpuTime;
+    }
+
+    private Map<Long, Double> getThreadsCpuTimePercentage(Map<Long, Long> threadsCpuTime,
+                                                          long totalThreadsCpuTime,
+                                                          double processEnergy) {
+        Map<Long, Double> threadsPower = new HashMap<>();
+        for (var entry : threadsCpuTime.entrySet()) {
+            double percentageCpuTime = (entry.getValue() * 100.0) / totalThreadsCpuTime;
+            double threadPower = processEnergy * (percentageCpuTime / 100.0);
+            threadsPower.put(entry.getKey(), threadPower);
+        }
+        return threadsPower;
+    }
+
+    private void updateMethodsConsumedEnergy(Map<Long, Map<String, Integer>> methodsStats,
+                                            Map<Long, Double> threadCpuTimePercentages,
+                                            ObjDoubleConsumer<String> updateMethodConsumedEnergy) {
+        for (var threadEntry : methodsStats.entrySet()) {
+            double totalEncounters = threadEntry.getValue().values().stream().mapToDouble(i -> i).sum();
+            for (var methodEntry : threadEntry.getValue().entrySet()) {
+                double methodPower = threadCpuTimePercentages.get(threadEntry.getKey()) * (methodEntry.getValue() / totalEncounters);
+                updateMethodConsumedEnergy.accept(methodEntry.getKey(), methodPower);
             }
         }
     }
@@ -198,5 +180,23 @@ public class MonitoringHandler implements Runnable {
      */
     private double calculateProcessCpuEnergy(double totalCpuUsage, double processCpuUsage, double cpuEnergy) {
         return (processCpuUsage * cpuEnergy) / totalCpuUsage;
+    }
+
+    private void shareResults(String name,
+                              Map<Long, Map<String, Integer>> methodsStats,
+                              Map<Long, Double> threadCpuTimePercentages) throws IOException {
+        if (!properties.savesRuntimeData()) {
+            return;
+        }
+
+        String fileName = properties.overwritesRuntimeData() ? name : name + "-" + System.currentTimeMillis();
+        resultWriter.setTarget(fileName);
+
+        for (var stats : methodsStats.entrySet()) {
+            for (var methodEntry : stats.getValue().entrySet()) {
+                double methodPower = threadCpuTimePercentages.get(stats.getKey()) * (methodEntry.getValue() / 100.0);
+                resultWriter.write(methodEntry.getKey(), methodPower);
+            }
+        }
     }
 }

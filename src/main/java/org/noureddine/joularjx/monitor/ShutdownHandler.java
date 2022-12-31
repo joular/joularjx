@@ -1,7 +1,7 @@
 package org.noureddine.joularjx.monitor;
 
 import org.noureddine.joularjx.Agent;
-import org.noureddine.joularjx.power.CPU;
+import org.noureddine.joularjx.cpu.Cpu;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -11,10 +11,10 @@ import java.util.logging.Level;
 public class ShutdownHandler implements Runnable {
 
     private final long appPid;
-    private final CPU cpu;
+    private final Cpu cpu;
     private final MonitoringStatus status;
 
-    public ShutdownHandler(long appPid, CPU cpu, MonitoringStatus status) {
+    public ShutdownHandler(long appPid, Cpu cpu, MonitoringStatus status) {
         this.appPid = appPid;
         this.cpu = cpu;
         this.status = status;

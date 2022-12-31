@@ -15,8 +15,10 @@ import com.sun.management.OperatingSystemMXBean;
 import org.noureddine.joularjx.monitor.MonitoringHandler;
 import org.noureddine.joularjx.monitor.MonitoringStatus;
 import org.noureddine.joularjx.monitor.ShutdownHandler;
-import org.noureddine.joularjx.power.CPU;
-import org.noureddine.joularjx.power.CPUFactory;
+import org.noureddine.joularjx.cpu.Cpu;
+import org.noureddine.joularjx.cpu.CpuFactory;
+import org.noureddine.joularjx.result.CsvResultWriter;
+import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
@@ -50,14 +52,15 @@ public class Agent {
         // Get Process ID of current application
         long appPid = ProcessHandle.current().pid();
 
-        CPU cpu = CPUFactory.getCpu(properties);
+        Cpu cpu = CpuFactory.getCpu(properties);
 
         OperatingSystemMXBean osBean = createOperatingSystemBean(cpu);
         MonitoringStatus status = new MonitoringStatus();
+        ResultWriter resultWriter = new CsvResultWriter(appPid);
 
         Agent.jxlogger.log(Level.INFO, "Initialization finished");
 
-        new Thread(() -> new MonitoringHandler(appPid, properties, cpu, status, osBean, threadBean)).start();
+        new Thread(() -> new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean)).start();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> new ShutdownHandler(appPid, cpu, status)));
     }
 
@@ -77,7 +80,7 @@ public class Agent {
         return threadBean;
     }
 
-    private static OperatingSystemMXBean createOperatingSystemBean(CPU cpu) {
+    private static OperatingSystemMXBean createOperatingSystemBean(Cpu cpu) {
         // Get OS MxBean to collect CPU and Process loads
         OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 
@@ -93,7 +96,9 @@ public class Agent {
             i++;
             try {
                 Thread.sleep(500);
-            } catch (Exception ignoredException) {}
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            }
         }
         return osBean;
     }

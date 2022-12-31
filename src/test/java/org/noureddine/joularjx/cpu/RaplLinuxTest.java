@@ -9,7 +9,7 @@
  * Author : Adel Noureddine
  */
 
-package org.noureddine.joularjx.power;
+package org.noureddine.joularjx.cpu;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
@@ -31,17 +31,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RAPLLinuxTest {
+class RaplLinuxTest {
 
     private FileSystem fileSystem;
 
-    private CPU cpu;
+    private Cpu cpu;
 
     @BeforeEach
     void init() throws IOException {
         Agent.jxlogger = JoularJXLogging.getInstance(Level.INFO).getLogger();
         fileSystem = MemoryFileSystemBuilder.newLinux().build();
-        cpu = new RAPLLinux(fileSystem);
+        cpu = new RaplLinux(fileSystem);
     }
 
     @AfterEach
@@ -59,30 +59,30 @@ class RAPLLinuxTest {
 
     @Test
     void psysFileSupported() throws IOException {
-        Path psys = fileSystem.getPath(RAPLLinux.RAPL_PSYS);
+        Path psys = fileSystem.getPath(RaplLinux.RAPL_PSYS);
         Files.createDirectories(psys.getParent());
         Files.writeString(psys, "1000000");
 
         cpu.initialize();
 
-        assertEquals(1.0, cpu.getPower(0));
+        assertEquals(1.0, cpu.getCurrentPower(0));
     }
 
     @Test
     void pkgFileSupported() throws IOException {
-        Path pkg = fileSystem.getPath(RAPLLinux.RAPL_PKG);
+        Path pkg = fileSystem.getPath(RaplLinux.RAPL_PKG);
         Files.createDirectories(pkg.getParent());
         Files.writeString(pkg, "1000000");
 
         cpu.initialize();
 
-        assertEquals(1.0, cpu.getPower(0));
+        assertEquals(1.0, cpu.getCurrentPower(0));
     }
 
     @Test
     void pkgAndDramFileSupported() throws IOException {
-        Path pkg = fileSystem.getPath(RAPLLinux.RAPL_PKG);
-        Path dram = fileSystem.getPath(RAPLLinux.RAPL_DRAM);
+        Path pkg = fileSystem.getPath(RaplLinux.RAPL_PKG);
+        Path dram = fileSystem.getPath(RaplLinux.RAPL_DRAM);
 
         Files.createDirectories(pkg.getParent());
         Files.createDirectories(dram.getParent());
@@ -92,13 +92,13 @@ class RAPLLinuxTest {
 
         cpu.initialize();
 
-        assertEquals(2.0, cpu.getPower(0));
+        assertEquals(2.0, cpu.getCurrentPower(0));
     }
 
     @Test
     @ExpectSystemExitWithStatus(1)
     void raplFileNotReadable() throws IOException {
-        Path psys = fileSystem.getPath(RAPLLinux.RAPL_PSYS);
+        Path psys = fileSystem.getPath(RaplLinux.RAPL_PSYS);
         Files.createDirectories(psys.getParent());
         Files.writeString(psys, "1000000");
 
