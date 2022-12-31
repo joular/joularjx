@@ -40,6 +40,12 @@ public class CsvResultWriter implements ResultWriter {
         writer.write(String.format("%s,%.4f%n", methodName, methodPower));
     }
 
+    @Override
+    public void closeTarget() throws IOException {
+        writer.get().close();
+        writer.remove();
+    }
+
     private Path getPath(String name) {
         return Path.of(name + ".csv");
     }

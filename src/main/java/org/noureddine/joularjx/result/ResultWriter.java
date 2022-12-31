@@ -7,4 +7,6 @@ public interface ResultWriter {
     void setTarget(String name, boolean overwrite) throws IOException;
 
     void write(String methodName, double methodPower) throws IOException;
+
+    void closeTarget() throws IOException;
 }

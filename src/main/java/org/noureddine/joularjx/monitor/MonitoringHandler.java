@@ -195,6 +195,7 @@ public class MonitoringHandler implements Runnable {
         String fileName = properties.overwritesRuntimeData() ?
                 String.format("joularJX-%d-%s-methods-power", appPid, modeName) :
                 String.format("joularJX-%d-%d-%s-methods-power", appPid, System.currentTimeMillis(), modeName);
+
         resultWriter.setTarget(fileName, true);
 
         for (var stats : methodsStats.entrySet()) {
@@ -203,5 +204,7 @@ public class MonitoringHandler implements Runnable {
                 resultWriter.write(methodEntry.getKey(), methodPower);
             }
         }
+
+        resultWriter.closeTarget();
     }
 }

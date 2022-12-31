@@ -49,10 +49,13 @@ public class ShutdownHandler implements Runnable {
 
     private void shareResults(String modeName, Map<String, Double> methodsConsumedEnergy) throws IOException {
         String fileName = String.format("joularJX-%d-%s-methods-energy", appPid, modeName);
+
         resultWriter.setTarget(fileName, false);
 
         for (var entry : methodsConsumedEnergy.entrySet()) {
             resultWriter.write(entry.getKey(), entry.getValue());
         }
+
+        resultWriter.closeTarget();
     }
 }
