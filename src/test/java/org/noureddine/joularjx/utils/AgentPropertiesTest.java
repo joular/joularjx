@@ -11,15 +11,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AgentPropertiesTest {
 
@@ -39,10 +34,10 @@ class AgentPropertiesTest {
             AgentProperties properties = new AgentProperties(fs);
 
             assertAll(
-                    () -> assertTrue(properties.getFilterMethodNames().isEmpty()),
+                    () -> assertFalse(properties.filtersMethod("")),
                     () -> assertNull(properties.getPowerMonitorPath()),
-                    () -> assertFalse(properties.getOverwriteRuntimeData()),
-                    () -> assertFalse(properties.getSaveRuntimeData()),
+                    () -> assertFalse(properties.overwritesRuntimeData()),
+                    () -> assertFalse(properties.savesRuntimeData()),
                     () -> assertEquals(Level.INFO, properties.getLoggerLevel())
             );
         }
@@ -58,10 +53,10 @@ class AgentPropertiesTest {
             AgentProperties properties = new AgentProperties(fs);
 
             assertAll(
-                    () -> assertEquals(List.of("org.noureddine.joularjx"), properties.getFilterMethodNames()),
+                    () -> assertTrue(properties.filtersMethod("org.noureddine.joularjx")),
                     () -> assertEquals("C:\\joularjx\\PowerMonitor.exe", properties.getPowerMonitorPath()),
-                    () -> assertTrue(properties.getSaveRuntimeData()),
-                    () -> assertTrue(properties.getOverwriteRuntimeData())
+                    () -> assertTrue(properties.savesRuntimeData()),
+                    () -> assertTrue(properties.overwritesRuntimeData())
             );
         }
     }
@@ -75,7 +70,8 @@ class AgentPropertiesTest {
             AgentProperties properties = new AgentProperties(fs);
 
             assertAll(
-                    () -> assertEquals(List.of("org.noureddine.joularjx", "org.noureddine.joularjx2"), properties.getFilterMethodNames()),
+                    () -> assertTrue(properties.filtersMethod("org.noureddine.joularjx")),
+                    () -> assertTrue(properties.filtersMethod("org.noureddine.joularjx2")),
                     () -> assertNull(properties.getPowerMonitorPath())
             );
         }
@@ -90,8 +86,8 @@ class AgentPropertiesTest {
             AgentProperties properties = new AgentProperties(fs);
 
             assertAll(
-                    () -> assertTrue(properties.getSaveRuntimeData()),
-                    () -> assertFalse(properties.getOverwriteRuntimeData())
+                    () -> assertTrue(properties.savesRuntimeData()),
+                    () -> assertFalse(properties.overwritesRuntimeData())
             );
         }
     }
