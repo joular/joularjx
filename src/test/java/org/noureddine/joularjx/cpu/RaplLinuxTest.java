@@ -16,7 +16,6 @@ import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.IOException;
@@ -26,12 +25,13 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RaplLinuxTest {
+
+    private static final Logger logger = JoularJXLogging.updateLevel(Level.INFO);
 
     private FileSystem fileSystem;
 
@@ -39,7 +39,6 @@ class RaplLinuxTest {
 
     @BeforeEach
     void init() throws IOException {
-        Agent.jxlogger = JoularJXLogging.getInstance(Level.INFO).getLogger();
         fileSystem = MemoryFileSystemBuilder.newLinux().build();
         cpu = new RaplLinux(fileSystem);
     }
@@ -48,7 +47,6 @@ class RaplLinuxTest {
     void cleanup() throws Exception {
         fileSystem.close();
         cpu.close();
-        Agent.jxlogger = null;
     }
 
     @Test

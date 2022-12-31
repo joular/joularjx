@@ -1,14 +1,17 @@
 package org.noureddine.joularjx.monitor;
 
-import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.cpu.Cpu;
+import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ShutdownHandler implements Runnable {
+
+    private static final Logger logger = JoularJXLogging.getLogger();
 
     private final long appPid;
     private final Cpu cpu;
@@ -27,8 +30,8 @@ public class ShutdownHandler implements Runnable {
             cpu.close();
         } catch (Exception e) {}
 
-        Agent.jxlogger.log(Level.INFO, "JoularJX finished monitoring application with ID {0}", appPid);
-        Agent.jxlogger.log(Level.INFO, "Program consumed {0,number,#.##} joules", status.getTotalConsumedEnergy());
+        logger.log(Level.INFO, "JoularJX finished monitoring application with ID {0}", appPid);
+        logger.log(Level.INFO, "Program consumed {0,number,#.##} joules", status.getTotalConsumedEnergy());
 
         // Prepare buffer for methods energy
         StringBuilder buf = new StringBuilder();
@@ -58,7 +61,7 @@ public class ShutdownHandler implements Runnable {
             out.write(bufFil.toString());
         } catch (Exception ignored) {}
 
-        Agent.jxlogger.log(Level.INFO, "Energy consumption of methods and filtered methods written to {0} and {1} files",
+        logger.log(Level.INFO, "Energy consumption of methods and filtered methods written to {0} and {1} files",
                 new Object[]{fileNameMethods, fileNameMethodsFiltered});
     }
 }

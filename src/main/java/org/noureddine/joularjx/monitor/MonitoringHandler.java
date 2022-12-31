@@ -1,24 +1,28 @@
 package org.noureddine.joularjx.monitor;
 
 import com.sun.management.OperatingSystemMXBean;
-import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.cpu.Cpu;
 import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
+import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.IOException;
 import java.lang.management.ThreadMXBean;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.ObjDoubleConsumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MonitoringHandler implements Runnable {
 
-    private static final String THREAD_NAME = "JoularJX Agent Computation";
     private static final long SAMPLE_TIME_MILLISECONDS = 1000;
     private static final long SAMPLE_RATE_MILLISECONDS = 10;
     private static final int SAMPLE_ITERATIONS = (int) (SAMPLE_TIME_MILLISECONDS / SAMPLE_RATE_MILLISECONDS);
+    private static final Logger logger = JoularJXLogging.getLogger();
 
     private final long appPid;
     private final AgentProperties properties;
@@ -41,8 +45,7 @@ public class MonitoringHandler implements Runnable {
 
     @Override
     public void run() {
-        Thread.currentThread().setName(THREAD_NAME);
-        Agent.jxlogger.log(Level.INFO, "Started monitoring application with ID {0}", appPid);
+        logger.log(Level.INFO, "Started monitoring application with ID {0}", appPid);
 
         // CPU time for each thread
         Map<Long, Long> threadsCpuTime = new HashMap<>();

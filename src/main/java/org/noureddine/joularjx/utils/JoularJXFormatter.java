@@ -18,14 +18,14 @@ import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
 public class JoularJXFormatter extends Formatter {
-    private final DateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
+    private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
 
     @Override
-    public String format(LogRecord record) {
+    public String format(LogRecord logRecord) {
         StringBuilder builder = new StringBuilder(1000);
-        builder.append(df.format(new Date(record.getMillis()))).append(" - ");
-        builder.append("[").append(record.getLevel()).append("] - ");
-        builder.append(formatMessage(record));
+        builder.append(dateFormat.format(new Date(logRecord.getMillis()))).append(" - ");
+        builder.append("[").append(logRecord.getLevel()).append("] - ");
+        builder.append(formatMessage(logRecord));
         builder.append("\n");
         return builder.toString();
     }

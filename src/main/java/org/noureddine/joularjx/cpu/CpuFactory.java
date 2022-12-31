@@ -11,8 +11,8 @@
 
 package org.noureddine.joularjx.cpu;
 
-import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.utils.AgentProperties;
+import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,18 +21,14 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Factory class for the {@link Cpu} implementation
  */
 public class CpuFactory {
 
-    /**
-     * Private constructor which hides the default one
-     */
-    private CpuFactory() {
-        
-    }
+    private static final Logger logger = JoularJXLogging.getLogger();
 
     /**
      * Select the supported {@link Cpu} implementation
@@ -53,7 +49,7 @@ public class CpuFactory {
                     return new RaspberryPi(rPiModelName.get());
                 } else {
                     // Platform not supported
-                    Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
+                    logger.log(Level.SEVERE, "Platform not supported. Exiting...");
                     System.exit(1);
                 }
             } else {
@@ -66,12 +62,12 @@ public class CpuFactory {
                         return new RaplLinux();
                     } else {
                         // If no RAPL, then no support
-                        Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
+                        logger.log(Level.SEVERE, "Platform not supported. Exiting...");
                         System.exit(1);
                     }
                 } catch (Exception e) {
                     // If no RAPL, then no support
-                    Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
+                    logger.log(Level.SEVERE, "Platform not supported. Exiting...");
                     System.exit(1);
                 }
             }
@@ -81,7 +77,7 @@ public class CpuFactory {
             return new IntelWindows(properties.getPowerMonitorPath());
         } else {
             // Other platforms not supported
-            Agent.jxlogger.log(Level.SEVERE, "Platform not supported. Exiting...");
+            logger.log(Level.SEVERE, "Platform not supported. Exiting...");
             System.exit(1);
         }
         // Should never reach here because we stop the agent. But the compiler needs the return to compile the code.
@@ -143,4 +139,10 @@ public class CpuFactory {
         return Optional.empty();
     }
 
+    /**
+     * Private constructor which hides the default one
+     */
+    private CpuFactory() {
+
+    }
 }

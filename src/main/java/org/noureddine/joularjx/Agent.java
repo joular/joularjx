@@ -31,7 +31,9 @@ import java.util.logging.Logger;
 
 public class Agent {
 
-    public static Logger jxlogger;
+    private static final String NAME_THREAD_NAME = "JoularJX Agent Thread";
+    private static final String COMPUTATION_THREAD_NAME = "JoularJX Agent Computation";
+    private static final Logger logger = JoularJXLogging.getLogger();
 
     /**
      * JVM hook to statically load the java agent at startup.
@@ -39,9 +41,9 @@ public class Agent {
      * will be called. Then the real application main method will be called.
      */
     public static void premain(String args, Instrumentation inst) {
-        Thread.currentThread().setName("JoularJX Agent Thread");
+        Thread.currentThread().setName(NAME_THREAD_NAME);
         AgentProperties properties = new AgentProperties(FileSystems.getDefault());
-        Agent.jxlogger = JoularJXLogging.getInstance(properties.getLoggerLevel()).getLogger();
+        JoularJXLogging.updateLevel(properties.getLoggerLevel());
 
         System.out.println("+---------------------------------+");
         System.out.println("| JoularJX Agent Version 1.5      |");
@@ -57,18 +59,20 @@ public class Agent {
         OperatingSystemMXBean osBean = createOperatingSystemBean(cpu);
         MonitoringStatus status = new MonitoringStatus();
         ResultWriter resultWriter = new CsvResultWriter(appPid);
+        MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean);
+        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, cpu, status);
 
-        Agent.jxlogger.log(Level.INFO, "Initialization finished");
+        logger.log(Level.INFO, "Initialization finished");
 
-        new Thread(() -> new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean)).start();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> new ShutdownHandler(appPid, cpu, status)));
+        new Thread(monitoringHandler, COMPUTATION_THREAD_NAME).start();
+        Runtime.getRuntime().addShutdownHook(new Thread(shutdownHandler));
     }
 
     private static ThreadMXBean createThreadBean() {
         ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
         // Check if CPU Time measurement is supported by the JVM. Quit otherwise
         if (!threadBean.isThreadCpuTimeSupported()) {
-            Agent.jxlogger.log(Level.SEVERE, "Thread CPU Time is not supported on this Java Virtual Machine. Existing...");
+            logger.log(Level.SEVERE, "Thread CPU Time is not supported on this Java Virtual Machine. Existing...");
             System.exit(1);
         }
 
@@ -85,15 +89,13 @@ public class Agent {
         OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 
         // Loop for a couple of seconds to initialize OSMXBean to get accurate details (first call will return -1)
-        int i = 0;
-        Agent.jxlogger.log(Level.INFO, "Please wait while initializing JoularJX...");
-        while (i < 2) {
+        logger.log(Level.INFO, "Please wait while initializing JoularJX...");
+        for (int i = 0; i < 2; i++) {
             osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
             osBean.getProcessCpuLoad();
 
             cpu.initialize();
 
-            i++;
             try {
                 Thread.sleep(500);
             } catch (InterruptedException exception) {

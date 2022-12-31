@@ -11,7 +11,7 @@
 
 package org.noureddine.joularjx.cpu;
 
-import org.noureddine.joularjx.Agent;
+import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -21,8 +21,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RaplLinux implements Cpu {
+
+    private static final Logger logger = JoularJXLogging.getLogger();
 
     static final String RAPL_PSYS = "/sys/class/powercap/intel-rapl/intel-rapl:1/energy_uj";
 
@@ -85,7 +88,7 @@ public class RaplLinux implements Cpu {
         }
 
         if (raplFilesToRead.isEmpty()) {
-            Agent.jxlogger.log(Level.SEVERE, "Found no RAPL files to read the energy measurement from. Exit ...");
+            logger.log(Level.SEVERE, "Found no RAPL files to read the energy measurement from. Exit ...");
             System.exit(1);
         }
     }
@@ -97,7 +100,7 @@ public class RaplLinux implements Cpu {
      */
     private void checkFileReadable(final Path file) {
         if (!Files.isReadable(file)) {
-            Agent.jxlogger.log(Level.SEVERE, "Failed to get RAPL energy readings. Did you run JoularJX with elevated privileges (sudo)?");
+            logger.log(Level.SEVERE, "Failed to get RAPL energy readings. Did you run JoularJX with elevated privileges (sudo)?");
             System.exit(1);
         }
     }

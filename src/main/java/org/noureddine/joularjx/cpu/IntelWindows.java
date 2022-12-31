@@ -11,14 +11,17 @@
 
 package org.noureddine.joularjx.cpu;
 
-import org.noureddine.joularjx.Agent;
+import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class IntelWindows implements Cpu {
+
+    private static final Logger logger = JoularJXLogging.getLogger();
 
     /**
      * Path for our power monitor program on Windows
@@ -50,7 +53,7 @@ public class IntelWindows implements Cpu {
             initialized = true;
         } catch (IOException ex) {
             ex.printStackTrace();
-            Agent.jxlogger.log(Level.SEVERE, "Can't start power monitor on Windows. Existing...");
+            logger.log(Level.SEVERE, "Can't start power monitor on Windows. Existing...");
             System.exit(1);
         }
     }
