@@ -185,15 +185,17 @@ public class MonitoringHandler implements Runnable {
         return (processCpuUsage * cpuEnergy) / totalCpuUsage;
     }
 
-    private void shareResults(String name,
+    private void shareResults(String modeName,
                               Map<Long, Map<String, Integer>> methodsStats,
                               Map<Long, Double> threadCpuTimePercentages) throws IOException {
         if (!properties.savesRuntimeData()) {
             return;
         }
 
-        String fileName = properties.overwritesRuntimeData() ? name : name + "-" + System.currentTimeMillis();
-        resultWriter.setTarget(fileName);
+        String fileName = properties.overwritesRuntimeData() ?
+                String.format("joularJX-%d-%s-methods-power", appPid, modeName) :
+                String.format("joularJX-%d-%d-%s-methods-power", appPid, System.currentTimeMillis(), modeName);
+        resultWriter.setTarget(fileName, true);
 
         for (var stats : methodsStats.entrySet()) {
             for (var methodEntry : stats.getValue().entrySet()) {

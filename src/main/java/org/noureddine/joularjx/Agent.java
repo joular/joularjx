@@ -58,9 +58,9 @@ public class Agent {
 
         OperatingSystemMXBean osBean = createOperatingSystemBean(cpu);
         MonitoringStatus status = new MonitoringStatus();
-        ResultWriter resultWriter = new CsvResultWriter(appPid);
+        ResultWriter resultWriter = new CsvResultWriter();
         MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean);
-        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, cpu, status);
+        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriter, cpu, status);
 
         logger.log(Level.INFO, "Initialization finished");
 

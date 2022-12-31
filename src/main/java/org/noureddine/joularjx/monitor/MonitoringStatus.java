@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MonitoringStatus {
 
     private final Object consumedEnergyLock;
-
     private final Map<String, Double> methodsConsumedEnergy;
     private final Map<String, Double> filteredMethodsConsumedEnergy;
 
@@ -22,7 +21,7 @@ public class MonitoringStatus {
     }
 
     public void addConsumedEnergy(double delta) {
-        synchronized(consumedEnergyLock) {
+        synchronized (consumedEnergyLock) {
             totalConsumedEnergy += delta;
         }
     }
@@ -36,7 +35,7 @@ public class MonitoringStatus {
     }
 
     public double getTotalConsumedEnergy() {
-        synchronized(consumedEnergyLock) {
+        synchronized (consumedEnergyLock) {
             return totalConsumedEnergy;
         }
     }

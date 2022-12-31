@@ -1,10 +1,10 @@
 package org.noureddine.joularjx.monitor;
 
 import org.noureddine.joularjx.cpu.Cpu;
+import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,11 +14,13 @@ public class ShutdownHandler implements Runnable {
     private static final Logger logger = JoularJXLogging.getLogger();
 
     private final long appPid;
+    private final ResultWriter resultWriter;
     private final Cpu cpu;
     private final MonitoringStatus status;
 
-    public ShutdownHandler(long appPid, Cpu cpu, MonitoringStatus status) {
+    public ShutdownHandler(long appPid, ResultWriter resultWriter, Cpu cpu, MonitoringStatus status) {
         this.appPid = appPid;
+        this.resultWriter = resultWriter;
         this.cpu = cpu;
         this.status = status;
     }
@@ -28,40 +30,29 @@ public class ShutdownHandler implements Runnable {
         // Close monitoring implementation to release all resources
         try {
             cpu.close();
-        } catch (Exception e) {}
+        } catch (Exception exception) {
+            // Continue shutting down
+        }
 
         logger.log(Level.INFO, "JoularJX finished monitoring application with ID {0}", appPid);
         logger.log(Level.INFO, "Program consumed {0,number,#.##} joules", status.getTotalConsumedEnergy());
 
-        // Prepare buffer for methods energy
-        StringBuilder buf = new StringBuilder();
-        for (Map.Entry<String, Double> entry : status.getMethodsConsumedEnergy().entrySet()) {
-            String key = entry.getKey();
-            Double value = entry.getValue();
-            buf.append(key).append(',').append(value).append("\n");
+        try {
+            shareResults("all", status.getMethodsConsumedEnergy());
+            shareResults("filtered", status.getFilteredMethodsConsumedEnergy());
+        } catch (IOException exception) {
+            // Continue shutting down
         }
 
-        // Write to CSV file
-        String fileNameMethods = "joularJX-" + appPid + "-methods-energy.csv";
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethods, true))) {
-            out.write(buf.toString());
-        } catch (Exception ignored) {}
+        logger.log(Level.INFO, "Energy consumption of methods and filtered methods written to files");
+    }
 
-        // Prepare buffer for filtered methods energy
-        StringBuilder bufFil = new StringBuilder();
-        for (Map.Entry<String, Double> entry : status.getFilteredMethodsConsumedEnergy().entrySet()) {
-            String key = entry.getKey();
-            Double value = entry.getValue();
-            bufFil.append(key).append(',').append(value).append("\n");
+    private void shareResults(String modeName, Map<String, Double> methodsConsumedEnergy) throws IOException {
+        String fileName = String.format("joularJX-%d-%s-methods-energy", appPid, modeName);
+        resultWriter.setTarget(fileName, false);
+
+        for (var entry : methodsConsumedEnergy.entrySet()) {
+            resultWriter.write(entry.getKey(), entry.getValue());
         }
-
-        // Write to CSV file for filtered methods
-        String fileNameMethodsFiltered = "joularJX-" + appPid + "-methods-energy-filtered.csv";
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(fileNameMethodsFiltered, true))) {
-            out.write(bufFil.toString());
-        } catch (Exception ignored) {}
-
-        logger.log(Level.INFO, "Energy consumption of methods and filtered methods written to {0} and {1} files",
-                new Object[]{fileNameMethods, fileNameMethodsFiltered});
     }
 }
