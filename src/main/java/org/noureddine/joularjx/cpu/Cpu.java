@@ -15,9 +15,7 @@ public interface Cpu extends AutoCloseable {
 
     void initialize();
 
-    default double getInitialPower() {
-        return 0;
-    }
+    double getInitialPower();
 
     double getCurrentPower(double cpuLoad);
 }

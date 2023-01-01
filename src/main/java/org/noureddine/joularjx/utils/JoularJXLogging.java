@@ -22,10 +22,9 @@ public class JoularJXLogging {
     private final Logger logger;
     private final ConsoleHandler consoleHandler;
 
-    public static Logger updateLevel(Level loggerLevel) {
+    public static void updateLevel(Level loggerLevel) {
         instance.logger.setLevel(loggerLevel);
         instance.consoleHandler.setLevel(loggerLevel);
-        return instance.logger;
     }
 
     public static Logger getLogger() {

@@ -126,6 +126,11 @@ public class RaplLinux implements Cpu {
         return energyData / 1000000;
     }
 
+    /**
+     * Returns the
+     *
+     * @return Energy readings from RAPL
+     */
     @Override
     public double getInitialPower() {
         return getCurrentPower(0);

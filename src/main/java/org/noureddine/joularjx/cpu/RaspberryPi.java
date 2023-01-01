@@ -167,6 +167,16 @@ public class RaspberryPi implements Cpu {
         return calculateCpuEnergyForRaspberryPi(rpiModel, cpuLoad);
     }
 
+    /**
+     * The power is approximated based on the CPU load, so it does not need an offset.
+     *
+     * @return 0
+     */
+    @Override
+    public double getInitialPower() {
+        return 0;
+    }
+
     @Override
     public void close() {
         // Nothing to do for Raspberry Pi

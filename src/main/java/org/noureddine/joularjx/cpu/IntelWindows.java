@@ -75,6 +75,16 @@ public class IntelWindows implements Cpu {
         return 0;
     }
 
+    /**
+     * The power is returned every second, so it does not need an offset.
+     *
+     * @return 0
+     */
+    @Override
+    public double getInitialPower() {
+        return 0;
+    }
+
     @Override
     public void close() {
         if (initialized) {
