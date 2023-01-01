@@ -45,9 +45,9 @@ public class Agent {
         AgentProperties properties = new AgentProperties(FileSystems.getDefault());
         JoularJXLogging.updateLevel(properties.getLoggerLevel());
 
-        System.out.println("+---------------------------------+");
-        System.out.println("| JoularJX Agent Version 1.5      |");
-        System.out.println("+---------------------------------+");
+        logger.info("+---------------------------------+");
+        logger.info("| JoularJX Agent Version 1.5      |");
+        logger.info("+---------------------------------+");
 
         ThreadMXBean threadBean = createThreadBean();
 
