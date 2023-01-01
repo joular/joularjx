@@ -130,7 +130,9 @@ public class CpuFactory {
                     return Optional.of(RaspberryPiModels.RPI_ZW_11);
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException exception) {
+            logger.throwing(CpuFactory.class.getName(), "getRPiModelName", exception);
+        }
 
         return Optional.empty();
     }

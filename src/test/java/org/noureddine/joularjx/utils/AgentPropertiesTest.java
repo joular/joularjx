@@ -98,11 +98,11 @@ class AgentPropertiesTest {
                 Arguments.of("OFF", Level.OFF),
                 Arguments.of("SEVERE", Level.SEVERE),
                 Arguments.of("WARNING", Level.WARNING),
-                Arguments.of("FINE", Level.INFO),
-                Arguments.of("CONFIG", Level.INFO),
-                Arguments.of("ALL", Level.INFO),
-                Arguments.of("FINER", Level.INFO),
-                Arguments.of("FINEST", Level.INFO)
+                Arguments.of("FINE", Level.FINE),
+                Arguments.of("CONFIG", Level.CONFIG),
+                Arguments.of("ALL", Level.ALL),
+                Arguments.of("FINER", Level.FINER),
+                Arguments.of("FINEST", Level.FINEST)
         );
     }
 

@@ -11,6 +11,8 @@
 
 package org.noureddine.joularjx.utils;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,6 +29,14 @@ public class JoularJXFormatter extends Formatter {
         builder.append("[").append(logRecord.getLevel()).append("] - ");
         builder.append(formatMessage(logRecord));
         builder.append("\n");
+
+        if (logRecord.getThrown() != null) {
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+            logRecord.getThrown().printStackTrace(printWriter);
+            builder.append(stringWriter);
+        }
+
         return builder.toString();
     }
 }

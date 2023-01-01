@@ -16,13 +16,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Agent properties configured by the config.properties file
  */
 public class AgentProperties {
+
+    private static final Logger logger = JoularJXLogging.getLogger();
 
     private static final String FILTER_METHOD_NAME_PROPERTY = "filter-method-names";
 
@@ -85,9 +89,11 @@ public class AgentProperties {
         Properties result = new Properties();
 
         // Read properties file
-        try (InputStream input = new BufferedInputStream(Files.newInputStream(fileSystem.getPath("config.properties")))) {
+        try (InputStream input = new BufferedInputStream(Files.newInputStream(getPropertiesPathIfExists(fileSystem)))) {
             result.load(input);
         } catch (IOException e) {
+            logger.log(Level.SEVERE, "Cannot load properties: \"{0}\"", e.getMessage());
+            logger.throwing(getClass().getName(), "loadProperties", e);
             System.exit(1);
         }
         return result;
@@ -106,37 +112,34 @@ public class AgentProperties {
     }
 
     public boolean loadSaveRuntimeData() {
-        return "true".equalsIgnoreCase(properties.getProperty(SAVE_RUNTIME_DATA_PROPERTY));
+        return Boolean.parseBoolean(properties.getProperty(SAVE_RUNTIME_DATA_PROPERTY));
     }
 
     public boolean loadOverwriteRuntimeData() {
-        return "true".equalsIgnoreCase(properties.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY));
+        return Boolean.parseBoolean(properties.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY));
     }
 
     public Level loadLoggerLevel() {
-        final String loggerLevel = properties.getProperty(LOGGER_LEVEL_PROPERTY);
-        if (loggerLevel == null) {
+        String property = properties.getProperty(LOGGER_LEVEL_PROPERTY);
+        if (property == null) {
             return Level.INFO;
         }
 
-        final Level loggerLevelEnum;
-        switch (loggerLevel) {
-            case "OFF":
-                loggerLevelEnum = Level.OFF;
-                break;
-            case "WARNING":
-                loggerLevelEnum = Level.WARNING;
-                break;
-            case "SEVERE":
-                loggerLevelEnum = Level.SEVERE;
-                break;
-            case "INFO":
-            default:
-                loggerLevelEnum = Level.INFO;
-                break;
+        try {
+            return Level.parse(property);
+        } catch (IllegalArgumentException exception) {
+            return Level.INFO;
         }
-
-        return loggerLevelEnum;
     }
 
+    private Path getPropertiesPathIfExists(FileSystem fileSystem) {
+        Path path = fileSystem.getPath("config.properties");
+
+        if (Files.notExists(path)) {
+            logger.log(Level.SEVERE, "Could not locate config.properties");
+            System.exit(1);
+        }
+
+        return path;
+    }
 }

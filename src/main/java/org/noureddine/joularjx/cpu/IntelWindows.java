@@ -14,7 +14,6 @@ package org.noureddine.joularjx.cpu;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,12 +47,17 @@ public class IntelWindows implements Cpu {
             // Do not initialize the same instance multiple times
             return;
         }
+
         try {
             process = Runtime.getRuntime().exec(programPath);
+
+            // The first result is not useful
+            getCurrentPower(0);
+
             initialized = true;
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            logger.log(Level.SEVERE, "Can't start power monitor on Windows. Existing...");
+        } catch (Exception exception) {
+            logger.log(Level.SEVERE, "Can''t start power monitor \"{0}\" on Windows. Exiting...", programPath);
+            logger.throwing(getClass().getName(), "initialize", exception);
             System.exit(1);
         }
     }
@@ -61,11 +65,12 @@ public class IntelWindows implements Cpu {
     @Override
     public double getCurrentPower(final double cpuLoad) {
         try {
+            // Should not be closed since it closes the process
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = input.readLine();
             return Double.parseDouble(line);
-        } catch (Exception ignoredException) {
-            ignoredException.printStackTrace();
+        } catch (Exception exception) {
+            logger.throwing(getClass().getName(), "getCurrentPower", exception);
         }
         return 0;
     }

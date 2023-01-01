@@ -8,10 +8,7 @@ import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.IOException;
 import java.lang.management.ThreadMXBean;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.ObjDoubleConsumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -19,6 +16,7 @@ import java.util.logging.Logger;
 
 public class MonitoringHandler implements Runnable {
 
+    private static final String DESTROY_THREAD_NAME = "DestroyJavaVM";
     private static final long SAMPLE_TIME_MILLISECONDS = 1000;
     private static final long SAMPLE_RATE_MILLISECONDS = 10;
     private static final int SAMPLE_ITERATIONS = (int) (SAMPLE_TIME_MILLISECONDS / SAMPLE_RATE_MILLISECONDS);
@@ -50,7 +48,7 @@ public class MonitoringHandler implements Runnable {
         // CPU time for each thread
         Map<Long, Long> threadsCpuTime = new HashMap<>();
 
-        while (true) {
+        while (!destroyingVM()) {
             try {
                 double energyBefore = cpu.getInitialPower();
 
@@ -74,7 +72,7 @@ public class MonitoringHandler implements Runnable {
                 // CPU energy for JVM process
                 // CPU energy for all processes
                 // We need to calculate energy for each thread
-                long totalThreadsCpuTime = updateThreadsCpuTime(threadsCpuTime);
+                long totalThreadsCpuTime = updateThreadsCpuTime(methodsStats, threadsCpuTime);
                 var threadCpuTimePercentages = getThreadsCpuTimePercentage(threadsCpuTime, totalThreadsCpuTime, processEnergy);
 
                 updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy);
@@ -87,19 +85,21 @@ public class MonitoringHandler implements Runnable {
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
             } catch (IOException exception) {
-                throw new RuntimeException(exception);
+                logger.log(Level.SEVERE, "Cannot perform IO \"{0}\"", exception.getMessage());
+                logger.throwing(getClass().getName(), "run", exception);
+                System.exit(1);
             }
         }
     }
 
-    private Map<Long, List<StackTraceElement[]>> sample() {
-        Map<Long, List<StackTraceElement[]>> result = new HashMap<>();
+    private Map<Thread, List<StackTraceElement[]>> sample() {
+        Map<Thread, List<StackTraceElement[]>> result = new HashMap<>();
         try {
             for (int duration = 0; duration < SAMPLE_TIME_MILLISECONDS; duration += SAMPLE_RATE_MILLISECONDS) {
                 for (var entry : Thread.getAllStackTraces().entrySet()) {
                     // Only check runnable threads (not waiting or blocked)
                     if (entry.getKey().getState() == Thread.State.RUNNABLE) {
-                        var target = result.computeIfAbsent(entry.getKey().getId(),
+                        var target = result.computeIfAbsent(entry.getKey(),
                                 t -> new ArrayList<>(SAMPLE_ITERATIONS));
                         target.add(entry.getValue());
                     }
@@ -114,9 +114,9 @@ public class MonitoringHandler implements Runnable {
         return result;
     }
 
-    private Map<Long, Map<String, Integer>> extractStats(Map<Long, List<StackTraceElement[]>> samples,
+    private Map<Thread, Map<String, Integer>> extractStats(Map<Thread, List<StackTraceElement[]>> samples,
                                                            Predicate<String> covers) {
-        Map<Long, Map<String, Integer>> stats = new HashMap<>();
+        Map<Thread, Map<String, Integer>> stats = new HashMap<>();
 
         for (var entry : samples.entrySet()) {
             Map<String, Integer> target = new HashMap<>();
@@ -136,13 +136,15 @@ public class MonitoringHandler implements Runnable {
         return stats;
     }
 
-    private long updateThreadsCpuTime(Map<Long, Long> threadsCpuTime) {
+    private long updateThreadsCpuTime(Map<Thread, Map<String, Integer>> methodsStats, Map<Long, Long> threadsCpuTime) {
         long totalThreadsCpuTime = 0;
-        for (Thread thread : Thread.getAllStackTraces().keySet()) {
-            long threadCpuTime = threadBean.getThreadCpuTime(thread.getId());
+        for (var entry : methodsStats.entrySet()) {
+            long threadCpuTime = threadBean.getThreadCpuTime(entry.getKey().getId());
+
+            threadCpuTime *= entry.getValue().values().stream().mapToDouble(i -> i).sum() / SAMPLE_ITERATIONS;
 
             // If thread already monitored, then calculate CPU time since last time
-            threadCpuTime = threadsCpuTime.merge(thread.getId(), threadCpuTime,
+            threadCpuTime = threadsCpuTime.merge(entry.getKey().getId(), threadCpuTime,
                     (present, newValue) -> newValue - present);
 
             totalThreadsCpuTime += threadCpuTime;
@@ -162,13 +164,14 @@ public class MonitoringHandler implements Runnable {
         return threadsPower;
     }
 
-    private void updateMethodsConsumedEnergy(Map<Long, Map<String, Integer>> methodsStats,
-                                            Map<Long, Double> threadCpuTimePercentages,
-                                            ObjDoubleConsumer<String> updateMethodConsumedEnergy) {
+    private void updateMethodsConsumedEnergy(Map<Thread, Map<String, Integer>> methodsStats,
+                                             Map<Long, Double> threadCpuTimePercentages,
+                                             ObjDoubleConsumer<String> updateMethodConsumedEnergy) {
         for (var threadEntry : methodsStats.entrySet()) {
             double totalEncounters = threadEntry.getValue().values().stream().mapToDouble(i -> i).sum();
             for (var methodEntry : threadEntry.getValue().entrySet()) {
-                double methodPower = threadCpuTimePercentages.get(threadEntry.getKey()) * (methodEntry.getValue() / totalEncounters);
+                double methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId())
+                        * (methodEntry.getValue() / totalEncounters);
                 updateMethodConsumedEnergy.accept(methodEntry.getKey(), methodPower);
             }
         }
@@ -186,7 +189,7 @@ public class MonitoringHandler implements Runnable {
     }
 
     private void shareResults(String modeName,
-                              Map<Long, Map<String, Integer>> methodsStats,
+                              Map<Thread, Map<String, Integer>> methodsStats,
                               Map<Long, Double> threadCpuTimePercentages) throws IOException {
         if (!properties.savesRuntimeData()) {
             return;
@@ -200,11 +203,16 @@ public class MonitoringHandler implements Runnable {
 
         for (var stats : methodsStats.entrySet()) {
             for (var methodEntry : stats.getValue().entrySet()) {
-                double methodPower = threadCpuTimePercentages.get(stats.getKey()) * (methodEntry.getValue() / 100.0);
+                double methodPower = threadCpuTimePercentages.get(stats.getKey().getId()) * (methodEntry.getValue() / 100.0);
                 resultWriter.write(methodEntry.getKey(), methodPower);
             }
         }
 
         resultWriter.closeTarget();
+    }
+
+    private boolean destroyingVM() {
+        return Thread.getAllStackTraces().keySet().stream()
+                .anyMatch(thread -> thread.getName().equals(DESTROY_THREAD_NAME));
     }
 }
