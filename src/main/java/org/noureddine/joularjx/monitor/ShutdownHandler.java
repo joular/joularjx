@@ -34,7 +34,7 @@ public class ShutdownHandler implements Runnable {
             // Continue shutting down
         }
 
-        logger.log(Level.INFO, "JoularJX finished monitoring application with ID {0}", appPid);
+        logger.log(Level.INFO, String.format("JoularJX finished monitoring application with ID %d", appPid));
         logger.log(Level.INFO, "Program consumed {0,number,#.##} joules", status.getTotalConsumedEnergy());
 
         try {

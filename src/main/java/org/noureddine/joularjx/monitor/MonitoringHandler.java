@@ -43,7 +43,7 @@ public class MonitoringHandler implements Runnable {
 
     @Override
     public void run() {
-        logger.log(Level.INFO, "Started monitoring application with ID {0}", appPid);
+        logger.log(Level.INFO, String.format("Started monitoring application with ID %d", appPid));
 
         // CPU time for each thread
         Map<Long, Long> threadsCpuTime = new HashMap<>();
