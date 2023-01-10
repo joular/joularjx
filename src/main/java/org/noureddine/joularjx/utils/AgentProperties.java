@@ -16,16 +16,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Agent properties configured by the config.properties file
  */
 public class AgentProperties {
+
+    private static final Logger logger = JoularJXLogging.getLogger();
 
     private static final String FILTER_METHOD_NAME_PROPERTY = "filter-method-names";
 
@@ -40,65 +41,105 @@ public class AgentProperties {
     /**
      * Loaded configuration properties
      */
-    private final Properties prop = new Properties();
+    private final Properties properties;
+    private final Collection<String> filterMethodNames;
+    private final String powerMonitorPath;
+    private final boolean saveRuntimeData;
+    private final boolean overwriteRuntimeData;
+    private final Level loggerLevel;
 
     /**
      * Instantiate a new instance which will load the properties
      */
-    public AgentProperties(final FileSystem fileSystem) {
-        // Read properties file
-        try (final InputStream input =
-                     new BufferedInputStream(Files.newInputStream(fileSystem.getPath("config.properties")))) {
-            prop.load(input);
-        } catch (IOException e) {
-            System.exit(1);
+    public AgentProperties(FileSystem fileSystem) {
+        this.properties = loadProperties(fileSystem);
+        this.filterMethodNames = loadFilterMethodNames();
+        this.powerMonitorPath = loadPowerMonitorPath();
+        this.saveRuntimeData = loadSaveRuntimeData();
+        this.overwriteRuntimeData = loadOverwriteRuntimeData();
+        this.loggerLevel = loadLoggerLevel();
+    }
+
+    public boolean filtersMethod(String methodName) {
+        for (String filterMethod : filterMethodNames) {
+            if (methodName.startsWith(filterMethod)) {
+                return true;
+            }
         }
-    }
-
-    public List<String> getFilterMethodNames() {
-        String filterMethods = prop.getProperty(FILTER_METHOD_NAME_PROPERTY);
-        if (filterMethods == null || filterMethods.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.asList(filterMethods.split(","));
-    }
-
-    public String getPowerMonitorPath() {
-        return prop.getProperty(POWER_MONITOR_PATH_PROPERTY);
-    }
-
-    public boolean getSaveRuntimeData() {
-        return "true".equalsIgnoreCase(prop.getProperty(SAVE_RUNTIME_DATA_PROPERTY));
-    }
-
-    public boolean getOverwriteRuntimeData() {
-        return "true".equalsIgnoreCase(prop.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY));
+        return false;
     }
 
     public Level getLoggerLevel() {
-        final String loggerLevel = prop.getProperty(LOGGER_LEVEL_PROPERTY);
-        if (loggerLevel == null) {
+        return loggerLevel;
+    }
+
+    public String getPowerMonitorPath() {
+        return powerMonitorPath;
+    }
+
+    public boolean savesRuntimeData() {
+        return saveRuntimeData;
+    }
+
+    public boolean overwritesRuntimeData() {
+        return overwriteRuntimeData;
+    }
+
+    private Properties loadProperties(FileSystem fileSystem) {
+        Properties result = new Properties();
+
+        // Read properties file
+        try (InputStream input = new BufferedInputStream(Files.newInputStream(getPropertiesPathIfExists(fileSystem)))) {
+            result.load(input);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Cannot load properties: \"{0}\"", e.getMessage());
+            logger.throwing(getClass().getName(), "loadProperties", e);
+            System.exit(1);
+        }
+        return result;
+    }
+
+    private Collection<String> loadFilterMethodNames() {
+        String filterMethods = properties.getProperty(FILTER_METHOD_NAME_PROPERTY);
+        if (filterMethods == null || filterMethods.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Set.of(filterMethods.split(","));
+    }
+
+    public String loadPowerMonitorPath() {
+        return properties.getProperty(POWER_MONITOR_PATH_PROPERTY);
+    }
+
+    public boolean loadSaveRuntimeData() {
+        return Boolean.parseBoolean(properties.getProperty(SAVE_RUNTIME_DATA_PROPERTY));
+    }
+
+    public boolean loadOverwriteRuntimeData() {
+        return Boolean.parseBoolean(properties.getProperty(OVERWRITE_RUNTIME_DATA_PROPERTY));
+    }
+
+    public Level loadLoggerLevel() {
+        String property = properties.getProperty(LOGGER_LEVEL_PROPERTY);
+        if (property == null) {
             return Level.INFO;
         }
 
-        final Level loggerLevelEnum;
-        switch (loggerLevel) {
-            case "OFF":
-                loggerLevelEnum = Level.OFF;
-                break;
-            case "WARNING":
-                loggerLevelEnum = Level.WARNING;
-                break;
-            case "SEVERE":
-                loggerLevelEnum = Level.SEVERE;
-                break;
-            case "INFO":
-            default:
-                loggerLevelEnum = Level.INFO;
-                break;
+        try {
+            return Level.parse(property);
+        } catch (IllegalArgumentException exception) {
+            return Level.INFO;
         }
-
-        return loggerLevelEnum;
     }
 
+    private Path getPropertiesPathIfExists(FileSystem fileSystem) {
+        Path path = fileSystem.getPath("config.properties");
+
+        if (Files.notExists(path)) {
+            logger.log(Level.SEVERE, "Could not locate config.properties");
+            System.exit(1);
+        }
+
+        return path;
+    }
 }

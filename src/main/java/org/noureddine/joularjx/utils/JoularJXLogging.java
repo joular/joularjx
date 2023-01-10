@@ -16,33 +16,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class JoularJXLogging {
-    private static JoularJXLogging instance;
-    private final Logger jxlogger;
 
-    private JoularJXLogging(Level loggerLevel) {
-        ConsoleHandler ch = new ConsoleHandler();
-        ch.setFormatter(new JoularJXFormatter());
-        ch.setLevel(loggerLevel);
-        this.jxlogger = Logger.getAnonymousLogger();
-        this.jxlogger.addHandler(ch);
-        this.jxlogger.setLevel(Level.CONFIG);
-        this.jxlogger.setUseParentHandlers(false);
+    private static final JoularJXLogging instance = new JoularJXLogging();
+
+    private final Logger logger;
+    private final ConsoleHandler consoleHandler;
+
+    public static void updateLevel(Level loggerLevel) {
+        instance.logger.setLevel(loggerLevel);
+        instance.consoleHandler.setLevel(loggerLevel);
     }
 
-    public Logger getLogger() {
-        return this.jxlogger;
+    public static Logger getLogger() {
+        return instance.logger;
     }
 
-    public static JoularJXLogging getInstance(Level loggerLevel) {
-        JoularJXLogging result = instance;
-        if (result != null) {
-            return result;
-        }
-        synchronized(JoularJXLogging.class) {
-            if (instance == null) {
-                instance = new JoularJXLogging(loggerLevel);
-            }
-            return instance;
-        }
+    private JoularJXLogging() {
+        this.consoleHandler = new ConsoleHandler();
+        this.consoleHandler.setFormatter(new JoularJXFormatter());
+        this.logger = Logger.getAnonymousLogger();
+        this.logger.addHandler(consoleHandler);
+        this.logger.setLevel(Level.CONFIG);
+        this.logger.setUseParentHandlers(false);
     }
 }
