@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Locale;
 
 public class CsvResultWriter implements ResultWriter {
 
@@ -37,7 +38,7 @@ public class CsvResultWriter implements ResultWriter {
             throw new IllegalStateException("Please call ResultWriter#setTarget(String) first");
         }
 
-        writer.write(String.format("%s,%.4f%n", methodName, methodPower));
+        writer.write(String.format(Locale.US,"%s,%.4f%n", methodName, methodPower));
     }
 
     @Override
