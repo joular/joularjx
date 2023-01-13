@@ -38,6 +38,8 @@ public class AgentProperties {
 
     private static final String LOGGER_LEVEL_PROPERTY = "logger-level";
 
+    private static final String TRACK_CONSUMPTION_EVOLUTION_PROPERTY = "track-consumption-evolution";
+
     /**
      * Loaded configuration properties
      */
@@ -47,6 +49,7 @@ public class AgentProperties {
     private final boolean saveRuntimeData;
     private final boolean overwriteRuntimeData;
     private final Level loggerLevel;
+    private final boolean consumptionEvolution;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -58,6 +61,7 @@ public class AgentProperties {
         this.saveRuntimeData = loadSaveRuntimeData();
         this.overwriteRuntimeData = loadOverwriteRuntimeData();
         this.loggerLevel = loadLoggerLevel();
+        this.consumptionEvolution = loadConsumptionEvolution();
     }
 
     public boolean filtersMethod(String methodName) {
@@ -83,6 +87,10 @@ public class AgentProperties {
 
     public boolean overwritesRuntimeData() {
         return overwriteRuntimeData;
+    }
+
+    public boolean trackConsumptionEvolution(){
+        return consumptionEvolution;
     }
 
     private Properties loadProperties(FileSystem fileSystem) {
@@ -130,6 +138,10 @@ public class AgentProperties {
         } catch (IllegalArgumentException exception) {
             return Level.INFO;
         }
+    }
+
+    public boolean loadConsumptionEvolution() {
+        return Boolean.parseBoolean(properties.getProperty(TRACK_CONSUMPTION_EVOLUTION_PROPERTY));
     }
 
     private Path getPropertiesPathIfExists(FileSystem fileSystem) {
