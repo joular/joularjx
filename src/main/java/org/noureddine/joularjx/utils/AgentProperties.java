@@ -28,17 +28,14 @@ public class AgentProperties {
 
     private static final Logger logger = JoularJXLogging.getLogger();
 
+    //Properties names in the config.properties file
     private static final String FILTER_METHOD_NAME_PROPERTY = "filter-method-names";
-
     private static final String POWER_MONITOR_PATH_PROPERTY = "powermonitor-path";
-
     private static final String SAVE_RUNTIME_DATA_PROPERTY = "save-runtime-data";
-
     private static final String OVERWRITE_RUNTIME_DATA_PROPERTY = "overwrite-runtime-data";
-
     private static final String LOGGER_LEVEL_PROPERTY = "logger-level";
-
     private static final String TRACK_CONSUMPTION_EVOLUTION_PROPERTY = "track-consumption-evolution";
+    private static final String EVOLUTION_DATA_FILEPATH_PROPERTY = "evolution-data-path";
 
     /**
      * Loaded configuration properties
@@ -50,6 +47,7 @@ public class AgentProperties {
     private final boolean overwriteRuntimeData;
     private final Level loggerLevel;
     private final boolean consumptionEvolution;
+    private final String evolutionDataPath;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -62,6 +60,7 @@ public class AgentProperties {
         this.overwriteRuntimeData = loadOverwriteRuntimeData();
         this.loggerLevel = loadLoggerLevel();
         this.consumptionEvolution = loadConsumptionEvolution();
+        this.evolutionDataPath = loadEvolutionDataPath();
     }
 
     public boolean filtersMethod(String methodName) {
@@ -89,8 +88,12 @@ public class AgentProperties {
         return overwriteRuntimeData;
     }
 
-    public boolean trackConsumptionEvolution(){
+    public boolean trackConsumptionEvolution() {
         return consumptionEvolution;
+    }
+
+    public String getEvolutionDataPath() {
+        return this.evolutionDataPath;
     }
 
     private Properties loadProperties(FileSystem fileSystem) {
@@ -142,6 +145,10 @@ public class AgentProperties {
 
     public boolean loadConsumptionEvolution() {
         return Boolean.parseBoolean(properties.getProperty(TRACK_CONSUMPTION_EVOLUTION_PROPERTY));
+    }
+
+    public String loadEvolutionDataPath() {
+        return properties.getProperty(EVOLUTION_DATA_FILEPATH_PROPERTY);
     }
 
     private Path getPropertiesPathIfExists(FileSystem fileSystem) {

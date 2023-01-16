@@ -16,6 +16,9 @@ public class ShutdownHandler implements Runnable {
 
     private static final Logger logger = JoularJXLogging.getLogger();
 
+    private static final String ALL_METHODS_EVOLUTION_FOLDER_NAME = "all";
+    private static final String FILTERED_METHODS_EVOLUTION_FOLDER_NAME = "filtered";
+
     private final long appPid;
     private final ResultWriter resultWriter;
     private final Cpu cpu;
@@ -69,12 +72,13 @@ public class ShutdownHandler implements Runnable {
     }
 
     private void writeConsumptionEvolution(Map<String, Map<Long, Double>> consumptionEvolution, Scope scope) throws IOException{
-        String[] folderToCreate = {"evolution", "evolution/all", "evolution/filtered"};
+        String[] foldersToCreate = {this.properties.getEvolutionDataPath()+"/"+ALL_METHODS_EVOLUTION_FOLDER_NAME,
+                                   this.properties.getEvolutionDataPath()+"/"+FILTERED_METHODS_EVOLUTION_FOLDER_NAME};
 
         //Creating the required folders to store consumption evolution files, if they do not already exists
-        for (String dirName : folderToCreate) {
+        for (String dirName : foldersToCreate) {
             File dir = new File(dirName);
-            if(!dir.exists() && !dir.mkdir()){
+            if(!dir.exists() && !dir.mkdirs()){
                 logger.log(Level.SEVERE, String.format("Cannot create %s folder. Methods consumption evolution cannot be reported.", dirName));
                 return;
             }
@@ -82,13 +86,13 @@ public class ShutdownHandler implements Runnable {
 
         String targetFolderName;
         if (scope == Scope.ALL) {
-            targetFolderName = "evolution/all";
+            targetFolderName = foldersToCreate[0]; //All methods
         } else {
-            targetFolderName = "evolution/filtered";
+            targetFolderName = foldersToCreate[1]; //Filtered methods
         }
 
         for(var entry : consumptionEvolution.entrySet()){
-            String fileName = String.format("%s/joularJX-%d-%s-evolution", targetFolderName, appPid, entry.getKey().replace('<', '_').replace('>', '_'));
+            String fileName = String.format("%s/joularJX-%d-%s-evolution", targetFolderName, appPid, entry.getKey().replace('<', '_').replace('>', '_')); //replacing special chars
 
             resultWriter.setTarget(fileName, false);
 
