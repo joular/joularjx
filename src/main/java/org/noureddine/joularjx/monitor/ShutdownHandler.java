@@ -71,6 +71,12 @@ public class ShutdownHandler implements Runnable {
         resultWriter.closeTarget();
     }
 
+    /**
+     * Writes each method's consumption evolution into a separate CSV file.
+     * @param consumptionEvolution a Map mapping each method name to another Map mapping Unix timestamps to energy consumption.
+     * @param scope the scope of the given methods (all or filtered). Used to know in which folder to write the data.
+     * @throws IOException if an error occurs while creating the folders or writing the data
+     */
     private void writeConsumptionEvolution(Map<String, Map<Long, Double>> consumptionEvolution, Scope scope) throws IOException{
         String[] foldersToCreate = {this.properties.getEvolutionDataPath()+"/"+ALL_METHODS_EVOLUTION_FOLDER_NAME,
                                    this.properties.getEvolutionDataPath()+"/"+FILTERED_METHODS_EVOLUTION_FOLDER_NAME};
@@ -84,6 +90,7 @@ public class ShutdownHandler implements Runnable {
             }
         }
 
+        //Selecting the correct target folder regarding the scope
         String targetFolderName;
         if (scope == Scope.ALL) {
             targetFolderName = foldersToCreate[0]; //All methods
@@ -91,6 +98,7 @@ public class ShutdownHandler implements Runnable {
             targetFolderName = foldersToCreate[1]; //Filtered methods
         }
 
+        //Writing a file per method
         for(var entry : consumptionEvolution.entrySet()){
             String fileName = String.format("%s/joularJX-%d-%s-evolution", targetFolderName, appPid, entry.getKey().replace('<', '_').replace('>', '_')); //replacing special chars
 
