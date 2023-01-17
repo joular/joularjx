@@ -23,7 +23,7 @@ Just run the installation script in the ```install/``` folder:
 
 You can also just use the compiled jar package for JoularJX.
 
-JoularJX depend on the following software or packages in order to get get power reading:
+JoularJX depend on the following software or packages in order to get power reading:
 - On Windows, JoularJX uses a custom power monitor program that uses Intel Power Gadget API on Windows, and therefore require installing the [Intel Power Gadget tool](https://www.intel.com/content/www/us/en/developer/articles/tool/power-gadget.html) and using a supported Intel CPU.
 - On PC/server GNU/Linux, JoularJX uses Intel RAPL interface through powercap, and therefore requires running on an Intel CPU or an AMD Ryzen CPU.
 - On Raspberry Pi devices on GNU/Linux, JoularJX uses our own research-based regression models to estimate CPU power consumption with support for the following device models:
@@ -51,6 +51,8 @@ JoularJX can be configured by modifying the ```config.properties``` files:
 - ```overwrite-runtime-data```: overwrite runtime power data files, or if set to false, it will write new files for each monitoring cycle.
 - ```logger-level```: set the level of information (by logger) given by JoularJX in the terminal (allowed values: OFF, INFO, WARNING, SEVERE).
 - ```powermonitor-path```: Full path to the power monitor program (only for Windows).
+- ```track-consumption-evolution```: generate .csv files for each method containing details of the method's consumption over the time. Each consumption value is mapped to an Unix timestamp.
+- ```evolution-data-path```: Path to the location where the consumption evolution csv files will be stored. The tool will attemp to create the folders if they do not alreay exists.
 
 You can install the jar package (and the PowerMonitor.exe on Windows) wherever you want, and call it in the ```javaagent``` with the full path.
 However, ```config.properties``` must be copied to the same folder as where you run the Java command.

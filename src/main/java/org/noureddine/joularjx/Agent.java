@@ -60,7 +60,7 @@ public class Agent {
         MonitoringStatus status = new MonitoringStatus();
         ResultWriter resultWriter = new CsvResultWriter();
         MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean);
-        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriter, cpu, status);
+        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriter, cpu, status, properties);
 
         logger.log(Level.INFO, "Initialization finished");
 

@@ -5,6 +5,7 @@ import org.noureddine.joularjx.cpu.Cpu;
 import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
+import org.noureddine.joularjx.utils.Scope;
 
 import java.io.IOException;
 import java.lang.management.ThreadMXBean;
@@ -75,8 +76,8 @@ public class MonitoringHandler implements Runnable {
                 long totalThreadsCpuTime = updateThreadsCpuTime(methodsStats, threadsCpuTime);
                 var threadCpuTimePercentages = getThreadsCpuTimePercentage(threadsCpuTime, totalThreadsCpuTime, processEnergy);
 
-                updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy);
-                updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages, status::addFilteredMethodConsumedEnergy);
+                updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy, Scope.ALL);
+                updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages, status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
 
                 shareResults("all", methodsStats, threadCpuTimePercentages);
                 shareResults("filtered", methodsStatsFiltered, threadCpuTimePercentages);
@@ -164,14 +165,34 @@ public class MonitoringHandler implements Runnable {
         return threadsPower;
     }
 
+    /**
+     * Update method's consumed energy. 
+     * @param methodsStats method's encounters statistics during per Thread
+     * @param threadCpuTimePercentages a map of CPU time usage per PID
+     * @param updateMethodConsumedEnergy an object consumer, used to update all or only filtered methods
+     * @param scope the scope (all methods or only filterd methods). Used for energy consumption tracking
+     */
     private void updateMethodsConsumedEnergy(Map<Thread, Map<String, Integer>> methodsStats,
                                              Map<Long, Double> threadCpuTimePercentages,
-                                             ObjDoubleConsumer<String> updateMethodConsumedEnergy) {
+                                             ObjDoubleConsumer<String> updateMethodConsumedEnergy,
+                                             Scope scope) {
         for (var threadEntry : methodsStats.entrySet()) {
             double totalEncounters = threadEntry.getValue().values().stream().mapToDouble(i -> i).sum();
             for (var methodEntry : threadEntry.getValue().entrySet()) {
-                double methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId())
-                        * (methodEntry.getValue() / totalEncounters);
+                double methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId()) * (methodEntry.getValue() / totalEncounters);
+
+                //Only of consumption evolution tracking is enabled
+                if (this.properties.trackConsumptionEvolution()) {
+                    //computing the UNIX EPOCH timestamp
+                    long unixTimestamp = System.currentTimeMillis() / 1000L;
+
+                    if (scope == Scope.ALL) {
+                        this.status.trackMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
+                    } else {
+                        this.status.trackFilteredMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
+                    }
+                }
+
                 updateMethodConsumedEnergy.accept(methodEntry.getKey(), methodPower);
             }
         }
