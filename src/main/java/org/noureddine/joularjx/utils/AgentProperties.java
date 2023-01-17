@@ -35,7 +35,7 @@ public class AgentProperties {
     private static final String OVERWRITE_RUNTIME_DATA_PROPERTY = "overwrite-runtime-data";
     private static final String LOGGER_LEVEL_PROPERTY = "logger-level";
     private static final String TRACK_CONSUMPTION_EVOLUTION_PROPERTY = "track-consumption-evolution";
-    private static final String EVOLUTION_DATA_FILEPATH_PROPERTY = "evolution-data-path";
+    private static final String EVOLUTION_DATA_PATH_PROPERTY = "evolution-data-path";
 
     /**
      * Loaded configuration properties
