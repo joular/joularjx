@@ -38,7 +38,9 @@ class AgentPropertiesTest {
                     () -> assertNull(properties.getPowerMonitorPath()),
                     () -> assertFalse(properties.overwritesRuntimeData()),
                     () -> assertFalse(properties.savesRuntimeData()),
-                    () -> assertEquals(Level.INFO, properties.getLoggerLevel())
+                    () -> assertEquals(Level.INFO, properties.getLoggerLevel()),
+                    () -> assertFalse(properties.loadConsumptionEvolution()),
+                    () -> assertEquals("evolution", properties.loadEvolutionDataPath())
             );
         }
     }
@@ -46,9 +48,14 @@ class AgentPropertiesTest {
     @Test
     void fullConfiguration() throws IOException {
         try (final FileSystem fs = MemoryFileSystemBuilder.newEmpty().build()) {
-            Files.write(fs.getPath("config.properties"), ("filter-method-names=org.noureddine.joularjx\n" +
-                    "powermonitor-path=C:\\\\joularjx\\\\PowerMonitor.exe\n" +
-                    "save-runtime-data=true\noverwrite-runtime-data=true").getBytes(StandardCharsets.UTF_8));
+            String path = "custom/path";
+            String props = "filter-method-names=org.noureddine.joularjx\n" +
+                                "powermonitor-path=C:\\\\joularjx\\\\PowerMonitor.exe\n" +
+                                "save-runtime-data=true\n"+
+                                "overwrite-runtime-data=true\n"+
+                                "track-consumption-evolution=true\n"+
+                                "evolution-data-path="+path;
+            Files.write(fs.getPath("config.properties"), (props).getBytes(StandardCharsets.UTF_8));
 
             AgentProperties properties = new AgentProperties(fs);
 
@@ -56,7 +63,9 @@ class AgentPropertiesTest {
                     () -> assertTrue(properties.filtersMethod("org.noureddine.joularjx")),
                     () -> assertEquals("C:\\joularjx\\PowerMonitor.exe", properties.getPowerMonitorPath()),
                     () -> assertTrue(properties.savesRuntimeData()),
-                    () -> assertTrue(properties.overwritesRuntimeData())
+                    () -> assertTrue(properties.overwritesRuntimeData()),
+                    () -> assertTrue(properties.trackConsumptionEvolution()),
+                    () -> assertEquals(path, properties.getEvolutionDataPath())
             );
         }
     }
