@@ -148,7 +148,12 @@ public class AgentProperties {
     }
 
     public String loadEvolutionDataPath() {
-        return properties.getProperty(EVOLUTION_DATA_FILEPATH_PROPERTY);
+        String property = properties.getProperty(EVOLUTION_DATA_FILEPATH_PROPERTY);
+        if (property == null){
+            //Default path
+            return "evolution";
+        }
+        return property;
     }
 
     private Path getPropertiesPathIfExists(FileSystem fileSystem) {
