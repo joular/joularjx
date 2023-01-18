@@ -40,7 +40,8 @@ class AgentPropertiesTest {
                     () -> assertFalse(properties.savesRuntimeData()),
                     () -> assertEquals(Level.INFO, properties.getLoggerLevel()),
                     () -> assertFalse(properties.loadConsumptionEvolution()),
-                    () -> assertEquals("evolution", properties.loadEvolutionDataPath())
+                    () -> assertEquals("evolution", properties.loadEvolutionDataPath()),
+                    () -> assertFalse(properties.loadAgentConsumption())
             );
         }
     }
@@ -54,7 +55,8 @@ class AgentPropertiesTest {
                                 "save-runtime-data=true\n"+
                                 "overwrite-runtime-data=true\n"+
                                 "track-consumption-evolution=true\n"+
-                                "evolution-data-path="+path;
+                                "evolution-data-path="+path+"\n"+
+                                "hide-agent-consumption=true";
             Files.write(fs.getPath("config.properties"), (props).getBytes(StandardCharsets.UTF_8));
 
             AgentProperties properties = new AgentProperties(fs);
@@ -65,7 +67,8 @@ class AgentPropertiesTest {
                     () -> assertTrue(properties.savesRuntimeData()),
                     () -> assertTrue(properties.overwritesRuntimeData()),
                     () -> assertTrue(properties.trackConsumptionEvolution()),
-                    () -> assertEquals(path, properties.getEvolutionDataPath())
+                    () -> assertEquals(path, properties.getEvolutionDataPath()),
+                    () -> assertTrue(properties.hideAgentConsumption())
             );
         }
     }

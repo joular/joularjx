@@ -36,6 +36,7 @@ public class AgentProperties {
     private static final String LOGGER_LEVEL_PROPERTY = "logger-level";
     private static final String TRACK_CONSUMPTION_EVOLUTION_PROPERTY = "track-consumption-evolution";
     private static final String EVOLUTION_DATA_PATH_PROPERTY = "evolution-data-path";
+    private static final String HIDE_AGENT_CONSUMPTION_PROPERTY = "hide-agent-consumption";
 
     /**
      * Loaded configuration properties
@@ -48,6 +49,7 @@ public class AgentProperties {
     private final Level loggerLevel;
     private final boolean consumptionEvolution;
     private final String evolutionDataPath;
+    private final boolean hideAgentConsumption;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -61,6 +63,7 @@ public class AgentProperties {
         this.loggerLevel = loadLoggerLevel();
         this.consumptionEvolution = loadConsumptionEvolution();
         this.evolutionDataPath = loadEvolutionDataPath();
+        this.hideAgentConsumption = loadAgentConsumption();
     }
 
     public boolean filtersMethod(String methodName) {
@@ -94,6 +97,10 @@ public class AgentProperties {
 
     public String getEvolutionDataPath() {
         return this.evolutionDataPath;
+    }
+
+    public boolean hideAgentConsumption(){
+        return this.hideAgentConsumption;
     }
 
     private Properties loadProperties(FileSystem fileSystem) {
@@ -154,6 +161,10 @@ public class AgentProperties {
             return "evolution";
         }
         return property;
+    }
+
+    public boolean loadAgentConsumption() {
+        return Boolean.parseBoolean(properties.getProperty(HIDE_AGENT_CONSUMPTION_PROPERTY));
     }
 
     private Path getPropertiesPathIfExists(FileSystem fileSystem) {
