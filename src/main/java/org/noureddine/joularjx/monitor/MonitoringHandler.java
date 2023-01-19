@@ -102,7 +102,7 @@ public class MonitoringHandler implements Runnable {
                 for (var entry : Thread.getAllStackTraces().entrySet()) {
                     String threadName = entry.getKey().getName();
                     //Ignoring agent related threads, if option is enabled
-                    if(this.properties.hideAgentConsumption() && (threadName.equals(Agent.COMPUTATION_THREAD_NAME) || threadName.equals(Agent.NAME_THREAD_NAME))){
+                    if(this.properties.hideAgentConsumption() && (threadName.equals(Agent.COMPUTATION_THREAD_NAME))) {
                         continue; //Ignoring the thread
                     }
 
