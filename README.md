@@ -52,7 +52,8 @@ JoularJX can be configured by modifying the ```config.properties``` files:
 - ```logger-level```: set the level of information (by logger) given by JoularJX in the terminal (allowed values: OFF, INFO, WARNING, SEVERE).
 - ```powermonitor-path```: Full path to the power monitor program (only for Windows).
 - ```track-consumption-evolution```: generate .csv files for each method containing details of the method's consumption over the time. Each consumption value is mapped to an Unix timestamp.
-- ```evolution-data-path```: Path to the location where the consumption evolution csv files will be stored. The tool will attemp to create the folders if they do not alreay exists.
+- ```evolution-data-path```: path to the location where the consumption evolution csv files will be stored. The tool will attemp to create the folders if they do not alreay exists.
+- ```hide-agent-consumption```: if set to true, the energy consumption of the agent threads will not be reported.
 
 You can install the jar package (and the PowerMonitor.exe on Windows) wherever you want, and call it in the ```javaagent``` with the full path.
 However, ```config.properties``` must be copied to the same folder as where you run the Java command.

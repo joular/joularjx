@@ -1,6 +1,8 @@
 package org.noureddine.joularjx.monitor;
 
 import com.sun.management.OperatingSystemMXBean;
+
+import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.cpu.Cpu;
 import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
@@ -98,6 +100,12 @@ public class MonitoringHandler implements Runnable {
         try {
             for (int duration = 0; duration < SAMPLE_TIME_MILLISECONDS; duration += SAMPLE_RATE_MILLISECONDS) {
                 for (var entry : Thread.getAllStackTraces().entrySet()) {
+                    String threadName = entry.getKey().getName();
+                    //Ignoring agent related threads, if option is enabled
+                    if(this.properties.hideAgentConsumption() && (threadName.equals(Agent.COMPUTATION_THREAD_NAME))) {
+                        continue; //Ignoring the thread
+                    }
+
                     // Only check runnable threads (not waiting or blocked)
                     if (entry.getKey().getState() == Thread.State.RUNNABLE) {
                         var target = result.computeIfAbsent(entry.getKey(),

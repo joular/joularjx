@@ -108,6 +108,5 @@ public class ShutdownHandler implements Runnable {
                 resultWriter.write(methodEntry.getKey().toString(), methodEntry.getValue());
             }
         }
-        logger.log(Level.INFO, "Methods energy consumption evolution written to files.");
     }
 }

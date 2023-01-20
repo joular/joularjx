@@ -31,8 +31,8 @@ import java.util.logging.Logger;
 
 public class Agent {
 
-    private static final String NAME_THREAD_NAME = "JoularJX Agent Thread";
-    private static final String COMPUTATION_THREAD_NAME = "JoularJX Agent Computation";
+    public static final String NAME_THREAD_NAME = "JoularJX Agent Thread";
+    public static final String COMPUTATION_THREAD_NAME = "JoularJX Agent Computation";
     private static final Logger logger = JoularJXLogging.getLogger();
 
     /**
