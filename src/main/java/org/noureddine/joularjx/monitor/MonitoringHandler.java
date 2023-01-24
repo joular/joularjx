@@ -1,6 +1,15 @@
 package org.noureddine.joularjx.monitor;
 
-import com.sun.management.OperatingSystemMXBean;
+import java.io.IOException;
+import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.ObjDoubleConsumer;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.cpu.Cpu;
@@ -8,14 +17,9 @@ import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import org.noureddine.joularjx.utils.Scope;
+import org.noureddine.joularjx.utils.StackTrace;
 
-import java.io.IOException;
-import java.lang.management.ThreadMXBean;
-import java.util.*;
-import java.util.function.ObjDoubleConsumer;
-import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.sun.management.OperatingSystemMXBean;
 
 public class MonitoringHandler implements Runnable {
 
@@ -58,6 +62,7 @@ public class MonitoringHandler implements Runnable {
                 var samples = sample();
                 var methodsStats = extractStats(samples, methodName -> true);
                 var methodsStatsFiltered = extractStats(samples, properties::filtersMethod);
+                var stackTraceStats = extractStackTraceStats(samples);
 
                 double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
                 double processCpuLoad = osBean.getProcessCpuLoad();
@@ -80,6 +85,7 @@ public class MonitoringHandler implements Runnable {
 
                 updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy, Scope.ALL);
                 updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages, status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
+                updateStackTracesConsumedEnergy(stackTraceStats, threadCpuTimePercentages);
 
                 shareResults("all", methodsStats, threadCpuTimePercentages);
                 shareResults("filtered", methodsStatsFiltered, threadCpuTimePercentages);
@@ -145,6 +151,19 @@ public class MonitoringHandler implements Runnable {
         return stats;
     }
 
+    private Map<Thread, Map<StackTrace, Integer>> extractStackTraceStats(Map<Thread, List<StackTraceElement[]>> samples){
+        Map<Thread, Map<StackTrace, Integer>> stats = new HashMap<>();
+
+        for (var entry : samples.entrySet()) {
+            Map<StackTrace, Integer> target = new HashMap<>();
+            stats.put(entry.getKey(), target);
+
+            entry.getValue().stream().forEach(stackTraceArray -> {target.merge(new StackTrace(stackTraceArray), 1, Integer::sum);});
+        }
+
+        return stats;
+    }
+
     private long updateThreadsCpuTime(Map<Thread, Map<String, Integer>> methodsStats, Map<Long, Long> threadsCpuTime) {
         long totalThreadsCpuTime = 0;
         for (var entry : methodsStats.entrySet()) {
@@ -175,7 +194,7 @@ public class MonitoringHandler implements Runnable {
 
     /**
      * Update method's consumed energy. 
-     * @param methodsStats method's encounters statistics during per Thread
+     * @param methodsStats method's encounters statistics per Thread
      * @param threadCpuTimePercentages a map of CPU time usage per PID
      * @param updateMethodConsumedEnergy an object consumer, used to update all or only filtered methods
      * @param scope the scope (all methods or only filterd methods). Used for energy consumption tracking
@@ -202,6 +221,18 @@ public class MonitoringHandler implements Runnable {
                 }
 
                 updateMethodConsumedEnergy.accept(methodEntry.getKey(), methodPower);
+            }
+        }
+    }
+
+    private void updateStackTracesConsumedEnergy(Map<Thread, Map<StackTrace, Integer>> stats, Map<Long, Double> threadCpuTimePercentages) {
+        for (var entry : stats.entrySet()) {
+            double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
+
+            for (var stackTraceEntry : entry.getValue().entrySet()) {
+                double stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId()) * (stackTraceEntry.getValue() / totalEncounters);
+
+                this.status.addStackTraceConsumedEnergy(stackTraceEntry.getKey(), stackTracePower);
             }
         }
     }

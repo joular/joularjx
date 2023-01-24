@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.noureddine.joularjx.utils.StackTrace;
+
 public class MonitoringStatus {
 
     private final Object consumedEnergyLock;
@@ -13,6 +15,9 @@ public class MonitoringStatus {
     //Map method names to a Map of timestamps mapped to energy consumption
     private final Map<String, Map<Long, Double>> methodsConsumptionEvolution;
     private final Map<String, Map<Long, Double>> filteredMethodsConsumptionEvolution;
+
+    //Map StackTraces to their energy consumption
+    private final Map<StackTrace, Double> stackTracesConsumption;
 
     private double totalConsumedEnergy;
 
@@ -25,6 +30,7 @@ public class MonitoringStatus {
         this.filteredMethodsConsumedEnergy = new ConcurrentHashMap<>();
         this.methodsConsumptionEvolution = new ConcurrentHashMap<>();
         this.filteredMethodsConsumptionEvolution = new ConcurrentHashMap<>();
+        this.stackTracesConsumption = new ConcurrentHashMap<>();
 
         this.totalConsumedEnergy = 0;
     }
@@ -55,6 +61,10 @@ public class MonitoringStatus {
      */
     public void addFilteredMethodConsumedEnergy(String methodName, double delta) {
         filteredMethodsConsumedEnergy.merge(methodName, delta, Double::sum);
+    }
+
+    public void addStackTraceConsumedEnergy(StackTrace stackTrace, double delta) {
+        this.stackTracesConsumption.merge(stackTrace, delta, Double::sum);
     }
 
     /**
