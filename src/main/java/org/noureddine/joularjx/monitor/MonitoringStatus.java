@@ -145,4 +145,8 @@ public class MonitoringStatus {
     public Map<String, Map<Long, Double>> getFilteredMethodsConsumptionEvolution(){
         return this.filteredMethodsConsumptionEvolution;
     }
+
+    public Map<StackTrace, Double> getStackTracesConsumedEnergy() {
+        return this.stackTracesConsumption;
+    }
 }

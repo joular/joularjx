@@ -11,6 +11,7 @@ import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import org.noureddine.joularjx.utils.Scope;
+import org.noureddine.joularjx.utils.StackTrace;
 
 public class ShutdownHandler implements Runnable {
 
@@ -52,6 +53,7 @@ public class ShutdownHandler implements Runnable {
                 writeConsumptionEvolution(status.getMethodsConsumptionEvolution(), Scope.ALL);
                 writeConsumptionEvolution(status.getFilteredMethodsConsumptionEvolution(), Scope.FILTERED);
             }
+            writeStackTracesConsumption(status.getStackTracesConsumedEnergy());
         } catch (IOException exception) {
             // Continue shutting down
         }
@@ -108,5 +110,19 @@ public class ShutdownHandler implements Runnable {
                 resultWriter.write(methodEntry.getKey().toString(), methodEntry.getValue());
             }
         }
+    }
+
+    private void writeStackTracesConsumption(Map<StackTrace, Double> stackTracesConsumedEnergy) throws IOException {
+        String filename = String.format("joularJX-%d-stack-traces-energy", appPid);
+
+        resultWriter.setTarget(filename, false);
+
+        for(var entry : stackTracesConsumedEnergy.entrySet()) {
+            resultWriter.write(entry.getKey().toString(), entry.getValue());
+        }
+
+        resultWriter.closeTarget();
+
+        logger.log(Level.INFO, "Stack traces consumption written.");
     }
 }
