@@ -27,12 +27,15 @@ public class StackTrace {
     @Override
     public String toString() {
         String res = "";
-        
-        for (StackTraceElement element : this.stackTrace) {
+
+        /*Appening elements to res String in reverse order. The least recent element (the bottom of the stack trace) will be written first, and the most recent one last.*/
+        for(int i = this.stackTrace.size()-1; i >= 0; i--){
+            StackTraceElement element = this.stackTrace.get(i);
             res += element.getClassName()+"."+element.getMethodName()+";";
         }
 
-        return res;
+        //Removing the last ";"
+        return res.substring(0, res.length()-1);
     }
 
     @Override
