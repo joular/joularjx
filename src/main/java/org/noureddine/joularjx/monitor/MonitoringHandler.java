@@ -158,7 +158,8 @@ public class MonitoringHandler implements Runnable {
             Map<StackTrace, Integer> target = new HashMap<>();
             stats.put(entry.getKey(), target);
 
-            entry.getValue().stream().forEach(stackTraceArray -> {target.merge(new StackTrace(stackTraceArray), 1, Integer::sum);});
+            entry.getValue().stream().filter(stackTraceArray -> stackTraceArray.length > 0)
+                                     .forEach(stackTraceArray -> {target.merge(new StackTrace(stackTraceArray), 1, Integer::sum);});
         }
 
         return stats;
