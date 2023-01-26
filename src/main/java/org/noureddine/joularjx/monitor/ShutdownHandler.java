@@ -47,13 +47,25 @@ public class ShutdownHandler implements Runnable {
         logger.log(Level.INFO, "Program consumed {0,number,#.##} joules", status.getTotalConsumedEnergy());
 
         try {
+            /*
             shareResults("all", status.getMethodsConsumedEnergy());
             shareResults("filtered", status.getFilteredMethodsConsumedEnergy());
+            */
+            //Writing methods and filtered methods energy consumption
+            this.saveResults(status.getMethodsConsumedEnergy(), "all-methods", "energy");
+            this.saveResults(status.getFilteredMethodsConsumedEnergy(), "filtered-methods", "energy");
+
+            //Writing consumption evolution files only if the option is enabled
             if (this.properties.trackConsumptionEvolution()) {
                 writeConsumptionEvolution(status.getMethodsConsumptionEvolution(), Scope.ALL);
                 writeConsumptionEvolution(status.getFilteredMethodsConsumptionEvolution(), Scope.FILTERED);
             }
-            writeCallTreesConsumption(status.getCallTreesConsumedEnergy());
+
+            //Writing call trees consumption file only if the option is enabled
+            if (this.properties.callTreesConsumption()) {
+                //writeCallTreesConsumption(status.getCallTreesConsumedEnergy());
+                this.saveResults(status.getCallTreesConsumedEnergy(), "call-trees", "energy");
+            }
         } catch (IOException exception) {
             // Continue shutting down
         }
@@ -68,6 +80,18 @@ public class ShutdownHandler implements Runnable {
 
         for (var entry : methodsConsumedEnergy.entrySet()) {
             resultWriter.write(entry.getKey(), entry.getValue());
+        }
+
+        resultWriter.closeTarget();
+    }
+
+    public <K> void saveResults(Map<K, Double> consumedEnergyMap, String nodeType, String dataType) throws IOException {
+        String fileName = String.format("joularJX-%d-%s-%s", appPid, nodeType, dataType);
+
+        resultWriter.setTarget(fileName, false);
+
+        for (var entry : consumedEnergyMap.entrySet()) {
+            resultWriter.write(entry.getKey().toString(), entry.getValue());
         }
 
         resultWriter.closeTarget();

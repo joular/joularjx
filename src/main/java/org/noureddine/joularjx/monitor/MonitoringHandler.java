@@ -62,7 +62,12 @@ public class MonitoringHandler implements Runnable {
                 var samples = sample();
                 var methodsStats = extractStats(samples, methodName -> true);
                 var methodsStatsFiltered = extractStats(samples, properties::filtersMethod);
-                var callTreesStats = extractCallTreesStats(samples);
+
+                //Collecting call trees stats only if the option is enabled
+                Map<Thread, Map<CallTree, Integer>> callTreesStats = null;
+                if (this.properties.callTreesConsumption()) {
+                    callTreesStats = extractCallTreesStats(samples);
+                }
 
                 double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
                 double processCpuLoad = osBean.getProcessCpuLoad();
@@ -85,10 +90,22 @@ public class MonitoringHandler implements Runnable {
 
                 updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy, Scope.ALL);
                 updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages, status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
-                updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages);
 
-                shareResults("all", methodsStats, threadCpuTimePercentages);
-                shareResults("filtered", methodsStatsFiltered, threadCpuTimePercentages);
+                //Updating call trees consumption if option is enabled
+                if (this.properties.callTreesConsumption()) {
+                    updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages);
+
+                    //Writing call trees power only if option is enabled
+                    if (this.properties.saveCallTreesRuntimeData()) {
+                        this.saveResults(callTreesStats, threadCpuTimePercentages, "all", "call-trees", this.properties.overwriteCallTreesRuntimeData());
+                    }
+                }
+
+                //Saving method's power only if option is enabled
+                if (this.properties.savesRuntimeData()) {   
+                    this.saveResults(methodsStats, threadCpuTimePercentages, "all", "methods", this.properties.overwritesRuntimeData());
+                    this.saveResults(methodsStatsFiltered , threadCpuTimePercentages, "filtered", "methods", this.properties.overwritesRuntimeData());
+                }
 
                 Thread.sleep(SAMPLE_RATE_MILLISECONDS);
             } catch (InterruptedException exception) {
@@ -270,6 +287,23 @@ public class MonitoringHandler implements Runnable {
         }
 
         resultWriter.closeTarget();
+    }
+
+    public <K> void saveResults(Map<Thread, Map<K,Integer>> stats,  Map<Long, Double> threadCpuTimePercentages, String modeName, String nodeType, boolean overwriteData) throws IOException {
+        String fileName = overwriteData ? 
+                String.format("joularJX-%d-%s-%s-power", appPid, modeName, nodeType) : 
+                String.format("joularJX-%d-%d-%s-%s-power", appPid, System.currentTimeMillis(), modeName, nodeType);
+
+        resultWriter.setTarget(fileName, true);
+
+            for (var statEntry : stats.entrySet()) {
+                for (var entry : statEntry.getValue().entrySet()) {
+                    double power = threadCpuTimePercentages.get(statEntry.getKey().getId()) * (entry.getValue() / 100.0);
+                    resultWriter.write(entry.getKey().toString(), power);
+                }
+            }
+        
+            resultWriter.closeTarget();
     }
 
     private boolean destroyingVM() {
