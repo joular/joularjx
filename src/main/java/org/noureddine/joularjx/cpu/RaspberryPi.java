@@ -150,6 +150,17 @@ public class RaspberryPi implements Cpu {
                         (-17824.350159 * Math.pow(cpuUsage, 8)) +
                         (4069.178175 * Math.pow(cpuUsage, 9));
                 break;
+            case ASUSTBS:
+                result = 3.9146162374630173 + (-19.85430796 * cpuUsage) +
+                        (141.7306532 * Math.pow(cpuUsage, 2)) +
+                        (-298.12713091 * Math.pow(cpuUsage, 3)) +
+                        (-1115.76983141 * Math.pow(cpuUsage, 4)) +
+                        (8238.275731321 * Math.pow(cpuUsage, 5)) +
+                        (-20976.13898406 * Math.pow(cpuUsage, 6)) +
+                        (27132.90930519 * Math.pow(cpuUsage, 7)) +
+                        (-17741.01303757 * Math.pow(cpuUsage, 8)) +
+                        (4640.69530931 * Math.pow(cpuUsage, 9));
+                break;
             default:
                 break;
         }

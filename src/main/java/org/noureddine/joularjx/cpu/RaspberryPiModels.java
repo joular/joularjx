@@ -22,5 +22,6 @@ public enum RaspberryPiModels {
     RPI_2B_11,
     RPI_1BP_12,
     RPI_1B_2,
-    RPI_ZW_11
+    RPI_ZW_11,
+    ASUSTBS
 }

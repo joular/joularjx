@@ -128,6 +128,8 @@ public class CpuFactory {
                     return Optional.of(RaspberryPiModels.RPI_1B_2);
                 } else if (currentLine.contains("Raspberry Pi Zero W Rev 1.1")) {
                     return Optional.of(RaspberryPiModels.RPI_ZW_11);
+                } else if (currentLine.contains("ASUS Tinker Board (S)")) {
+                    return Optional.of(RaspberryPiModels.ASUSTBS);
                 }
             }
         } catch (IOException exception) {
