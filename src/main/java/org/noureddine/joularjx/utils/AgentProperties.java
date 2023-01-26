@@ -37,11 +37,15 @@ public class AgentProperties {
     private static final String TRACK_CONSUMPTION_EVOLUTION_PROPERTY = "track-consumption-evolution";
     private static final String EVOLUTION_DATA_PATH_PROPERTY = "evolution-data-path";
     private static final String HIDE_AGENT_CONSUMPTION_PROPERTY = "hide-agent-consumption";
+    private static final String CALL_TREES_CONSUMPTION_PROPERTY = "enable-call-trees-consumption";
+    private static final String SAVE_CT_RUNTIME_DATA_PROPERTY = "save-call-trees-runtime-data";
+    private static final String OVERWRITE_CT_RUNTIME_DATA_PROPERTY = "overwrite-call-treestruntime-data";
 
     /**
      * Loaded configuration properties
      */
     private final Properties properties;
+
     private final Collection<String> filterMethodNames;
     private final String powerMonitorPath;
     private final boolean saveRuntimeData;
@@ -50,12 +54,16 @@ public class AgentProperties {
     private final boolean consumptionEvolution;
     private final String evolutionDataPath;
     private final boolean hideAgentConsumption;
+    private final boolean callTreesConsumption;
+    private final boolean saveCtRuntimeData;
+    private final boolean overwriteCtRuntimeData;
 
     /**
      * Instantiate a new instance which will load the properties
      */
     public AgentProperties(FileSystem fileSystem) {
         this.properties = loadProperties(fileSystem);
+
         this.filterMethodNames = loadFilterMethodNames();
         this.powerMonitorPath = loadPowerMonitorPath();
         this.saveRuntimeData = loadSaveRuntimeData();
@@ -64,6 +72,9 @@ public class AgentProperties {
         this.consumptionEvolution = loadConsumptionEvolution();
         this.evolutionDataPath = loadEvolutionDataPath();
         this.hideAgentConsumption = loadAgentConsumption();
+        this.callTreesConsumption = loadCallTreesConsumption();
+        this.saveCtRuntimeData = loadSaveCallTreesRuntimeData();
+        this.overwriteCtRuntimeData = loadOverwriteCallTreeRuntimeData();
     }
 
     public boolean filtersMethod(String methodName) {
@@ -99,8 +110,20 @@ public class AgentProperties {
         return this.evolutionDataPath;
     }
 
-    public boolean hideAgentConsumption(){
+    public boolean hideAgentConsumption() {
         return this.hideAgentConsumption;
+    }
+
+    public boolean callTreesConsumption() {
+        return this.callTreesConsumption;
+    }
+
+    public boolean saveCallTreesRuntimeData() {
+        return this.saveCtRuntimeData;
+    }
+
+    public boolean overwriteCallTreesRuntimeData() {
+        return this.overwriteCtRuntimeData;
     }
 
     private Properties loadProperties(FileSystem fileSystem) {
@@ -165,6 +188,18 @@ public class AgentProperties {
 
     public boolean loadAgentConsumption() {
         return Boolean.parseBoolean(properties.getProperty(HIDE_AGENT_CONSUMPTION_PROPERTY));
+    }
+
+    public boolean loadCallTreesConsumption() {
+        return Boolean.parseBoolean(properties.getProperty(CALL_TREES_CONSUMPTION_PROPERTY));
+    }
+
+    public boolean loadSaveCallTreesRuntimeData() {
+        return Boolean.parseBoolean(properties.getProperty(SAVE_CT_RUNTIME_DATA_PROPERTY));
+    }
+
+    public boolean loadOverwriteCallTreeRuntimeData() {
+        return Boolean.parseBoolean(properties.getProperty(OVERWRITE_CT_RUNTIME_DATA_PROPERTY));
     }
 
     private Path getPropertiesPathIfExists(FileSystem fileSystem) {

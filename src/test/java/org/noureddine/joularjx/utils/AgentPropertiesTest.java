@@ -41,7 +41,10 @@ class AgentPropertiesTest {
                     () -> assertEquals(Level.INFO, properties.getLoggerLevel()),
                     () -> assertFalse(properties.loadConsumptionEvolution()),
                     () -> assertEquals("evolution", properties.loadEvolutionDataPath()),
-                    () -> assertFalse(properties.loadAgentConsumption())
+                    () -> assertFalse(properties.loadAgentConsumption()),
+                    () -> assertFalse(properties.loadCallTreesConsumption()),
+                    () -> assertFalse(properties.loadSaveCallTreesRuntimeData()),
+                    () -> assertFalse(properties.loadOverwriteCallTreeRuntimeData())
             );
         }
     }
@@ -56,7 +59,10 @@ class AgentPropertiesTest {
                                 "overwrite-runtime-data=true\n"+
                                 "track-consumption-evolution=true\n"+
                                 "evolution-data-path="+path+"\n"+
-                                "hide-agent-consumption=true";
+                                "hide-agent-consumption=true\n"+
+                                "enable-call-trees-consumption=true\n"+
+                                "save-call-trees-runtime-data=true\n"+
+                                "overwrite-call-treestruntime-data=true";
             Files.write(fs.getPath("config.properties"), (props).getBytes(StandardCharsets.UTF_8));
 
             AgentProperties properties = new AgentProperties(fs);
@@ -68,7 +74,10 @@ class AgentPropertiesTest {
                     () -> assertTrue(properties.overwritesRuntimeData()),
                     () -> assertTrue(properties.trackConsumptionEvolution()),
                     () -> assertEquals(path, properties.getEvolutionDataPath()),
-                    () -> assertTrue(properties.hideAgentConsumption())
+                    () -> assertTrue(properties.hideAgentConsumption()),
+                    () -> assertTrue(properties.callTreesConsumption()),
+                    () -> assertTrue(properties.saveCallTreesRuntimeData()),
+                    () -> assertTrue(properties.overwriteCallTreesRuntimeData())
             );
         }
     }
