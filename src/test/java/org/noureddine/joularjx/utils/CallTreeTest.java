@@ -8,35 +8,35 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
-public class StackTraceTest {
+public class CallTreeTest {
 
     @Test
-    public void getStackTraceTest() {
+    public void getCallTreeTest() {
         StackTraceElement[] stackTraceArray = Thread.currentThread().getStackTrace();
 
-        StackTrace stackTrace = new StackTrace(stackTraceArray);
+        CallTree stackTrace = new CallTree(stackTraceArray);
 
-        assertEquals(stackTrace.getStackTrace(), Arrays.asList(stackTraceArray));
+        assertEquals(stackTrace.getCallTree(), Arrays.asList(stackTraceArray));
     }
 
     @Test
-    public void setStackTraceTest() {
-        StackTrace stackTrace = new StackTrace();
+    public void setCallTreeTest() {
+        CallTree stackTrace = new CallTree();
         StackTraceElement[] stackTraceArray = Thread.currentThread().getStackTrace();
 
-        stackTrace.setStackTrace(stackTraceArray);
+        stackTrace.setCallTree(stackTraceArray);
 
-        assertEquals(stackTrace.getStackTrace(), Arrays.asList(stackTraceArray));
+        assertEquals(stackTrace.getCallTree(), Arrays.asList(stackTraceArray));
     }
 
     @Test
     public void equalsTest() {
         StackTraceElement[] stackTraceArray = Thread.currentThread().getStackTrace();
 
-        StackTrace stackTrace = new StackTrace(stackTraceArray);
+        CallTree stackTrace = new CallTree(stackTraceArray);
 
-        assertTrue(stackTrace.equals(new StackTrace(stackTraceArray)));
-        assertFalse(stackTrace.equals(new StackTrace()));
+        assertTrue(stackTrace.equals(new CallTree(stackTraceArray)));
+        assertFalse(stackTrace.equals(new CallTree()));
     }
 
     @Test
@@ -48,8 +48,8 @@ public class StackTraceTest {
         StackTraceElement[] arr1 = {e, e1, e2};
         StackTraceElement[] arr2 = {e2, e1, e};
 
-        StackTrace s1 = new StackTrace(arr1);
-        StackTrace s2 = new StackTrace(arr2);
+        CallTree s1 = new CallTree(arr1);
+        CallTree s2 = new CallTree(arr2);
 
         assertFalse(s1.equals(s2));
     }
@@ -61,7 +61,7 @@ public class StackTraceTest {
         StackTraceElement e2 = new StackTraceElement("ClassC", "MethodC", "FileC", 59);
 
         StackTraceElement[] arr = {e2, e1, e};
-        StackTrace stackTrace = new StackTrace(arr);
+        CallTree stackTrace = new CallTree(arr);
 
         String oracle = "ClassA.MethodA;ClassB.MethodB;ClassC.MethodC";
 

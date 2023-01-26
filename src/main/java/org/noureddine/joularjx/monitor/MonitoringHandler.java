@@ -17,7 +17,7 @@ import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import org.noureddine.joularjx.utils.Scope;
-import org.noureddine.joularjx.utils.StackTrace;
+import org.noureddine.joularjx.utils.CallTree;
 
 import com.sun.management.OperatingSystemMXBean;
 
@@ -62,7 +62,7 @@ public class MonitoringHandler implements Runnable {
                 var samples = sample();
                 var methodsStats = extractStats(samples, methodName -> true);
                 var methodsStatsFiltered = extractStats(samples, properties::filtersMethod);
-                var stackTraceStats = extractStackTraceStats(samples);
+                var callTreesStats = extractCallTreesStats(samples);
 
                 double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
                 double processCpuLoad = osBean.getProcessCpuLoad();
@@ -85,7 +85,7 @@ public class MonitoringHandler implements Runnable {
 
                 updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy, Scope.ALL);
                 updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages, status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
-                updateStackTracesConsumedEnergy(stackTraceStats, threadCpuTimePercentages);
+                updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages);
 
                 shareResults("all", methodsStats, threadCpuTimePercentages);
                 shareResults("filtered", methodsStatsFiltered, threadCpuTimePercentages);
@@ -151,15 +151,15 @@ public class MonitoringHandler implements Runnable {
         return stats;
     }
 
-    private Map<Thread, Map<StackTrace, Integer>> extractStackTraceStats(Map<Thread, List<StackTraceElement[]>> samples){
-        Map<Thread, Map<StackTrace, Integer>> stats = new HashMap<>();
+    private Map<Thread, Map<CallTree, Integer>> extractCallTreesStats(Map<Thread, List<StackTraceElement[]>> samples){
+        Map<Thread, Map<CallTree, Integer>> stats = new HashMap<>();
 
         for (var entry : samples.entrySet()) {
-            Map<StackTrace, Integer> target = new HashMap<>();
+            Map<CallTree, Integer> target = new HashMap<>();
             stats.put(entry.getKey(), target);
 
             entry.getValue().stream().filter(stackTraceArray -> stackTraceArray.length > 0)
-                                     .forEach(stackTraceArray -> {target.merge(new StackTrace(stackTraceArray), 1, Integer::sum);});
+                                     .forEach(stackTraceArray -> {target.merge(new CallTree(stackTraceArray), 1, Integer::sum);});
         }
 
         return stats;
@@ -226,14 +226,14 @@ public class MonitoringHandler implements Runnable {
         }
     }
 
-    private void updateStackTracesConsumedEnergy(Map<Thread, Map<StackTrace, Integer>> stats, Map<Long, Double> threadCpuTimePercentages) {
+    private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats, Map<Long, Double> threadCpuTimePercentages) {
         for (var entry : stats.entrySet()) {
             double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
 
-            for (var stackTraceEntry : entry.getValue().entrySet()) {
-                double stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId()) * (stackTraceEntry.getValue() / totalEncounters);
+            for (var callTreeEntry : entry.getValue().entrySet()) {
+                double stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId()) * (callTreeEntry.getValue() / totalEncounters);
 
-                this.status.addStackTraceConsumedEnergy(stackTraceEntry.getKey(), stackTracePower);
+                this.status.addCallTreeConsumedEnergy(callTreeEntry.getKey(), stackTracePower);
             }
         }
     }

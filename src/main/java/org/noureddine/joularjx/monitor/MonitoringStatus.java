@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.noureddine.joularjx.utils.StackTrace;
+import org.noureddine.joularjx.utils.CallTree;
 
 public class MonitoringStatus {
 
@@ -16,8 +16,8 @@ public class MonitoringStatus {
     private final Map<String, Map<Long, Double>> methodsConsumptionEvolution;
     private final Map<String, Map<Long, Double>> filteredMethodsConsumptionEvolution;
 
-    //Map StackTraces to their energy consumption
-    private final Map<StackTrace, Double> stackTracesConsumption;
+    //Map CallTrees to their energy consumption
+    private final Map<CallTree, Double> callTreesConsumption;
 
     private double totalConsumedEnergy;
 
@@ -30,7 +30,7 @@ public class MonitoringStatus {
         this.filteredMethodsConsumedEnergy = new ConcurrentHashMap<>();
         this.methodsConsumptionEvolution = new ConcurrentHashMap<>();
         this.filteredMethodsConsumptionEvolution = new ConcurrentHashMap<>();
-        this.stackTracesConsumption = new ConcurrentHashMap<>();
+        this.callTreesConsumption = new ConcurrentHashMap<>();
 
         this.totalConsumedEnergy = 0;
     }
@@ -63,8 +63,8 @@ public class MonitoringStatus {
         filteredMethodsConsumedEnergy.merge(methodName, delta, Double::sum);
     }
 
-    public void addStackTraceConsumedEnergy(StackTrace stackTrace, double delta) {
-        this.stackTracesConsumption.merge(stackTrace, delta, Double::sum);
+    public void addCallTreeConsumedEnergy(CallTree callTree, double delta) {
+        this.callTreesConsumption.merge(callTree, delta, Double::sum);
     }
 
     /**
@@ -146,7 +146,7 @@ public class MonitoringStatus {
         return this.filteredMethodsConsumptionEvolution;
     }
 
-    public Map<StackTrace, Double> getStackTracesConsumedEnergy() {
-        return this.stackTracesConsumption;
+    public Map<CallTree, Double> getCallTreesConsumedEnergy() {
+        return this.callTreesConsumption;
     }
 }

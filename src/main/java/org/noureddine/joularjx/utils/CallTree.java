@@ -4,24 +4,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class StackTrace {
+public class CallTree {
 
-    private List<StackTraceElement> stackTrace;
+    private List<StackTraceElement> callTree;
 
-    public StackTrace() {
-        this.stackTrace = new ArrayList<>();
+    public CallTree() {
+        this.callTree = new ArrayList<>();
     }
 
-    public StackTrace(StackTraceElement[] stackTrace) {
-        this.stackTrace = Arrays.asList(stackTrace);
+    public CallTree(StackTraceElement[] stackTrace) {
+        this.callTree = Arrays.asList(stackTrace);
     }
 
-    public void setStackTrace(StackTraceElement[] stackTrace) {
-        this.stackTrace = Arrays.asList(stackTrace);
+    public void setCallTree(StackTraceElement[] stackTrace) {
+        this.callTree = Arrays.asList(stackTrace);
     }
 
-    public List<StackTraceElement> getStackTrace() {
-        return this.stackTrace;
+    public List<StackTraceElement> getCallTree() {
+        return this.callTree;
     }
 
     @Override
@@ -29,8 +29,8 @@ public class StackTrace {
         String res = "";
 
         /*Appening elements to res String in reverse order. The least recent element (the bottom of the stack trace) will be written first, and the most recent one last.*/
-        for(int i = this.stackTrace.size()-1; i >= 0; i--){
-            StackTraceElement element = this.stackTrace.get(i);
+        for(int i = this.callTree.size()-1; i >= 0; i--){
+            StackTraceElement element = this.callTree.get(i);
             res += element.getClassName()+"."+element.getMethodName()+";";
         }
 
@@ -42,7 +42,7 @@ public class StackTrace {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((stackTrace == null) ? 0 : stackTrace.hashCode());
+        result = prime * result + ((callTree == null) ? 0 : callTree.hashCode());
         return result;
     }
 
@@ -55,11 +55,11 @@ public class StackTrace {
         if (getClass() != obj.getClass())
             return false;
             
-        StackTrace other = (StackTrace) obj;
-        if (stackTrace == null) {
-            if (other.stackTrace != null)
+        CallTree other = (CallTree) obj;
+        if (callTree == null) {
+            if (other.callTree != null)
                 return false;
-        } else if (!stackTrace.equals(other.stackTrace))
+        } else if (!callTree.equals(other.callTree))
             return false;
         return true;
     }
