@@ -1,4 +1,4 @@
-# [![Joular Project](https://gitlab.com/uploads/-/system/group/avatar/10668049/joular.png?width=64)](https://www.noureddine.org/research/joular/) JoularJX :microscope:
+# <a href="https://www.noureddine.org/research/joular/"><img src="https://raw.githubusercontent.com/joular/.github/main/profile/joular.png" alt="Joular Project" width="64" /></a> JoularJX :microscope:
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses/gpl-3.0)
 [![Java](https://img.shields.io/badge/Made%20with-Java-orange)](https://openjdk.java.net)
