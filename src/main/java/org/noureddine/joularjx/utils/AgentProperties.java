@@ -39,7 +39,7 @@ public class AgentProperties {
     private static final String HIDE_AGENT_CONSUMPTION_PROPERTY = "hide-agent-consumption";
     private static final String CALL_TREES_CONSUMPTION_PROPERTY = "enable-call-trees-consumption";
     private static final String SAVE_CT_RUNTIME_DATA_PROPERTY = "save-call-trees-runtime-data";
-    private static final String OVERWRITE_CT_RUNTIME_DATA_PROPERTY = "overwrite-call-treestruntime-data";
+    private static final String OVERWRITE_CT_RUNTIME_DATA_PROPERTY = "overwrite-call-trees-runtime-data";
 
     /**
      * Loaded configuration properties
