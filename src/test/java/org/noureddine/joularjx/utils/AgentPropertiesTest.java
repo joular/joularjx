@@ -62,7 +62,7 @@ class AgentPropertiesTest {
                                 "hide-agent-consumption=true\n"+
                                 "enable-call-trees-consumption=true\n"+
                                 "save-call-trees-runtime-data=true\n"+
-                                "overwrite-call-treestruntime-data=true";
+                                "overwrite-call-trees-runtime-data=true";
             Files.write(fs.getPath("config.properties"), (props).getBytes(StandardCharsets.UTF_8));
 
             AgentProperties properties = new AgentProperties(fs);
