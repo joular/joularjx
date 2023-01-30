@@ -168,6 +168,11 @@ public class MonitoringHandler implements Runnable {
         return stats;
     }
 
+    /**
+     * Returns the occurences of each call tree during monitoring loop, per thread.
+     * @param samples the result of the sampling step. A List of StackTraces of each Thread. 
+     * @return for each Thread, a Map of each CallTree and its occurences during the last monitoring loop.
+     */
     private Map<Thread, Map<CallTree, Integer>> extractCallTreesStats(Map<Thread, List<StackTraceElement[]>> samples){
         Map<Thread, Map<CallTree, Integer>> stats = new HashMap<>();
 
@@ -243,6 +248,11 @@ public class MonitoringHandler implements Runnable {
         }
     }
 
+    /**
+     * Update call trees consumed energy.
+     * @param stats call trees encounters statistics per Thread
+     * @param threadCpuTimePercentages  map of CPU time usage per PID
+     */
     private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats, Map<Long, Double> threadCpuTimePercentages) {
         for (var entry : stats.entrySet()) {
             double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
@@ -266,29 +276,16 @@ public class MonitoringHandler implements Runnable {
         return (processCpuUsage * cpuEnergy) / totalCpuUsage;
     }
 
-    private void shareResults(String modeName,
-                              Map<Thread, Map<String, Integer>> methodsStats,
-                              Map<Long, Double> threadCpuTimePercentages) throws IOException {
-        if (!properties.savesRuntimeData()) {
-            return;
-        }
-
-        String fileName = properties.overwritesRuntimeData() ?
-                String.format("joularJX-%d-%s-methods-power", appPid, modeName) :
-                String.format("joularJX-%d-%d-%s-methods-power", appPid, System.currentTimeMillis(), modeName);
-
-        resultWriter.setTarget(fileName, true);
-
-        for (var stats : methodsStats.entrySet()) {
-            for (var methodEntry : stats.getValue().entrySet()) {
-                double methodPower = threadCpuTimePercentages.get(stats.getKey().getId()) * (methodEntry.getValue() / 100.0);
-                resultWriter.write(methodEntry.getKey(), methodPower);
-            }
-        }
-
-        resultWriter.closeTarget();
-    }
-
+    /**
+     * Writes the results in a file. The filename is partially defined by the given parameters.
+     * @param <K> The type of key that will be written in the file. Must implement the toString() method.
+     * @param stats the data to be written, given under the form of a Map<Thread, Map<K>, Double>> where the Double is the enrgy consumption.
+     * @param threadCpuTimePercentages a map of CPU time usage per Thread (PID)
+     * @param modeName a String that will be part of the file name. Used to distinct all or filtered files.
+     * @param nodeType a String that will be part of the file name. Used to distinct methods, call-trees, ...
+     * @param overwriteData a boolean. If true, the same file will be overwritten. If false, a new file will be created, including a timestamps in milliseconds in its name.
+     * @throws IOException if an I/O error occurs while writing the file
+     */
     public <K> void saveResults(Map<Thread, Map<K,Integer>> stats,  Map<Long, Double> threadCpuTimePercentages, String modeName, String nodeType, boolean overwriteData) throws IOException {
         String fileName = overwriteData ? 
                 String.format("joularJX-%d-%s-%s-power", appPid, modeName, nodeType) : 

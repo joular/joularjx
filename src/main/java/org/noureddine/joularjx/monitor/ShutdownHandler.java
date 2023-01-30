@@ -73,18 +73,14 @@ public class ShutdownHandler implements Runnable {
         logger.log(Level.INFO, "Energy consumption of methods and filtered methods written to files");
     }
 
-    private void shareResults(String modeName, Map<String, Double> methodsConsumedEnergy) throws IOException {
-        String fileName = String.format("joularJX-%d-%s-methods-energy", appPid, modeName);
-
-        resultWriter.setTarget(fileName, false);
-
-        for (var entry : methodsConsumedEnergy.entrySet()) {
-            resultWriter.write(entry.getKey(), entry.getValue());
-        }
-
-        resultWriter.closeTarget();
-    }
-
+    /**
+    * Writes the results in a file. The filename is partially defined by the given parameters.
+     * @param <K> The type of key that will be written in the file. Must implement the toString() method.*
+     * @param consumedEnergyMap the data to be written.
+     * @param nodeType a String that will be part of the file name. Used to distinct methods, call-trees, ...
+     * @param dataType a String that will be part of the file name. Used to distinct the data type contained in the file : power, energy, ...
+     * @throws IOException if an I/O error occurs while writing the data
+     */
     public <K> void saveResults(Map<K, Double> consumedEnergyMap, String nodeType, String dataType) throws IOException {
         String fileName = String.format("joularJX-%d-%s-%s", appPid, nodeType, dataType);
 
@@ -134,19 +130,5 @@ public class ShutdownHandler implements Runnable {
                 resultWriter.write(methodEntry.getKey().toString(), methodEntry.getValue());
             }
         }
-    }
-
-    private void writeCallTreesConsumption(Map<CallTree, Double> callTreesConsumedEnergy) throws IOException {
-        String filename = String.format("joularJX-%d-stack-traces-energy", appPid);
-
-        resultWriter.setTarget(filename, false);
-
-        for(var entry : callTreesConsumedEnergy.entrySet()) {
-            resultWriter.write(entry.getKey().toString(), entry.getValue());
-        }
-
-        resultWriter.closeTarget();
-
-        logger.log(Level.INFO, "Stack traces consumption written.");
     }
 }
