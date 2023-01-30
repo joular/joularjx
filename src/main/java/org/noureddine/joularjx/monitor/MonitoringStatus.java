@@ -57,12 +57,17 @@ public class MonitoringStatus {
     /**
      * Adds the given energy consumption to the given filtered method.
      * @param methodName a String, the filtered method name to which the consumption is mapped
-     * @param delta a souble, the amount of energy to be added
+     * @param delta a double, the amount of energy to be added
      */
     public void addFilteredMethodConsumedEnergy(String methodName, double delta) {
         filteredMethodsConsumedEnergy.merge(methodName, delta, Double::sum);
     }
 
+    /**
+     * Adds the given energy consumption to the given call tree.
+     * @param callTree a CallTree, the call tree to which the consumption is mapped
+     * @param delta a double, the amount of energy to be added
+     */
     public void addCallTreeConsumedEnergy(CallTree callTree, double delta) {
         this.callTreesConsumption.merge(callTree, delta, Double::sum);
     }
@@ -146,6 +151,10 @@ public class MonitoringStatus {
         return this.filteredMethodsConsumptionEvolution;
     }
 
+    /**
+     * Returns the energy consumption evolution of each call tree.
+     * @return a Map<CallTree, Double> mapping each call tree to their energy consumption.
+     */
     public Map<CallTree, Double> getCallTreesConsumedEnergy() {
         return this.callTreesConsumption;
     }

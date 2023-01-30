@@ -146,6 +146,12 @@ public class MonitoringHandler implements Runnable {
         return result;
     }
 
+    /**
+     * Return the occurences of each method call during monitoring loop, per thread.
+     * @param samples the result of the sampking step. A List of StackTraces of each Thread
+     * @param covers a Predicate, used to filter method names
+     * @return for each Thread, a Map of each method and its occurences during the last monitoring loop
+     */
     private Map<Thread, Map<String, Integer>> extractStats(Map<Thread, List<StackTraceElement[]>> samples,
                                                            Predicate<String> covers) {
         Map<Thread, Map<String, Integer>> stats = new HashMap<>();
