@@ -11,7 +11,6 @@ import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import org.noureddine.joularjx.utils.Scope;
-import org.noureddine.joularjx.utils.CallTree;
 
 public class ShutdownHandler implements Runnable {
 
