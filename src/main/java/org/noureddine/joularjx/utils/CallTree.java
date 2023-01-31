@@ -16,6 +16,10 @@ public class CallTree {
         this.callTree = Arrays.asList(stackTrace);
     }
 
+    public CallTree(List<StackTraceElement> stackTrace) {
+        this.callTree = stackTrace;
+    }
+
     public void setCallTree(StackTraceElement[] stackTrace) {
         this.callTree = Arrays.asList(stackTrace);
     }
