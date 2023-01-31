@@ -62,8 +62,8 @@ public class ShutdownHandler implements Runnable {
 
             //Writing call trees consumption file only if the option is enabled
             if (this.properties.callTreesConsumption()) {
-                //writeCallTreesConsumption(status.getCallTreesConsumedEnergy());
-                this.saveResults(status.getCallTreesConsumedEnergy(), "call-trees", "energy");
+                this.saveResults(status.getCallTreesConsumedEnergy(), "all-call-trees", "energy");
+                this.saveResults(status.getFilteredCallTreesConsumedEnergy(), "filtered-call-trees", "energy");
             }
         } catch (IOException exception) {
             // Continue shutting down

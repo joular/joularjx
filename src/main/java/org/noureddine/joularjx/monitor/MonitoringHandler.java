@@ -17,6 +17,7 @@ import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import org.noureddine.joularjx.utils.Scope;
+import org.noureddine.joularjx.utils.StackTraceFilter;
 import org.noureddine.joularjx.utils.CallTree;
 
 import com.sun.management.OperatingSystemMXBean;
@@ -65,8 +66,10 @@ public class MonitoringHandler implements Runnable {
 
                 //Collecting call trees stats only if the option is enabled
                 Map<Thread, Map<CallTree, Integer>> callTreesStats = null;
+                Map<Thread, Map<CallTree, Integer>> filteredCallTreeStats = null;
                 if (this.properties.callTreesConsumption()) {
-                    callTreesStats = extractCallTreesStats(samples);
+                    callTreesStats = extractCallTreesStats(samples, methodName -> true);
+                    filteredCallTreeStats = extractCallTreesStats(samples, properties::filtersMethod);
                 }
 
                 double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
@@ -93,11 +96,13 @@ public class MonitoringHandler implements Runnable {
 
                 //Updating call trees consumption if option is enabled
                 if (this.properties.callTreesConsumption()) {
-                    updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages);
+                    updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages, status::addCallTreeConsumedEnergy);
+                    updateCallTreesConsumedEnergy(filteredCallTreeStats, threadCpuTimePercentages, status::addFilteredCallTreeConsumedEnergy);
 
                     //Writing call trees power only if option is enabled
                     if (this.properties.saveCallTreesRuntimeData()) {
                         this.saveResults(callTreesStats, threadCpuTimePercentages, "all", "call-trees", this.properties.overwriteCallTreesRuntimeData());
+                        this.saveResults(filteredCallTreeStats, threadCpuTimePercentages, "filtered", "call-trees", this.properties.overwriteCallTreesRuntimeData());
                     }
                 }
 
@@ -177,17 +182,26 @@ public class MonitoringHandler implements Runnable {
     /**
      * Returns the occurences of each call tree during monitoring loop, per thread.
      * @param samples the result of the sampling step. A List of StackTraces of each Thread. 
+     * @param filter a Predicate, used to filter method names within the call tree.
      * @return for each Thread, a Map of each CallTree and its occurences during the last monitoring loop.
      */
-    private Map<Thread, Map<CallTree, Integer>> extractCallTreesStats(Map<Thread, List<StackTraceElement[]>> samples){
+    private Map<Thread, Map<CallTree, Integer>> extractCallTreesStats(Map<Thread, List<StackTraceElement[]>> samples, Predicate<String> filter){
         Map<Thread, Map<CallTree, Integer>> stats = new HashMap<>();
 
         for (var entry : samples.entrySet()) {
             Map<CallTree, Integer> target = new HashMap<>();
             stats.put(entry.getKey(), target);
 
+            /*
             entry.getValue().stream().filter(stackTraceArray -> stackTraceArray.length > 0)
-                                     .forEach(stackTraceArray -> {target.merge(new CallTree(stackTraceArray), 1, Integer::sum);});
+                                     .forEach(stackTraceArray -> {target.merge(new CallTree(StackTraceFilter.filter(stackTraceArray, filter)), 1, Integer::sum);});
+            */
+            for (var stackTraceEntry : entry.getValue()) {
+                List<StackTraceElement> stackTrace = StackTraceFilter.filter(stackTraceEntry, filter);
+                if (stackTrace.size() > 0) {
+                    target.merge(new CallTree(stackTrace), 1, Integer::sum);
+                }
+            }
         }
 
         return stats;
@@ -259,14 +273,15 @@ public class MonitoringHandler implements Runnable {
      * @param stats call trees encounters statistics per Thread
      * @param threadCpuTimePercentages  map of CPU time usage per PID
      */
-    private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats, Map<Long, Double> threadCpuTimePercentages) {
+    private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats, Map<Long, Double> threadCpuTimePercentages, ObjDoubleConsumer<CallTree> callTreeConsumer) {
         for (var entry : stats.entrySet()) {
             double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
 
             for (var callTreeEntry : entry.getValue().entrySet()) {
                 double stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId()) * (callTreeEntry.getValue() / totalEncounters);
-
-                this.status.addCallTreeConsumedEnergy(callTreeEntry.getKey(), stackTracePower);
+                
+                //this.status.addCallTreeConsumedEnergy(callTreeEntry.getKey(), stackTracePower);
+                callTreeConsumer.accept(callTreeEntry.getKey(), stackTracePower);
             }
         }
     }

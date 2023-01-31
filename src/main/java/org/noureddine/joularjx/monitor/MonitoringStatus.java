@@ -18,6 +18,7 @@ public class MonitoringStatus {
 
     //Map CallTrees to their energy consumption
     private final Map<CallTree, Double> callTreesConsumption;
+    private final Map<CallTree, Double> filteredCallTreesConsumption;
 
     private double totalConsumedEnergy;
 
@@ -31,6 +32,7 @@ public class MonitoringStatus {
         this.methodsConsumptionEvolution = new ConcurrentHashMap<>();
         this.filteredMethodsConsumptionEvolution = new ConcurrentHashMap<>();
         this.callTreesConsumption = new ConcurrentHashMap<>();
+        this.filteredCallTreesConsumption = new ConcurrentHashMap<>();
 
         this.totalConsumedEnergy = 0;
     }
@@ -70,6 +72,10 @@ public class MonitoringStatus {
      */
     public void addCallTreeConsumedEnergy(CallTree callTree, double delta) {
         this.callTreesConsumption.merge(callTree, delta, Double::sum);
+    }
+
+    public void addFilteredCallTreeConsumedEnergy(CallTree callTree, double delta) {
+        this.filteredCallTreesConsumption.merge(callTree, delta, Double::sum);
     }
 
     /**
@@ -157,5 +163,9 @@ public class MonitoringStatus {
      */
     public Map<CallTree, Double> getCallTreesConsumedEnergy() {
         return this.callTreesConsumption;
+    }
+
+    public Map<CallTree, Double> getFilteredCallTreesConsumedEnergy() {
+        return this.filteredCallTreesConsumption;
     }
 }
