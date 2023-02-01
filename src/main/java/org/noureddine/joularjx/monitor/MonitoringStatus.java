@@ -6,6 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.noureddine.joularjx.utils.CallTree;
 
+/**
+ * The MonitoringStatus contains several data structures used to save runtime data and global consumption values.
+ */
 public class MonitoringStatus {
 
     private final Object consumedEnergyLock;

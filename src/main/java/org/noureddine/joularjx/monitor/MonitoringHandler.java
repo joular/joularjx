@@ -22,6 +22,9 @@ import org.noureddine.joularjx.utils.CallTree;
 
 import com.sun.management.OperatingSystemMXBean;
 
+/**
+ * The MonitoringHandler performs all the sampling and energy computation step, and stores the data in dedicated MonitoringStatus structures or in files.
+ */
 public class MonitoringHandler implements Runnable {
 
     private static final String DESTROY_THREAD_NAME = "DestroyJavaVM";
@@ -38,6 +41,16 @@ public class MonitoringHandler implements Runnable {
     private final OperatingSystemMXBean osBean;
     private final ThreadMXBean threadBean;
 
+    /**
+     * Creates a new MonitoringHandler.
+     * @param appPid the PID of the monitored application
+     * @param properties the agent's configuration properties
+     * @param resultWriter the writer that will be used to save data in files
+     * @param cpu an implementation of the CPU interface, depending on the OS and hardware
+     * @param status where all the runtime data will be saved
+     * @param osBean the OperatingSystemMXBean, used to collect CPU and process loads
+     * @param threadBean the ThreadMXBean, used to collect thread CPU time
+     */
     public MonitoringHandler(long appPid, AgentProperties properties, ResultWriter resultWriter, Cpu cpu,
                              MonitoringStatus status, OperatingSystemMXBean osBean, ThreadMXBean threadBean) {
         this.appPid = appPid;
@@ -123,6 +136,11 @@ public class MonitoringHandler implements Runnable {
         }
     }
 
+    /**
+     * Performs the sampling step. Collects a set of stack traces for each thread.
+     * The sampling step is performed multiple time at the frequecy of SAMPLE_RATE_MILLSECONDS, for the duration of SAMPLE_TIME_MILLISECONDS
+     * @return for each Thread, a List of it's the stack traces
+     */
     private Map<Thread, List<StackTraceElement[]>> sample() {
         Map<Thread, List<StackTraceElement[]>> result = new HashMap<>();
         try {
@@ -203,6 +221,12 @@ public class MonitoringHandler implements Runnable {
         return stats;
     }
 
+    /**
+     * Updates the CPU times for each Thread.
+     * @param methodsStats a map of method occurences for each thread
+     * @param threadsCpuTime a map of CPU time per PID
+     * @return the total CPU time used by all the monitored threads
+     */
     private long updateThreadsCpuTime(Map<Thread, Map<String, Integer>> methodsStats, Map<Long, Long> threadsCpuTime) {
         long totalThreadsCpuTime = 0;
         for (var entry : methodsStats.entrySet()) {
@@ -219,6 +243,13 @@ public class MonitoringHandler implements Runnable {
         return totalThreadsCpuTime;
     }
 
+    /**
+     * Returns for each thread (PID) it's percentage of CPU time used
+     * @param threadsCpuTime a map of CPU time per PID
+     * @param totalThreadsCpuTime the CPU time used by all the monitored threads
+     * @param processEnergy the energy consumed by the process
+     * @return for each PID, the percentage of CPU time used by the associated thread
+     */
     private Map<Long, Double> getThreadsCpuTimePercentage(Map<Long, Long> threadsCpuTime,
                                                           long totalThreadsCpuTime,
                                                           double processEnergy) {
@@ -320,6 +351,10 @@ public class MonitoringHandler implements Runnable {
             resultWriter.closeTarget();
     }
 
+    /**
+     * Indicate if the JVM is destroying
+     * @return true if the JVM destroying thread is present, false otherwise
+     */
     private boolean destroyingVM() {
         return Thread.getAllStackTraces().keySet().stream()
                 .anyMatch(thread -> thread.getName().equals(DESTROY_THREAD_NAME));
