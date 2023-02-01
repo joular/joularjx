@@ -69,8 +69,6 @@ public class MonitoringHandler implements Runnable {
         // CPU time for each thread
         Map<Long, Long> threadsCpuTime = new HashMap<>();
 
-
-        logger.log(Level.INFO, String.format("Max memory : %d MB", Runtime.getRuntime().maxMemory() / 1000000L));
         while (!destroyingVM()) {
             try {
                 double energyBefore = cpu.getInitialPower();
@@ -125,11 +123,6 @@ public class MonitoringHandler implements Runnable {
                 if (this.properties.savesRuntimeData()) {   
                     this.saveResults(methodsStats, threadCpuTimePercentages, "all", "methods", this.properties.overwritesRuntimeData());
                     this.saveResults(methodsStatsFiltered , threadCpuTimePercentages, "filtered", "methods", this.properties.overwritesRuntimeData());
-                }
-
-                long usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-                if (usedMemory > this.status.getUsedMemory()) {
-                    this.status.setUsedMemory(usedMemory);
                 }
 
                 Thread.sleep(SAMPLE_RATE_MILLISECONDS);
