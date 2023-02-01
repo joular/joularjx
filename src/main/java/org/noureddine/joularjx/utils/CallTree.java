@@ -4,26 +4,49 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A CallTree (or a stack trace) is a collection of StackTraceElements in a given order. This class proivdes methods in order to easily represent and manage such stack traces. 
+ */
 public class CallTree {
 
+    //The stack trace is stored in the form of a List of StackTraceElements.
     private List<StackTraceElement> callTree;
-
+    
+    /**
+     * Creates a new empty CallTree.
+     */
     public CallTree() {
         this.callTree = new ArrayList<>();
     }
 
+    /**
+     * Creates a new CallTree.
+     * @param stackTrace a java array of StackTraceElement, representing a stack trace. This array will be automatically converted to a List.
+     */
     public CallTree(StackTraceElement[] stackTrace) {
         this.callTree = Arrays.asList(stackTrace);
     }
 
+    /**
+     * Creates a new CallTree.
+     * @param stackTrace a List of StackTraceElement, representing a stack trace
+     */
     public CallTree(List<StackTraceElement> stackTrace) {
         this.callTree = stackTrace;
     }
 
+    /**
+     * Sets the given stack trace.
+     * @param stackTrace a java array of StackTraceElement, representing a stack trace.
+     */
     public void setCallTree(StackTraceElement[] stackTrace) {
         this.callTree = Arrays.asList(stackTrace);
     }
 
+    /**
+     * Returns the call tree.
+     * @return a List of StackTraceElement, representing a call tree.
+     */
     public List<StackTraceElement> getCallTree() {
         return this.callTree;
     }
