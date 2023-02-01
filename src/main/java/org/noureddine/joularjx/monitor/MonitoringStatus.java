@@ -158,13 +158,17 @@ public class MonitoringStatus {
     }
 
     /**
-     * Returns the energy consumption evolution of each call tree.
-     * @return a Map<CallTree, Double> mapping each call tree to their energy consumption.
+     * Returns the energy consumption of each call tree.
+     * @return a Map<CallTree, Double> mapping each call tree to their total energy consumption.
      */
     public Map<CallTree, Double> getCallTreesConsumedEnergy() {
         return this.callTreesConsumption;
     }
 
+    /**
+     * Returns the energy consumption of each filtered call tree.
+     * @return a Map<CallTree, Double> mapping each filtered call tree to their total energy consumption.
+     */
     public Map<CallTree, Double> getFilteredCallTreesConsumedEnergy() {
         return this.filteredCallTreesConsumption;
     }

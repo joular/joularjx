@@ -17,7 +17,7 @@ public class StackTraceFilter {
         List<StackTraceElement> output = new ArrayList<>();
         
         for (StackTraceElement element : input) {
-            String canonicalName = element.getClassName()+"."+element.getMethodName();
+            String canonicalName = element.getClassName() + "." + element.getMethodName();
             if (filter.test(canonicalName)) {
                 output.add(element);
             }
