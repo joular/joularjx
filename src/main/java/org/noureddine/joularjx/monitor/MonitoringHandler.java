@@ -192,10 +192,6 @@ public class MonitoringHandler implements Runnable {
             Map<CallTree, Integer> target = new HashMap<>();
             stats.put(entry.getKey(), target);
 
-            /*
-            entry.getValue().stream().filter(stackTraceArray -> stackTraceArray.length > 0)
-                                     .forEach(stackTraceArray -> {target.merge(new CallTree(StackTraceFilter.filter(stackTraceArray, filter)), 1, Integer::sum);});
-            */
             for (var stackTraceEntry : entry.getValue()) {
                 List<StackTraceElement> stackTrace = StackTraceFilter.filter(stackTraceEntry, filter);
                 if (stackTrace.size() > 0) {
@@ -271,7 +267,8 @@ public class MonitoringHandler implements Runnable {
     /**
      * Update call trees consumed energy.
      * @param stats call trees encounters statistics per Thread
-     * @param threadCpuTimePercentages  map of CPU time usage per PID
+     * @param threadCpuTimePercentages map of CPU time usage per PID
+     * @param callTreeConsumer the method used to update the energy consumption
      */
     private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats, Map<Long, Double> threadCpuTimePercentages, ObjDoubleConsumer<CallTree> callTreeConsumer) {
         for (var entry : stats.entrySet()) {
@@ -280,7 +277,6 @@ public class MonitoringHandler implements Runnable {
             for (var callTreeEntry : entry.getValue().entrySet()) {
                 double stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId()) * (callTreeEntry.getValue() / totalEncounters);
                 
-                //this.status.addCallTreeConsumedEnergy(callTreeEntry.getKey(), stackTracePower);
                 callTreeConsumer.accept(callTreeEntry.getKey(), stackTracePower);
             }
         }

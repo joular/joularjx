@@ -46,10 +46,6 @@ public class ShutdownHandler implements Runnable {
         logger.log(Level.INFO, "Program consumed {0,number,#.##} joules", status.getTotalConsumedEnergy());
 
         try {
-            /*
-            shareResults("all", status.getMethodsConsumedEnergy());
-            shareResults("filtered", status.getFilteredMethodsConsumedEnergy());
-            */
             //Writing methods and filtered methods energy consumption
             this.saveResults(status.getMethodsConsumedEnergy(), "all-methods", "energy");
             this.saveResults(status.getFilteredMethodsConsumedEnergy(), "filtered-methods", "energy");
