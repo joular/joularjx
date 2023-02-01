@@ -36,6 +36,8 @@ JoularJX depend on the following software or packages in order to get power read
   - Model 4 B (rev 1.1, and rev 1.2), for both 32 bits and 64 bits OS
   - Model 400 (rev 1.0), for 64 bits OS
 
+We also support Asus Tinker Board (S).
+
 ## :bulb: Usage
 
 JoularJX is a Java agent where you can simply hook it to the Java Virtual Machine when starting your Java program:
