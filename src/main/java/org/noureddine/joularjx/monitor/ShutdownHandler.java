@@ -46,11 +46,20 @@ public class ShutdownHandler implements Runnable {
         logger.log(Level.INFO, "Program consumed {0,number,#.##} joules", status.getTotalConsumedEnergy());
 
         try {
-            shareResults("all", status.getMethodsConsumedEnergy());
-            shareResults("filtered", status.getFilteredMethodsConsumedEnergy());
+            //Writing methods and filtered methods energy consumption
+            this.saveResults(status.getMethodsConsumedEnergy(), "all-methods", "energy");
+            this.saveResults(status.getFilteredMethodsConsumedEnergy(), "filtered-methods", "energy");
+
+            //Writing consumption evolution files only if the option is enabled
             if (this.properties.trackConsumptionEvolution()) {
                 writeConsumptionEvolution(status.getMethodsConsumptionEvolution(), Scope.ALL);
                 writeConsumptionEvolution(status.getFilteredMethodsConsumptionEvolution(), Scope.FILTERED);
+            }
+
+            //Writing call trees consumption file only if the option is enabled
+            if (this.properties.callTreesConsumption()) {
+                this.saveResults(status.getCallTreesConsumedEnergy(), "all-call-trees", "energy");
+                this.saveResults(status.getFilteredCallTreesConsumedEnergy(), "filtered-call-trees", "energy");
             }
         } catch (IOException exception) {
             // Continue shutting down
@@ -59,13 +68,21 @@ public class ShutdownHandler implements Runnable {
         logger.log(Level.INFO, "Energy consumption of methods and filtered methods written to files");
     }
 
-    private void shareResults(String modeName, Map<String, Double> methodsConsumedEnergy) throws IOException {
-        String fileName = String.format("joularJX-%d-%s-methods-energy", appPid, modeName);
+    /**
+    * Writes the results in a file. The filename is partially defined by the given parameters.
+     * @param <K> The type of key that will be written in the file. Must implement the toString() method.*
+     * @param consumedEnergyMap the data to be written.
+     * @param nodeType a String that will be part of the file name. Used to distinct methods, call-trees, ...
+     * @param dataType a String that will be part of the file name. Used to distinct the data type contained in the file : power, energy, ...
+     * @throws IOException if an I/O error occurs while writing the data
+     */
+    public <K> void saveResults(Map<K, Double> consumedEnergyMap, String nodeType, String dataType) throws IOException {
+        String fileName = String.format("joularJX-%d-%s-%s", appPid, nodeType, dataType);
 
         resultWriter.setTarget(fileName, false);
 
-        for (var entry : methodsConsumedEnergy.entrySet()) {
-            resultWriter.write(entry.getKey(), entry.getValue());
+        for (var entry : consumedEnergyMap.entrySet()) {
+            resultWriter.write(entry.getKey().toString(), entry.getValue());
         }
 
         resultWriter.closeTarget();

@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.noureddine.joularjx.utils.CallTree;
+
 public class MonitoringStatus {
 
     private final Object consumedEnergyLock;
@@ -13,6 +15,10 @@ public class MonitoringStatus {
     //Map method names to a Map of timestamps mapped to energy consumption
     private final Map<String, Map<Long, Double>> methodsConsumptionEvolution;
     private final Map<String, Map<Long, Double>> filteredMethodsConsumptionEvolution;
+
+    //Map CallTrees to their energy consumption
+    private final Map<CallTree, Double> callTreesConsumption;
+    private final Map<CallTree, Double> filteredCallTreesConsumption;
 
     private double totalConsumedEnergy;
 
@@ -25,6 +31,8 @@ public class MonitoringStatus {
         this.filteredMethodsConsumedEnergy = new ConcurrentHashMap<>();
         this.methodsConsumptionEvolution = new ConcurrentHashMap<>();
         this.filteredMethodsConsumptionEvolution = new ConcurrentHashMap<>();
+        this.callTreesConsumption = new ConcurrentHashMap<>();
+        this.filteredCallTreesConsumption = new ConcurrentHashMap<>();
 
         this.totalConsumedEnergy = 0;
     }
@@ -51,10 +59,23 @@ public class MonitoringStatus {
     /**
      * Adds the given energy consumption to the given filtered method.
      * @param methodName a String, the filtered method name to which the consumption is mapped
-     * @param delta a souble, the amount of energy to be added
+     * @param delta a double, the amount of energy to be added
      */
     public void addFilteredMethodConsumedEnergy(String methodName, double delta) {
         filteredMethodsConsumedEnergy.merge(methodName, delta, Double::sum);
+    }
+
+    /**
+     * Adds the given energy consumption to the given call tree.
+     * @param callTree a CallTree, the call tree to which the consumption is mapped
+     * @param delta a double, the amount of energy to be added
+     */
+    public void addCallTreeConsumedEnergy(CallTree callTree, double delta) {
+        this.callTreesConsumption.merge(callTree, delta, Double::sum);
+    }
+
+    public void addFilteredCallTreeConsumedEnergy(CallTree callTree, double delta) {
+        this.filteredCallTreesConsumption.merge(callTree, delta, Double::sum);
     }
 
     /**
@@ -134,5 +155,21 @@ public class MonitoringStatus {
      */
     public Map<String, Map<Long, Double>> getFilteredMethodsConsumptionEvolution(){
         return this.filteredMethodsConsumptionEvolution;
+    }
+
+    /**
+     * Returns the energy consumption of each call tree.
+     * @return a Map<CallTree, Double> mapping each call tree to their total energy consumption.
+     */
+    public Map<CallTree, Double> getCallTreesConsumedEnergy() {
+        return this.callTreesConsumption;
+    }
+
+    /**
+     * Returns the energy consumption of each filtered call tree.
+     * @return a Map<CallTree, Double> mapping each filtered call tree to their total energy consumption.
+     */
+    public Map<CallTree, Double> getFilteredCallTreesConsumedEnergy() {
+        return this.filteredCallTreesConsumption;
     }
 }

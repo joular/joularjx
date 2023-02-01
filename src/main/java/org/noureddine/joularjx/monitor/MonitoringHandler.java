@@ -1,6 +1,15 @@
 package org.noureddine.joularjx.monitor;
 
-import com.sun.management.OperatingSystemMXBean;
+import java.io.IOException;
+import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.ObjDoubleConsumer;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.cpu.Cpu;
@@ -8,14 +17,10 @@ import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import org.noureddine.joularjx.utils.Scope;
+import org.noureddine.joularjx.utils.StackTraceFilter;
+import org.noureddine.joularjx.utils.CallTree;
 
-import java.io.IOException;
-import java.lang.management.ThreadMXBean;
-import java.util.*;
-import java.util.function.ObjDoubleConsumer;
-import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.sun.management.OperatingSystemMXBean;
 
 public class MonitoringHandler implements Runnable {
 
@@ -59,6 +64,14 @@ public class MonitoringHandler implements Runnable {
                 var methodsStats = extractStats(samples, methodName -> true);
                 var methodsStatsFiltered = extractStats(samples, properties::filtersMethod);
 
+                //Collecting call trees stats only if the option is enabled
+                Map<Thread, Map<CallTree, Integer>> callTreesStats = null;
+                Map<Thread, Map<CallTree, Integer>> filteredCallTreeStats = null;
+                if (this.properties.callTreesConsumption()) {
+                    callTreesStats = extractCallTreesStats(samples, methodName -> true);
+                    filteredCallTreeStats = extractCallTreesStats(samples, properties::filtersMethod);
+                }
+
                 double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
                 double processCpuLoad = osBean.getProcessCpuLoad();
 
@@ -81,8 +94,23 @@ public class MonitoringHandler implements Runnable {
                 updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy, Scope.ALL);
                 updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages, status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
 
-                shareResults("all", methodsStats, threadCpuTimePercentages);
-                shareResults("filtered", methodsStatsFiltered, threadCpuTimePercentages);
+                //Updating call trees consumption if option is enabled
+                if (this.properties.callTreesConsumption()) {
+                    updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages, status::addCallTreeConsumedEnergy);
+                    updateCallTreesConsumedEnergy(filteredCallTreeStats, threadCpuTimePercentages, status::addFilteredCallTreeConsumedEnergy);
+
+                    //Writing call trees power only if option is enabled
+                    if (this.properties.saveCallTreesRuntimeData()) {
+                        this.saveResults(callTreesStats, threadCpuTimePercentages, "all", "call-trees", this.properties.overwriteCallTreesRuntimeData());
+                        this.saveResults(filteredCallTreeStats, threadCpuTimePercentages, "filtered", "call-trees", this.properties.overwriteCallTreesRuntimeData());
+                    }
+                }
+
+                //Saving method's power only if option is enabled
+                if (this.properties.savesRuntimeData()) {   
+                    this.saveResults(methodsStats, threadCpuTimePercentages, "all", "methods", this.properties.overwritesRuntimeData());
+                    this.saveResults(methodsStatsFiltered , threadCpuTimePercentages, "filtered", "methods", this.properties.overwritesRuntimeData());
+                }
 
                 Thread.sleep(SAMPLE_RATE_MILLISECONDS);
             } catch (InterruptedException exception) {
@@ -123,6 +151,12 @@ public class MonitoringHandler implements Runnable {
         return result;
     }
 
+    /**
+     * Return the occurences of each method call during monitoring loop, per thread.
+     * @param samples the result of the sampking step. A List of StackTraces of each Thread
+     * @param covers a Predicate, used to filter method names
+     * @return for each Thread, a Map of each method and its occurences during the last monitoring loop
+     */
     private Map<Thread, Map<String, Integer>> extractStats(Map<Thread, List<StackTraceElement[]>> samples,
                                                            Predicate<String> covers) {
         Map<Thread, Map<String, Integer>> stats = new HashMap<>();
@@ -138,6 +172,30 @@ public class MonitoringHandler implements Runnable {
                         target.merge(methodName, 1, Integer::sum);
                         break;
                     }
+                }
+            }
+        }
+
+        return stats;
+    }
+
+    /**
+     * Returns the occurences of each call tree during monitoring loop, per thread.
+     * @param samples the result of the sampling step. A List of StackTraces of each Thread. 
+     * @param filter a Predicate, used to filter method names within the call tree.
+     * @return for each Thread, a Map of each CallTree and its occurences during the last monitoring loop.
+     */
+    private Map<Thread, Map<CallTree, Integer>> extractCallTreesStats(Map<Thread, List<StackTraceElement[]>> samples, Predicate<String> filter){
+        Map<Thread, Map<CallTree, Integer>> stats = new HashMap<>();
+
+        for (var entry : samples.entrySet()) {
+            Map<CallTree, Integer> target = new HashMap<>();
+            stats.put(entry.getKey(), target);
+
+            for (var stackTraceEntry : entry.getValue()) {
+                List<StackTraceElement> stackTrace = StackTraceFilter.filter(stackTraceEntry, filter);
+                if (stackTrace.size() > 0) {
+                    target.merge(new CallTree(stackTrace), 1, Integer::sum);
                 }
             }
         }
@@ -175,7 +233,7 @@ public class MonitoringHandler implements Runnable {
 
     /**
      * Update method's consumed energy. 
-     * @param methodsStats method's encounters statistics during per Thread
+     * @param methodsStats method's encounters statistics per Thread
      * @param threadCpuTimePercentages a map of CPU time usage per PID
      * @param updateMethodConsumedEnergy an object consumer, used to update all or only filtered methods
      * @param scope the scope (all methods or only filterd methods). Used for energy consumption tracking
@@ -207,6 +265,24 @@ public class MonitoringHandler implements Runnable {
     }
 
     /**
+     * Update call trees consumed energy.
+     * @param stats call trees encounters statistics per Thread
+     * @param threadCpuTimePercentages map of CPU time usage per PID
+     * @param callTreeConsumer the method used to update the energy consumption
+     */
+    private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats, Map<Long, Double> threadCpuTimePercentages, ObjDoubleConsumer<CallTree> callTreeConsumer) {
+        for (var entry : stats.entrySet()) {
+            double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
+
+            for (var callTreeEntry : entry.getValue().entrySet()) {
+                double stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId()) * (callTreeEntry.getValue() / totalEncounters);
+                
+                callTreeConsumer.accept(callTreeEntry.getKey(), stackTracePower);
+            }
+        }
+    }
+
+    /**
      * Calculate process energy consumption
      * @param totalCpuUsage Total CPU usage
      * @param processCpuUsage Process CPU usage
@@ -217,27 +293,31 @@ public class MonitoringHandler implements Runnable {
         return (processCpuUsage * cpuEnergy) / totalCpuUsage;
     }
 
-    private void shareResults(String modeName,
-                              Map<Thread, Map<String, Integer>> methodsStats,
-                              Map<Long, Double> threadCpuTimePercentages) throws IOException {
-        if (!properties.savesRuntimeData()) {
-            return;
-        }
-
-        String fileName = properties.overwritesRuntimeData() ?
-                String.format("joularJX-%d-%s-methods-power", appPid, modeName) :
-                String.format("joularJX-%d-%d-%s-methods-power", appPid, System.currentTimeMillis(), modeName);
+    /**
+     * Writes the results in a file. The filename is partially defined by the given parameters.
+     * @param <K> The type of key that will be written in the file. Must implement the toString() method.
+     * @param stats the data to be written, given under the form of a Map<Thread, Map<K>, Double>> where the Double is the enrgy consumption.
+     * @param threadCpuTimePercentages a map of CPU time usage per Thread (PID)
+     * @param modeName a String that will be part of the file name. Used to distinct all or filtered files.
+     * @param nodeType a String that will be part of the file name. Used to distinct methods, call-trees, ...
+     * @param overwriteData a boolean. If true, the same file will be overwritten. If false, a new file will be created, including a timestamps in milliseconds in its name.
+     * @throws IOException if an I/O error occurs while writing the file
+     */
+    public <K> void saveResults(Map<Thread, Map<K,Integer>> stats,  Map<Long, Double> threadCpuTimePercentages, String modeName, String nodeType, boolean overwriteData) throws IOException {
+        String fileName = overwriteData ? 
+                String.format("joularJX-%d-%s-%s-power", appPid, modeName, nodeType) : 
+                String.format("joularJX-%d-%d-%s-%s-power", appPid, System.currentTimeMillis(), modeName, nodeType);
 
         resultWriter.setTarget(fileName, true);
 
-        for (var stats : methodsStats.entrySet()) {
-            for (var methodEntry : stats.getValue().entrySet()) {
-                double methodPower = threadCpuTimePercentages.get(stats.getKey().getId()) * (methodEntry.getValue() / 100.0);
-                resultWriter.write(methodEntry.getKey(), methodPower);
+            for (var statEntry : stats.entrySet()) {
+                for (var entry : statEntry.getValue().entrySet()) {
+                    double power = threadCpuTimePercentages.get(statEntry.getKey().getId()) * (entry.getValue() / 100.0);
+                    resultWriter.write(entry.getKey().toString(), power);
+                }
             }
-        }
-
-        resultWriter.closeTarget();
+        
+            resultWriter.closeTarget();
     }
 
     private boolean destroyingVM() {
