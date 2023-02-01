@@ -23,6 +23,7 @@ public class MonitoringStatus {
     private final Map<CallTree, Double> callTreesConsumption;
     private final Map<CallTree, Double> filteredCallTreesConsumption;
 
+    private long maxMemoryUsage;
     private double totalConsumedEnergy;
 
     /**
@@ -37,6 +38,7 @@ public class MonitoringStatus {
         this.callTreesConsumption = new ConcurrentHashMap<>();
         this.filteredCallTreesConsumption = new ConcurrentHashMap<>();
 
+        this.maxMemoryUsage = 0;
         this.totalConsumedEnergy = 0;
     }
 
@@ -79,6 +81,14 @@ public class MonitoringStatus {
 
     public void addFilteredCallTreeConsumedEnergy(CallTree callTree, double delta) {
         this.filteredCallTreesConsumption.merge(callTree, delta, Double::sum);
+    }
+
+    public void setUsedMemory(long memory) {
+        this.maxMemoryUsage = memory;
+    }
+
+    public long getUsedMemory(){
+        return this.maxMemoryUsage;
     }
 
     /**

@@ -57,6 +57,8 @@ public class ShutdownHandler implements Runnable {
         logger.log(Level.INFO, String.format("JoularJX finished monitoring application with ID %d", appPid));
         logger.log(Level.INFO, "Program consumed {0,number,#.##} joules", status.getTotalConsumedEnergy());
 
+        System.out.println(String.format("Program consummed %,2f joules", status.getTotalConsumedEnergy()));
+
         try {
             //Writing methods and filtered methods energy consumption
             this.saveResults(status.getMethodsConsumedEnergy(), "all-methods", "energy");
@@ -78,6 +80,7 @@ public class ShutdownHandler implements Runnable {
         }
 
         logger.log(Level.INFO, "Energy consumption of methods and filtered methods written to files");
+        System.out.println(String.format("Max memory usage : %d MB", this.status.getUsedMemory() / 1000000L));
     }
 
     /**
