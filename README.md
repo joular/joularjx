@@ -54,8 +54,8 @@ JoularJX can be configured by modifying the ```config.properties``` files:
 - ```track-consumption-evolution```: generate CSV files for each method containing details of the method's consumption over the time. Each consumption value is mapped to an Unix timestamp.
 - ```evolution-data-path```: path to the location where the consumption evolution csv files will be stored. The tool will attemp to create the folders if they do not alreay exists.
 - ```hide-agent-consumption```: if set to true, the energy consumption of the agent threads will not be reported.
-- ```enable-call-trees-consumption```: compute and save method call trees energy consumption. The data will be stored in CSV files.
-- ```save-call-trees-runtime-data```: write runtime call trees power consumption in a CSV file.
+- ```enable-call-trees-consumption```: compute methods call trees energy consumption. A CSV file will be generated at the end of the agent's execution, associating to each call tree it's total energy consumption.
+- ```save-call-trees-runtime-data```: write runtime call trees power consumption in a CSV file. For each monitoring cycle (1 second), a new CSV file will be generated, containing the runtime power consumption of the call trees. The generated files will include timestamps in their names.
 - ```overwrite-call-trees-runtime-data```: overwrite runtime call trees power data file, or if set to false, it will write new file for each monitoring cycle.
 
 You can install the jar package (and the PowerMonitor.exe on Windows) wherever you want, and call it in the ```javaagent``` with the full path.
