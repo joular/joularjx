@@ -68,6 +68,10 @@ public class Agent {
         Runtime.getRuntime().addShutdownHook(new Thread(shutdownHandler));
     }
 
+    /**
+     * Creates and returns a ThreadMXBean. 
+     * Checks if the Thread CPU Time is supported by the JVM and enables it if it is disabled.
+     */
     private static ThreadMXBean createThreadBean() {
         ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
         // Check if CPU Time measurement is supported by the JVM. Quit otherwise
@@ -84,6 +88,11 @@ public class Agent {
         return threadBean;
     }
 
+    /**
+     * Creates and returns an OperatingSystemMXBean, used to collect CPU and process loads.
+     * @param cpu a {@link Cpu} implementation
+     * @return an OperatingSystemMXBean
+     */
     private static OperatingSystemMXBean createOperatingSystemBean(Cpu cpu) {
         // Get OS MxBean to collect CPU and Process loads
         OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();

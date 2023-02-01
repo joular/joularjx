@@ -12,6 +12,10 @@ import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import org.noureddine.joularjx.utils.Scope;
 
+/**
+ * The ShutdownHandler is meant to be called at the end of the agent and is responsible for displaying and writing all the consumption data in dedicated files.
+ * It also performs resource closing operations.
+ */
 public class ShutdownHandler implements Runnable {
 
     private static final Logger logger = JoularJXLogging.getLogger();
@@ -25,6 +29,14 @@ public class ShutdownHandler implements Runnable {
     private final MonitoringStatus status;
     private final AgentProperties properties;
 
+    /**
+     * Creates a new ShutdownHandler.
+     * @param appPid the PID of the monitored application 
+     * @param resultWriter the writer that will be used to save data in files
+     * @param cpu an implementation of the CPU interface, depending on the OS and hardware
+     * @param status where all the runtime data will be saved
+     * @param properties the agent's configuration properties
+     */
     public ShutdownHandler(long appPid, ResultWriter resultWriter, Cpu cpu, MonitoringStatus status, AgentProperties properties) {
         this.appPid = appPid;
         this.resultWriter = resultWriter;
