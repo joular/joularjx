@@ -35,7 +35,6 @@ public class AgentProperties {
     private static final String OVERWRITE_RUNTIME_DATA_PROPERTY = "overwrite-runtime-data";
     private static final String LOGGER_LEVEL_PROPERTY = "logger-level";
     private static final String TRACK_CONSUMPTION_EVOLUTION_PROPERTY = "track-consumption-evolution";
-    private static final String EVOLUTION_DATA_PATH_PROPERTY = "evolution-data-path";
     private static final String HIDE_AGENT_CONSUMPTION_PROPERTY = "hide-agent-consumption";
     private static final String CALL_TREES_CONSUMPTION_PROPERTY = "enable-call-trees-consumption";
     private static final String SAVE_CT_RUNTIME_DATA_PROPERTY = "save-call-trees-runtime-data";
@@ -52,7 +51,6 @@ public class AgentProperties {
     private final boolean overwriteRuntimeData;
     private final Level loggerLevel;
     private final boolean consumptionEvolution;
-    private final String evolutionDataPath;
     private final boolean hideAgentConsumption;
     private final boolean callTreesConsumption;
     private final boolean saveCtRuntimeData;
@@ -70,7 +68,6 @@ public class AgentProperties {
         this.overwriteRuntimeData = loadOverwriteRuntimeData();
         this.loggerLevel = loadLoggerLevel();
         this.consumptionEvolution = loadConsumptionEvolution();
-        this.evolutionDataPath = loadEvolutionDataPath();
         this.hideAgentConsumption = loadAgentConsumption();
         this.callTreesConsumption = loadCallTreesConsumption();
         this.saveCtRuntimeData = loadSaveCallTreesRuntimeData();
@@ -104,10 +101,6 @@ public class AgentProperties {
 
     public boolean trackConsumptionEvolution() {
         return consumptionEvolution;
-    }
-
-    public String getEvolutionDataPath() {
-        return this.evolutionDataPath;
     }
 
     public boolean hideAgentConsumption() {
@@ -175,15 +168,6 @@ public class AgentProperties {
 
     public boolean loadConsumptionEvolution() {
         return Boolean.parseBoolean(properties.getProperty(TRACK_CONSUMPTION_EVOLUTION_PROPERTY));
-    }
-
-    public String loadEvolutionDataPath() {
-        String property = properties.getProperty(EVOLUTION_DATA_PATH_PROPERTY);
-        if (property == null){
-            //Default path
-            return "evolution";
-        }
-        return property;
     }
 
     public boolean loadAgentConsumption() {

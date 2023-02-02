@@ -40,7 +40,6 @@ class AgentPropertiesTest {
                     () -> assertFalse(properties.savesRuntimeData()),
                     () -> assertEquals(Level.INFO, properties.getLoggerLevel()),
                     () -> assertFalse(properties.loadConsumptionEvolution()),
-                    () -> assertEquals("evolution", properties.loadEvolutionDataPath()),
                     () -> assertFalse(properties.loadAgentConsumption()),
                     () -> assertFalse(properties.loadCallTreesConsumption()),
                     () -> assertFalse(properties.loadSaveCallTreesRuntimeData()),
@@ -52,13 +51,11 @@ class AgentPropertiesTest {
     @Test
     void fullConfiguration() throws IOException {
         try (final FileSystem fs = MemoryFileSystemBuilder.newEmpty().build()) {
-            String path = "custom/path";
             String props = "filter-method-names=org.noureddine.joularjx\n" +
                                 "powermonitor-path=C:\\\\joularjx\\\\PowerMonitor.exe\n" +
                                 "save-runtime-data=true\n"+
                                 "overwrite-runtime-data=true\n"+
                                 "track-consumption-evolution=true\n"+
-                                "evolution-data-path="+path+"\n"+
                                 "hide-agent-consumption=true\n"+
                                 "enable-call-trees-consumption=true\n"+
                                 "save-call-trees-runtime-data=true\n"+
@@ -73,7 +70,6 @@ class AgentPropertiesTest {
                     () -> assertTrue(properties.savesRuntimeData()),
                     () -> assertTrue(properties.overwritesRuntimeData()),
                     () -> assertTrue(properties.trackConsumptionEvolution()),
-                    () -> assertEquals(path, properties.getEvolutionDataPath()),
                     () -> assertTrue(properties.hideAgentConsumption()),
                     () -> assertTrue(properties.callTreesConsumption()),
                     () -> assertTrue(properties.saveCallTreesRuntimeData()),
