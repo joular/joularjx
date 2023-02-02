@@ -9,6 +9,10 @@ import java.util.logging.Logger;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
+/**
+ * The ResultTreeManager provides a method to create the required folder hierarchy, enabling the agent to write data in files later on.
+ * This class also provides methods that return the proper filepath depending on the type (method, call-tree, ...) and granularity (all, filtered) of the data.
+ */
 public class ResultTreeManager {
 
     private static final Logger logger = JoularJXLogging.getLogger();
@@ -45,6 +49,13 @@ public class ResultTreeManager {
     private String allEvolutionPath;
     private String filteredEvolutionPath;
 
+    /**
+     * Creates a new ResultTreeManager. All the filepaths will be initialized (but not created yet!) with the informations provided by the given configuration properties.
+     * @param properties the agent's configuration properties
+     * @param appName the name of the monitored application
+     * @param pid the application PID
+     * @param startTimestamp the timestamp at which the creation has been initialized
+     */
     public ResultTreeManager(AgentProperties properties, String appName, long pid, long startTimestamp) {
         this.properties = properties;
         
@@ -70,6 +81,11 @@ public class ResultTreeManager {
 
     }
 
+    /**
+     * Creates the tree hierarchy. Creates the required folder, if they do not exists yet.
+     * Only the necessary folders are created, depending on the provided configuration properties.
+     * @return a boolean indicating werther an error occurs while creating the folder hierarchy (false), or no (true).
+     */
     public boolean create() {
         //This boolean acts as a check. If an error occurs during the intialization of the file hierarchy, the method will continue its execution, as other directories may be created sucessfully, but this boolean will be set to false, to indicate that an error occured.
         boolean verif = true; 
@@ -120,42 +136,82 @@ public class ResultTreeManager {
         return verif;
     }
 
+    /**
+     * Returns the path to the methods runtime consumption folder
+     * @return the path to the methods runtime consumption folder
+     */
     public String getAllRuntimeMethodsPath() {
         return this.allRuntimeMethodsPath;
     }
 
+    /**
+     * Returns the path to the methods total consumption folder
+     * @return the path to the methods total consumption folder
+     */
     public String getAllTotalMethodsPath() {
         return this.allTotalMethodsPath;
     }
 
+    /**
+     * Returns the path to the filtered methods runtime consumption folder
+     * @return the path to the filtered methods runtime consumption folder
+     */
     public String getFilteredRuntimeMethodsPath() {
         return this.filteredRuntimeMethodsPath;
     }
 
+    /**
+     * Returns the path to the filtered methods total consumption folder
+     * @return the path to the filtered methods total consumption folder
+     */
     public String getFilteredTotalMethodsPath() {
         return this.filteredTotalMethodsPath;
     }
 
+    /**
+     * Returns the path to the call trees runtime consumption folder
+     * @return the path to the call trees runtime consumption folder
+     */
     public String getAllRuntimeCallTreePath() {
         return this.allRuntimeCallTreePath;
     }
 
+    /**
+     * Returns the path to the call trees total consumption folder
+     * @return the path to the call trees total consumption folder
+     */
     public String getAllTotalCallTreePath() {
         return this.allTotalCallTreePath;
     }
 
+    /**
+     * Returns the path to the filtered call trees runtime consumption folder
+     * @return the path to the filtered call trees runtime consumption folder
+     */
     public String getFilteredRuntimeCallTreePath() {
         return this.filteredRuntimeCallTreePath;
     }
 
+    /**
+     * Returns the path to the filtered call trees total consumption folder
+     * @return the path to the filtered call trees total consumption folder
+     */
     public String getFilteredTotalCallTreePath() {
         return this.filteredTotalCallTreePath;
     }
 
+    /**
+     * Returns the path to the methods consumption evolution folder
+     * @return the path to the methods consumption evolution folder
+     */
     public String getAllEvolutionPath() {
         return this.allEvolutionPath;
     }
 
+    /**
+     * Returns the path to the filtered methods consumption evolution folder
+     * @return the path to the filtered methods consumption evolution folder
+     */
     public String getFilteredEvolutionPath() {
         return this.filteredEvolutionPath;
     }
