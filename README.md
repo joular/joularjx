@@ -52,6 +52,26 @@ If your program is a JAR file, then just run it as usual while adding JoularJX:
 
 JoularJX will generate multiple CSV files according to the configuration settings (in ```config.properties```), and will create these files in a ```joularjx-results```folder.
 
+The generated files are available under the following folder structure:
+- joularjx-results
+  - appName-PID-start_timestamp
+    - all (power/energy data for all methods, including the JDK ones)
+      - runtime (power consumption every second)
+        - calltree (consumption for each call tree branch)
+        - methods (consumption for each methods)
+      - total (total energy consumption, generated at the program's end)
+        - calltree
+        - methods
+      - evolution (power consumption evolution of every method, throughout the execution of the application)
+    - app (power/energy data for methods of the monitored application, according to the ```filter-method-names``` setting)
+      - runtime
+        - calltree
+        - methods
+      - total
+        - calltree
+        - methods
+      - evolution
+
 JoularJX can be configured by modifying the ```config.properties``` files:
 - ```filter-method-names```: list of strings which will be used to filter the monitored methods (see Generated files below for explanations).
 - ```save-runtime-data```: write runtime methods power consumption in a CSV file.
