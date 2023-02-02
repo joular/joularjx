@@ -56,7 +56,7 @@ public class Agent {
         long appPid = ProcessHandle.current().pid();
 
         // Creating the required folders to store the result files generated later on
-        ResultTreeManager resultTreeManager = new ResultTreeManager(properties, "TODO", appPid, System.currentTimeMillis());
+        ResultTreeManager resultTreeManager = new ResultTreeManager(properties, "run", appPid, System.currentTimeMillis());
         if (!resultTreeManager.create()) {
             logger.log(Level.WARNING, "Error(s) occured while creating the result folder hierarchy. Some results may not be reported.");
         }
@@ -66,8 +66,8 @@ public class Agent {
         OperatingSystemMXBean osBean = createOperatingSystemBean(cpu);
         MonitoringStatus status = new MonitoringStatus();
         ResultWriter resultWriter = new CsvResultWriter();
-        MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean);
-        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriter, cpu, status, properties);
+        MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean, resultTreeManager);
+        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriter, cpu, status, properties, resultTreeManager);
 
         logger.log(Level.INFO, "Initialization finished");
 

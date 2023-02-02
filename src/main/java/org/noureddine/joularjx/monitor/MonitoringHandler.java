@@ -13,12 +13,13 @@ import java.util.logging.Logger;
 
 import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.cpu.Cpu;
+import org.noureddine.joularjx.result.ResultTreeManager;
 import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
+import org.noureddine.joularjx.utils.CallTree;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import org.noureddine.joularjx.utils.Scope;
 import org.noureddine.joularjx.utils.StackTraceFilter;
-import org.noureddine.joularjx.utils.CallTree;
 
 import com.sun.management.OperatingSystemMXBean;
 
@@ -40,6 +41,7 @@ public class MonitoringHandler implements Runnable {
     private final MonitoringStatus status;
     private final OperatingSystemMXBean osBean;
     private final ThreadMXBean threadBean;
+    private final ResultTreeManager resultTreeManager;
 
     /**
      * Creates a new MonitoringHandler.
@@ -50,9 +52,10 @@ public class MonitoringHandler implements Runnable {
      * @param status where all the runtime data will be saved
      * @param osBean the OperatingSystemMXBean, used to collect CPU and process loads
      * @param threadBean the ThreadMXBean, used to collect thread CPU time
+     * @param resultTreeManager the ResultTreeManager, used to provide filepaths for runtime generated files
      */
     public MonitoringHandler(long appPid, AgentProperties properties, ResultWriter resultWriter, Cpu cpu,
-                             MonitoringStatus status, OperatingSystemMXBean osBean, ThreadMXBean threadBean) {
+                             MonitoringStatus status, OperatingSystemMXBean osBean, ThreadMXBean threadBean, ResultTreeManager resultTreeManager) {
         this.appPid = appPid;
         this.properties = properties;
         this.resultWriter = resultWriter;
@@ -60,6 +63,7 @@ public class MonitoringHandler implements Runnable {
         this.status = status;
         this.osBean = osBean;
         this.threadBean = threadBean;
+        this.resultTreeManager = resultTreeManager;
     }
 
     @Override
@@ -112,17 +116,27 @@ public class MonitoringHandler implements Runnable {
                     updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages, status::addCallTreeConsumedEnergy);
                     updateCallTreesConsumedEnergy(filteredCallTreeStats, threadCpuTimePercentages, status::addFilteredCallTreeConsumedEnergy);
 
-                    //Writing call trees power only if option is enabled
+                    //Writing runtime call trees power only if option is enabled
                     if (this.properties.saveCallTreesRuntimeData()) {
-                        this.saveResults(callTreesStats, threadCpuTimePercentages, "all", "call-trees", this.properties.overwriteCallTreesRuntimeData());
-                        this.saveResults(filteredCallTreeStats, threadCpuTimePercentages, "filtered", "call-trees", this.properties.overwriteCallTreesRuntimeData());
+                        if (this.properties.overwriteCallTreesRuntimeData()) {
+                            this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeCallTreePath()+String.format("/joularJX-%d-all-call-trees-power", appPid));
+                            this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeCallTreePath()+String.format("/joularJX-%d-filtered-call-trees-power", appPid));
+                        } else {
+                            this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeCallTreePath()+String.format("/joularJX-%d-%d-all-call-trees-power", appPid, System.currentTimeMillis()));
+                            this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeCallTreePath()+String.format("/joularJX-%d-%d-filtered-call-trees-power", appPid, System.currentTimeMillis()));
+                        }
                     }
                 }
 
-                //Saving method's power only if option is enabled
-                if (this.properties.savesRuntimeData()) {   
-                    this.saveResults(methodsStats, threadCpuTimePercentages, "all", "methods", this.properties.overwritesRuntimeData());
-                    this.saveResults(methodsStatsFiltered , threadCpuTimePercentages, "filtered", "methods", this.properties.overwritesRuntimeData());
+                //Writing runtime method's power only if option is enabled
+                if (this.properties.savesRuntimeData()) {
+                    if (this.properties.overwritesRuntimeData()) {
+                        this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeMethodsPath()+String.format("/joularJX-%d-all-methods-power", appPid));
+                        this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeMethodsPath()+String.format("/joularJX-%d-filtered-methods-power", appPid));
+                    } else {
+                        this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeMethodsPath()+String.format("/joularJX-%d-%d-all-methods-power", appPid, System.currentTimeMillis()));
+                        this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeMethodsPath()+String.format("/joularJX-%d-%d-filtered-methods-power", appPid, System.currentTimeMillis()));
+                    }
                 }
 
                 Thread.sleep(SAMPLE_RATE_MILLISECONDS);
@@ -329,17 +343,11 @@ public class MonitoringHandler implements Runnable {
      * @param <K> The type of key that will be written in the file. Must implement the toString() method.
      * @param stats the data to be written, given under the form of a Map<Thread, Map<K>, Double>> where the Double is the enrgy consumption.
      * @param threadCpuTimePercentages a map of CPU time usage per Thread (PID)
-     * @param modeName a String that will be part of the file name. Used to distinct all or filtered files.
-     * @param nodeType a String that will be part of the file name. Used to distinct methods, call-trees, ...
-     * @param overwriteData a boolean. If true, the same file will be overwritten. If false, a new file will be created, including a timestamps in milliseconds in its name.
+     * @param filePath the path of the file where the data will be written
      * @throws IOException if an I/O error occurs while writing the file
      */
-    public <K> void saveResults(Map<Thread, Map<K,Integer>> stats,  Map<Long, Double> threadCpuTimePercentages, String modeName, String nodeType, boolean overwriteData) throws IOException {
-        String fileName = overwriteData ? 
-                String.format("joularJX-%d-%s-%s-power", appPid, modeName, nodeType) : 
-                String.format("joularJX-%d-%d-%s-%s-power", appPid, System.currentTimeMillis(), modeName, nodeType);
-
-        resultWriter.setTarget(fileName, true);
+    public <K> void saveResults(Map<Thread, Map<K,Integer>> stats,  Map<Long, Double> threadCpuTimePercentages, String filePath) throws IOException {
+        resultWriter.setTarget(filePath, true);
 
             for (var statEntry : stats.entrySet()) {
                 for (var entry : statEntry.getValue().entrySet()) {
