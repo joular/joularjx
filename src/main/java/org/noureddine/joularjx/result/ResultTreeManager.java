@@ -119,5 +119,45 @@ public class ResultTreeManager {
 
         return verif;
     }
+
+    public String getAllRuntimeMethodsPath() {
+        return this.allRuntimeMethodsPath;
+    }
+
+    public String getAllTotalMethodsPath() {
+        return this.allTotalMethodsPath;
+    }
+
+    public String getFilteredRuntimeMethodsPath() {
+        return this.filteredRuntimeMethodsPath;
+    }
+
+    public String getFilteredTotalMethodsPath() {
+        return this.filteredTotalMethodsPath;
+    }
+
+    public String getAllRuntimeCallTreePath() {
+        return this.allRuntimeCallTreePath;
+    }
+
+    public String getAllTotalCallTreePath() {
+        return this.allTotalCallTreePath;
+    }
+
+    public String getFilteredRuntimeCallTreePath() {
+        return this.filteredRuntimeCallTreePath;
+    }
+
+    public String getFilteredTotalCallTreePath() {
+        return this.filteredTotalCallTreePath;
+    }
+
+    public String getAllEvolutionPath() {
+        return this.allEvolutionPath;
+    }
+
+    public String getFilteredEvolutionPath() {
+        return this.filteredEvolutionPath;
+    }
     
 }
