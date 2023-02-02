@@ -18,6 +18,7 @@ import org.noureddine.joularjx.monitor.ShutdownHandler;
 import org.noureddine.joularjx.cpu.Cpu;
 import org.noureddine.joularjx.cpu.CpuFactory;
 import org.noureddine.joularjx.result.CsvResultWriter;
+import org.noureddine.joularjx.result.ResultTreeManager;
 import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
@@ -53,6 +54,12 @@ public class Agent {
 
         // Get Process ID of current application
         long appPid = ProcessHandle.current().pid();
+
+        // Creating the required folders to store the result files generated later on
+        ResultTreeManager resultTreeManager = new ResultTreeManager(properties, "TODO", appPid, System.currentTimeMillis());
+        if (!resultTreeManager.create()) {
+            logger.log(Level.WARNING, "Error(s) occured while creating the result folder hierarchy. Some results may not be reported.");
+        }
 
         Cpu cpu = CpuFactory.getCpu(properties);
 
