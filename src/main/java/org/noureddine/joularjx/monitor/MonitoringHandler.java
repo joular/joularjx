@@ -120,10 +120,10 @@ public class MonitoringHandler implements Runnable {
                     if (this.properties.saveCallTreesRuntimeData()) {
                         if (this.properties.overwriteCallTreesRuntimeData()) {
                             this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeCallTreePath()+String.format("/joularJX-%d-all-call-trees-power", appPid));
-                            this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeCallTreePath()+String.format("/joularJX-%d-filtered-call-trees-power", appPid));
+                            this.saveResults(filteredCallTreeStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeCallTreePath()+String.format("/joularJX-%d-filtered-call-trees-power", appPid));
                         } else {
                             this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeCallTreePath()+String.format("/joularJX-%d-%d-all-call-trees-power", appPid, System.currentTimeMillis()));
-                            this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeCallTreePath()+String.format("/joularJX-%d-%d-filtered-call-trees-power", appPid, System.currentTimeMillis()));
+                            this.saveResults(filteredCallTreeStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeCallTreePath()+String.format("/joularJX-%d-%d-filtered-call-trees-power", appPid, System.currentTimeMillis()));
                         }
                     }
                 }
@@ -131,11 +131,11 @@ public class MonitoringHandler implements Runnable {
                 //Writing runtime method's power only if option is enabled
                 if (this.properties.savesRuntimeData()) {
                     if (this.properties.overwritesRuntimeData()) {
-                        this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeMethodsPath()+String.format("/joularJX-%d-all-methods-power", appPid));
-                        this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeMethodsPath()+String.format("/joularJX-%d-filtered-methods-power", appPid));
+                        this.saveResults(methodsStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeMethodsPath()+String.format("/joularJX-%d-all-methods-power", appPid));
+                        this.saveResults(methodsStatsFiltered, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeMethodsPath()+String.format("/joularJX-%d-filtered-methods-power", appPid));
                     } else {
-                        this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeMethodsPath()+String.format("/joularJX-%d-%d-all-methods-power", appPid, System.currentTimeMillis()));
-                        this.saveResults(callTreesStats, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeMethodsPath()+String.format("/joularJX-%d-%d-filtered-methods-power", appPid, System.currentTimeMillis()));
+                        this.saveResults(methodsStats, threadCpuTimePercentages, this.resultTreeManager.getAllRuntimeMethodsPath()+String.format("/joularJX-%d-%d-all-methods-power", appPid, System.currentTimeMillis()));
+                        this.saveResults(methodsStatsFiltered, threadCpuTimePercentages, this.resultTreeManager.getFilteredRuntimeMethodsPath()+String.format("/joularJX-%d-%d-filtered-methods-power", appPid, System.currentTimeMillis()));
                     }
                 }
 
