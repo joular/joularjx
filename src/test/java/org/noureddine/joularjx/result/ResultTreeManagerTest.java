@@ -13,7 +13,6 @@ public class ResultTreeManagerTest {
     private long timestamp;
 
     private String appDirectory;
-    private final String appName = "sample_app";
 
     private ResultTreeManager manager;
 
@@ -22,9 +21,10 @@ public class ResultTreeManagerTest {
         this.pid = new Random().nextLong();
         this.timestamp = System.currentTimeMillis();
 
-        this.appDirectory = String.format("%s-%d-%d", appName, pid, timestamp);
+        this.appDirectory = String.format("%d-%d", pid, timestamp);
 
-        this.manager = new ResultTreeManager(null, appName, pid, timestamp);
+        //For the moment, only peths are tested, so the AgentProperies parameter is not required
+        this.manager = new ResultTreeManager(null, pid, timestamp);
     }
 
     @Test

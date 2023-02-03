@@ -52,15 +52,14 @@ public class ResultTreeManager {
     /**
      * Creates a new ResultTreeManager. All the filepaths will be initialized (but not created yet!) with the informations provided by the given configuration properties.
      * @param properties the agent's configuration properties
-     * @param appName the name of the monitored application
      * @param pid the application PID
      * @param startTimestamp the timestamp at which the creation has been initialized
      */
-    public ResultTreeManager(AgentProperties properties, String appName, long pid, long startTimestamp) {
+    public ResultTreeManager(AgentProperties properties, long pid, long startTimestamp) {
         this.properties = properties;
         
         //Building the path of all the directories
-        this.runDirectoryPath =  GLOBAL_RESULT_DIRECTORY_NAME + "/" + String.format("%s-%d-%d",appName, pid, startTimestamp);
+        this.runDirectoryPath =  GLOBAL_RESULT_DIRECTORY_NAME + "/" + String.format("%d-%d", pid, startTimestamp);
 
         String allDirectoryPath      = runDirectoryPath + "/" + ALL_DIRECTORY_NAME;
         String filteredDirectoryPath = runDirectoryPath + "/" + FILTERED_DIRECTORY_NAME;

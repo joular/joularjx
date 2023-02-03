@@ -56,7 +56,7 @@ public class Agent {
         long appPid = ProcessHandle.current().pid();
 
         // Creating the required folders to store the result files generated later on
-        ResultTreeManager resultTreeManager = new ResultTreeManager(properties, "run", appPid, System.currentTimeMillis());
+        ResultTreeManager resultTreeManager = new ResultTreeManager(properties, appPid, System.currentTimeMillis());
         if (!resultTreeManager.create()) {
             logger.log(Level.WARNING, "Error(s) occured while creating the result folder hierarchy. Some results may not be reported.");
         }
