@@ -18,6 +18,7 @@ import org.noureddine.joularjx.monitor.ShutdownHandler;
 import org.noureddine.joularjx.cpu.Cpu;
 import org.noureddine.joularjx.cpu.CpuFactory;
 import org.noureddine.joularjx.result.CsvResultWriter;
+import org.noureddine.joularjx.result.ResultTreeManager;
 import org.noureddine.joularjx.result.ResultWriter;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
@@ -54,13 +55,19 @@ public class Agent {
         // Get Process ID of current application
         long appPid = ProcessHandle.current().pid();
 
+        // Creating the required folders to store the result files generated later on
+        ResultTreeManager resultTreeManager = new ResultTreeManager(properties, appPid, System.currentTimeMillis());
+        if (!resultTreeManager.create()) {
+            logger.log(Level.WARNING, "Error(s) occured while creating the result folder hierarchy. Some results may not be reported.");
+        }
+
         Cpu cpu = CpuFactory.getCpu(properties);
 
         OperatingSystemMXBean osBean = createOperatingSystemBean(cpu);
         MonitoringStatus status = new MonitoringStatus();
         ResultWriter resultWriter = new CsvResultWriter();
-        MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean);
-        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriter, cpu, status, properties);
+        MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriter, cpu, status, osBean, threadBean, resultTreeManager);
+        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriter, cpu, status, properties, resultTreeManager);
 
         logger.log(Level.INFO, "Initialization finished");
 
