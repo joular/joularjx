@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Adel Noureddine, Université de Pays et des Pays de l'Adour.
+ * Copyright (c) 2021-2023, Adel Noureddine, Université de Pays et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the
  * GNU General Public License v3.0 only (GPL-3.0-only)
@@ -47,7 +47,7 @@ public class Agent {
         JoularJXLogging.updateLevel(properties.getLoggerLevel());
 
         logger.info("+---------------------------------+");
-        logger.info("| JoularJX Agent Version 1.5      |");
+        logger.info("| JoularJX Agent Version 2.0      |");
         logger.info("+---------------------------------+");
 
         ThreadMXBean threadBean = createThreadBean();
