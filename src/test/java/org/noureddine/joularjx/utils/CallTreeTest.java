@@ -65,6 +65,38 @@ public class CallTreeTest {
     }
 
     @Test
+    public void equalsWithSameElementsButNotSameLinesTest() {
+        StackTraceElement e = new StackTraceElement("ClassA", "MethodA", "FileA", 20);
+        StackTraceElement e1 = new StackTraceElement("ClassB", "MethodB", "FileB", 12);
+
+        StackTraceElement e2 = new StackTraceElement("ClassA", "MethodA", "FileA", 59);
+        StackTraceElement e3 = new StackTraceElement("ClassB", "MethodB", "FileB", 02);
+
+        StackTraceElement[] arr1 = {e, e1};
+        StackTraceElement[] arr2 = {e2, e3};
+
+        CallTree s1 = new CallTree(arr1);
+        CallTree s2 = new CallTree(arr2);
+
+        assertEquals(s1, s2);
+    }
+
+    @Test
+    public void equalsWithoutFileNameDoesNotFailsTest() {
+        StackTraceElement e = new StackTraceElement("ClassA", "MethodA", null, 20);
+        StackTraceElement e1 = new StackTraceElement("ClassB", "MethodB", null, 12);
+        StackTraceElement e2 = new StackTraceElement("ClassC", "MethodC", null, 59);
+
+        StackTraceElement[] arr1 = {e, e1, e2};
+        StackTraceElement[] arr2 = {e, e1, e2};
+
+        CallTree s1 = new CallTree(arr1);
+        CallTree s2 = new CallTree(arr2);
+
+        assertTrue(s1.equals(s2));
+    }
+
+    @Test
     public void toSringTest() {
         StackTraceElement e = new StackTraceElement("ClassA", "MethodA", "FileA", 20);
         StackTraceElement e1 = new StackTraceElement("ClassB", "MethodB", "FileB", 12);
