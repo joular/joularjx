@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2021-2023, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the
+ * GNU General Public License v3.0 only (GPL-3.0-only)
+ * which accompanies this distribution, and is available at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ */
+
 package org.noureddine.joularjx.utils;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
@@ -11,15 +21,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AgentPropertiesTest {
 
@@ -39,11 +44,16 @@ class AgentPropertiesTest {
             AgentProperties properties = new AgentProperties(fs);
 
             assertAll(
-                    () -> assertTrue(properties.getFilterMethodNames().isEmpty()),
+                    () -> assertFalse(properties.filtersMethod("")),
                     () -> assertNull(properties.getPowerMonitorPath()),
-                    () -> assertFalse(properties.getOverwriteRuntimeData()),
-                    () -> assertFalse(properties.getSaveRuntimeData()),
-                    () -> assertEquals(Level.INFO, properties.getLoggerLevel())
+                    () -> assertFalse(properties.overwritesRuntimeData()),
+                    () -> assertFalse(properties.savesRuntimeData()),
+                    () -> assertEquals(Level.INFO, properties.getLoggerLevel()),
+                    () -> assertFalse(properties.loadConsumptionEvolution()),
+                    () -> assertFalse(properties.loadAgentConsumption()),
+                    () -> assertFalse(properties.loadCallTreesConsumption()),
+                    () -> assertFalse(properties.loadSaveCallTreesRuntimeData()),
+                    () -> assertFalse(properties.loadOverwriteCallTreeRuntimeData())
             );
         }
     }
@@ -51,17 +61,29 @@ class AgentPropertiesTest {
     @Test
     void fullConfiguration() throws IOException {
         try (final FileSystem fs = MemoryFileSystemBuilder.newEmpty().build()) {
-            Files.write(fs.getPath("config.properties"), ("filter-method-names=org.noureddine.joularjx\n" +
-                    "powermonitor-path=C:\\\\joularjx\\\\PowerMonitor.exe\n" +
-                    "save-runtime-data=true\noverwrite-runtime-data=true").getBytes(StandardCharsets.UTF_8));
+            String props = "filter-method-names=org.noureddine.joularjx\n" +
+                                "powermonitor-path=C:\\\\joularjx\\\\PowerMonitor.exe\n" +
+                                "save-runtime-data=true\n"+
+                                "overwrite-runtime-data=true\n"+
+                                "track-consumption-evolution=true\n"+
+                                "hide-agent-consumption=true\n"+
+                                "enable-call-trees-consumption=true\n"+
+                                "save-call-trees-runtime-data=true\n"+
+                                "overwrite-call-trees-runtime-data=true";
+            Files.write(fs.getPath("config.properties"), (props).getBytes(StandardCharsets.UTF_8));
 
             AgentProperties properties = new AgentProperties(fs);
 
             assertAll(
-                    () -> assertEquals(List.of("org.noureddine.joularjx"), properties.getFilterMethodNames()),
+                    () -> assertTrue(properties.filtersMethod("org.noureddine.joularjx")),
                     () -> assertEquals("C:\\joularjx\\PowerMonitor.exe", properties.getPowerMonitorPath()),
-                    () -> assertTrue(properties.getSaveRuntimeData()),
-                    () -> assertTrue(properties.getOverwriteRuntimeData())
+                    () -> assertTrue(properties.savesRuntimeData()),
+                    () -> assertTrue(properties.overwritesRuntimeData()),
+                    () -> assertTrue(properties.trackConsumptionEvolution()),
+                    () -> assertTrue(properties.hideAgentConsumption()),
+                    () -> assertTrue(properties.callTreesConsumption()),
+                    () -> assertTrue(properties.saveCallTreesRuntimeData()),
+                    () -> assertTrue(properties.overwriteCallTreesRuntimeData())
             );
         }
     }
@@ -75,7 +97,8 @@ class AgentPropertiesTest {
             AgentProperties properties = new AgentProperties(fs);
 
             assertAll(
-                    () -> assertEquals(List.of("org.noureddine.joularjx", "org.noureddine.joularjx2"), properties.getFilterMethodNames()),
+                    () -> assertTrue(properties.filtersMethod("org.noureddine.joularjx")),
+                    () -> assertTrue(properties.filtersMethod("org.noureddine.joularjx2")),
                     () -> assertNull(properties.getPowerMonitorPath())
             );
         }
@@ -90,8 +113,8 @@ class AgentPropertiesTest {
             AgentProperties properties = new AgentProperties(fs);
 
             assertAll(
-                    () -> assertTrue(properties.getSaveRuntimeData()),
-                    () -> assertFalse(properties.getOverwriteRuntimeData())
+                    () -> assertTrue(properties.savesRuntimeData()),
+                    () -> assertFalse(properties.overwritesRuntimeData())
             );
         }
     }
@@ -102,11 +125,11 @@ class AgentPropertiesTest {
                 Arguments.of("OFF", Level.OFF),
                 Arguments.of("SEVERE", Level.SEVERE),
                 Arguments.of("WARNING", Level.WARNING),
-                Arguments.of("FINE", Level.INFO),
-                Arguments.of("CONFIG", Level.INFO),
-                Arguments.of("ALL", Level.INFO),
-                Arguments.of("FINER", Level.INFO),
-                Arguments.of("FINEST", Level.INFO)
+                Arguments.of("FINE", Level.FINE),
+                Arguments.of("CONFIG", Level.CONFIG),
+                Arguments.of("ALL", Level.ALL),
+                Arguments.of("FINER", Level.FINER),
+                Arguments.of("FINEST", Level.FINEST)
         );
     }
 
