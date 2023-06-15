@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ Copyright (c) 2021-2023, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+  ~ All rights reserved. This program and the accompanying materials
+  ~ are made available under the terms of the
+  ~ GNU General Public License v3.0 only (GPL-3.0-only)
+  ~ which accompanies this distribution, and is available at
+  ~ https://www.gnu.org/licenses/gpl-3.0.en.html
+  -->
+
+<Page
+    x:Class="org_noureddine_joularjx_gui.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:org_noureddine_joularjx_gui.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" >
+        <Grid HorizontalAlignment="Center" Margin="20"  MaxWidth="1000">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <!--Row 0-->
+            <TextBlock Name="joularTitleTextBlock" 
+                    Grid.Column="0" Grid.Row="0"  Margin="0,20,0,10" 
+                    FontSize="30" FontFamily="Segoe Ui Variable"
+                    FontWeight="SemiBold"
+                    Text="JoularJX GUI"/>
+            <!--Row 1-->
+            <Image  Name="joularLogo"
+                Grid.Column="0" Grid.Row="1"
+                HorizontalAlignment="Left"
+                Width="200" Height="auto" Margin="0,0,0,20"
+                Source="/Images/joularjx.png"/>            
+            <!--Row 2-->
+            <TextBlock Name="joularDefinitionTextBlock"
+                    Grid.Column="0" Grid.Row="2"
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Left"
+                    FontSize="14" TextWrapping="Wrap">
+            JoularJX is a Java-based agent 
+            for power monitoring at the source code
+            level with support for modern Java versions
+            and multi-OS to monitor power consumption
+            of hardware and software.
+            </TextBlock>
+            <!--Row 3-->
+            <RichTextBlock Name="linksRichTextBlock"
+               Grid.Column="0" Grid.Row="3"
+               FontFamily="Segoe UI Variable Small" FontSize="13"
+               FontWeight="Bold" Foreground="#003E92">
+                <Paragraph>
+                    <Hyperlink NavigateUri="https://joular.github.io/joularjx/overview.html">
+                        Documentation
+                    </Hyperlink>
+                    <Run Text=" | " />
+                    <Hyperlink NavigateUri="https://github.com/joular/joularjx">
+                        GitHub Repository
+                    </Hyperlink>
+                    <Run Text=" | " />
+                    <Hyperlink NavigateUri="https://www.noureddine.org/research/joular/joularjx">
+                        Official Website
+                    </Hyperlink>
+                </Paragraph>
+            </RichTextBlock>
+            <!--Row 4-->
+            <TextBlock Name="SelectingFolderRequestTextBlock"
+                    Grid.Column="0" Grid.Row="4"
+                    Margin="0,40,0,20" FontSize="20" FontFamily="Segoe UI Variable Display Semibold"                   
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Left">
+                Let’s start by selecting the '<Run FontWeight="Bold">joularjx-result</Run>' folder
+            </TextBlock>
+            <!--Row 5-->
+            <TextBlock Name="locationTextBlock"
+                    Grid.Column="0" Grid.Row="5"
+                    VerticalAlignment="Top"
+                    FontFamily="Segoe UI Variable Display Semibold"                   
+                    Text="Location" />
+
+           
+            <Button x:Name="selectFolderButton"
+                    Grid.Column="1" Grid.Row="5" Grid.RowSpan="2"
+                    HorizontalAlignment="Right"
+                    Height="40"
+                    Style="{StaticResource AccentButtonStyle}" Content="Select folder" Click="SelectFolderButton_Click"/>
+            <!--Row 6-->
+            <TextBlock Name="joularResultsPathTextBlock"
+                    Grid.Column="0" Grid.Row="6"
+                    FontSize="12" 
+                    FontFamily="Segoe UI Variable Text"
+                    FontStyle="Italic"
+                    TextWrapping="Wrap"/>
+            <!--Row 7-->
+            <Button  x:Name="startAnalysisButton"
+                     Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2"
+                     Margin="0,40,0,20"
+                     Height="40"
+                     HorizontalAlignment="Center" 
+                     Style="{StaticResource AccentButtonStyle}" 
+                     Content="Start analysis" Click="StartAnalysisButton_Click" />
+            <!--Row 8-->
+            <TextBlock Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="2"
+                       TextWrapping="Wrap" FontSize="10" FontWeight="Bold">
+                Version 0.9.0 beta
+            </TextBlock>
+            <!--Row 9-->
+            <TextBlock x:Name="licenseTextBlock"
+                       Grid.Column="0" Grid.Row="9" Grid.ColumnSpan="2"
+                       TextWrapping="Wrap" FontSize="10">
+                JoularJX is licensed under the GNU GPL 3 license only (GPL-3.0-only).
+                Copyright (c) 2021-2023, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+                All rights reserved.
+                This program and the accompanying materials are made available
+                under the terms of the GNU General Public License v3.0 only (GPL-3.0-only)
+                which accompanies this distribution,
+                and is available at: 
+                <Hyperlink NavigateUri="https://www.gnu.org/licenses/gpl-3.0.en.html">
+                    https://www.gnu.org/licenses/gpl-3.0.en.html
+                </Hyperlink>
+            </TextBlock>
+        </Grid>
+    </ScrollViewer>
+</Page>

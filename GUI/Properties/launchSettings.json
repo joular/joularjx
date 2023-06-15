@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "joularIHM (Package)": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    },
+    "joularIHM (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
