@@ -55,6 +55,7 @@
                     Grid.Column="0" Grid.Row="2"
                     Margin="0,0,0,10"
                     HorizontalAlignment="Left"
+                    HorizontalTextAlignment="Justify"
                     FontSize="14" TextWrapping="Wrap">
             JoularJX is a Java-based agent 
             for power monitoring at the source code
@@ -125,6 +126,7 @@
             <!--Row 9-->
             <TextBlock x:Name="licenseTextBlock"
                        Grid.Column="0" Grid.Row="9" Grid.ColumnSpan="2"
+                       HorizontalTextAlignment="Justify"
                        TextWrapping="Wrap" FontSize="10">
                 JoularJX is licensed under the GNU GPL 3 license only (GPL-3.0-only).
                 Copyright (c) 2021-2023, Adel Noureddine, Université de Pau et des Pays de l'Adour.

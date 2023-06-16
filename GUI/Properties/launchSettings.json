@@ -1,10 +1,10 @@
 {
   "profiles": {
-    "joularIHM (Package)": {
+    "joularjx-gui (Package)": {
       "commandName": "Project",
-      "nativeDebugging": true
+      "nativeDebugging": false
     },
-    "joularIHM (Unpackaged)": {
+    "joularjx-gui (Unpackaged)": {
       "commandName": "Project"
     }
   }
