@@ -10,6 +10,7 @@
 using org_noureddine_joularjx_gui.Models;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -68,7 +69,7 @@ namespace org_noureddine_joularjx_gui.Shared
                 string methodName = match.Groups["Method"].Value;
                 string consumptionValue = match.Groups["Consumption"].Value;
 
-                if (!double.TryParse(consumptionValue, out double consumption))
+                if (!double.TryParse(consumptionValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double consumption))
                 {
                     consumption = 0;
                 }
@@ -92,11 +93,11 @@ namespace org_noureddine_joularjx_gui.Shared
             {
                 string timestampValue = match.Groups["Timestamp"].Value;
                 string consumptionValue = match.Groups["Consumption"].Value;
-                if (!double.TryParse(consumptionValue, out double consumption))
+                if (!double.TryParse(consumptionValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double consumption))
                 {
                     consumption = 0;
                 }
-                if(int.TryParse(timestampValue, out int timestamp))
+                if(int.TryParse(timestampValue, NumberStyles.Any, CultureInfo.InvariantCulture, out int timestamp))
                 {
                     MethodConsumptionPerTimestamp timeConsumption = new MethodConsumptionPerTimestamp(consumption, timestamp);
                     methodConsumptionPerTime.Add(timeConsumption);
