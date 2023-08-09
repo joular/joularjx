@@ -126,7 +126,7 @@ For example, if ```Package1.MethodA``` calls ```java.io.PrintStream.println``` t
 
 We manage to do this by analyzing the stacktrace of all running threads on runtime.
 
-## Graphical User Interface (GUI)
+## :camera_flash: Graphical User Interface (GUI)
 
 JoularJX GUI is a graphical interface that reads the generated folder and files, and displays power and energy consumption, along with analysis, of the various methods and execution branches.
 
