@@ -7,6 +7,8 @@
 
 JoularJX is a Java-based agent for software power monitoring at the source code level.
 
+Detailed documentation (including user and reference guides) are available at: [https://joular.github.io/joularjx/](https://joular.github.io/joularjx/).
+
 ## :rocket: Features
 
 - Monitor power consumption of each method at runtime
