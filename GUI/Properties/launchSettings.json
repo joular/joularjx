@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "joularjx-gui (Package)": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    },
+    "joularjx-gui (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

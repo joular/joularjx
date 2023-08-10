@@ -46,11 +46,15 @@ We also support Asus Tinker Board (S).
 
 JoularJX is a Java agent where you can simply hook it to the Java Virtual Machine when starting your Java program's main class:
 
-```java -javaagent:joularjx-$version.jar YourProgramMainClass```
+```
+java -javaagent:joularjx-$version.jar YourProgramMainClass
+```
 
 If your program is a JAR file, then just run it as usual while adding JoularJX:
 
-```java -javaagent:joularjx-$version.jar -jar yourProgram.jar```
+```
+java -javaagent:joularjx-$version.jar -jar yourProgram.jar
+```
 
 JoularJX will generate multiple CSV files according to the configuration settings (in ```config.properties```), and will create these files in a ```joularjx-results```folder.
 
@@ -93,9 +97,22 @@ However, ```config.properties``` must be copied to the same folder as where you 
 
 To build JoularJX, you need Java 11+ and Maven, then just build:
 
-```mvn clean install```
+```
+mvn clean install
+```
+
+Alternatively, you can use the Maven wrappen shipped with the project with the command:
+
+```
+Linux: ./mvnw clean install
+Windows: mvnw.cmd clean install
+```
 
 To compile the Windows power monitor tool, required by JoularJX on Windows, open the project in Visual Studio and compile there.
+Or open, Developer Command Prompt for VS (or Developer PowerShell for VS), and compile with this command:
+```
+msbuild.exe PowerMonitor.sln /property:Configuration=Release
+```
 
 ## Generated files
 
@@ -110,6 +127,23 @@ For example, if ```Package1.MethodA``` calls ```java.io.PrintStream.println``` t
 - In the second file, if we filter methods from ```Package1```, then the power consumption of ```println``` will be added to ```MethodA``` power consumption, and the file will only provide power or energy of ```Package1``` methods.
 
 We manage to do this by analyzing the stacktrace of all running threads on runtime.
+
+## :camera_flash: Graphical User Interface (GUI)
+
+JoularJX GUI is a graphical interface that reads the generated folder and files, and displays power and energy consumption, along with analysis, of the various methods and execution branches.
+
+JoularJX GUI adopts WinUI 3 style and is currently only available on Windows, and in a beta release.
+
+To compile the GUI, open the project (in the ```GUI``` folder) in Visual Studio and compile there.
+Or open, Developer Command Prompt for VS (or Developer PowerShell for VS), and compile with this command:
+```
+msbuild.exe juolarjx-gui.sln /property:Configuration=Release
+```
+
+<figure>
+  <img src="./images/joularjx-gui-1.png" width=50%>
+  <figcaption>Main interface of JoularJX GUI</figcaption>
+</figure> 
 
 ## :bookmark_tabs: Cite this work
 
