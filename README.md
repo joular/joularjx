@@ -138,6 +138,11 @@ Or open, Developer Command Prompt for VS (or Developer PowerShell for VS), and c
 msbuild.exe juolarjx-gui.sln /property:Configuration=Release
 ```
 
+<figure>
+  <img src="./images/joularjx-gui-1.png" width=50%>
+  <figcaption>Main interface of JoularJX GUI</figcaption>
+</figure> 
+
 ## :bookmark_tabs: Cite this work
 
 To cite our work in a research paper, please cite our paper in the 18th International Conference on Intelligent Environments (IE2022).
