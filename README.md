@@ -137,7 +137,7 @@ JoularJX GUI adopts WinUI 3 style and is currently only available on Windows, an
 To compile the GUI, open the project (in the ```GUI``` folder) in Visual Studio and compile there.
 Or open, Developer Command Prompt for VS (or Developer PowerShell for VS), and compile with this command:
 ```
-msbuild.exe juolarjx-gui.sln /property:Configuration=Release
+msbuild.exe joularjx-gui.sln /property:Configuration=Release
 ```
 
 <figure>
