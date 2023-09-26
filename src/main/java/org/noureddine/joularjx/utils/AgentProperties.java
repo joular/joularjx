@@ -39,6 +39,7 @@ public class AgentProperties {
     private static final String CALL_TREES_CONSUMPTION_PROPERTY = "enable-call-trees-consumption";
     private static final String SAVE_CT_RUNTIME_DATA_PROPERTY = "save-call-trees-runtime-data";
     private static final String OVERWRITE_CT_RUNTIME_DATA_PROPERTY = "overwrite-call-trees-runtime-data";
+    private static final String STACK_MONITORING_SAMPLE_RATE_PROPERTY = "stack-monitoring-sample-rate";
 
     /**
      * Loaded configuration properties
@@ -55,6 +56,7 @@ public class AgentProperties {
     private final boolean callTreesConsumption;
     private final boolean saveCtRuntimeData;
     private final boolean overwriteCtRuntimeData;
+    private final int stackMonitoringSampleRate;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -72,6 +74,7 @@ public class AgentProperties {
         this.callTreesConsumption = loadCallTreesConsumption();
         this.saveCtRuntimeData = loadSaveCallTreesRuntimeData();
         this.overwriteCtRuntimeData = loadOverwriteCallTreeRuntimeData();
+        this.stackMonitoringSampleRate = loadStackMonitoringSampleRate();
     }
 
     public boolean filtersMethod(String methodName) {
@@ -115,9 +118,9 @@ public class AgentProperties {
         return this.saveCtRuntimeData;
     }
 
-    public boolean overwriteCallTreesRuntimeData() {
-        return this.overwriteCtRuntimeData;
-    }
+    public boolean overwriteCallTreesRuntimeData() { return this.overwriteCtRuntimeData; }
+
+    public int stackMonitoringSampleRate() { return this.stackMonitoringSampleRate; }
 
     private Properties loadProperties(FileSystem fileSystem) {
         Properties result = new Properties();
@@ -184,6 +187,18 @@ public class AgentProperties {
 
     public boolean loadOverwriteCallTreeRuntimeData() {
         return Boolean.parseBoolean(properties.getProperty(OVERWRITE_CT_RUNTIME_DATA_PROPERTY));
+    }
+
+    public int loadStackMonitoringSampleRate() {
+        String property = properties.getProperty(STACK_MONITORING_SAMPLE_RATE_PROPERTY);
+        int value = 10; // default of 10 milliseconds
+        if(property != null) {
+            int parsedValue = Integer.parseInt(property);
+            if (parsedValue > 0 && parsedValue <= 1000) {
+                value = parsedValue;
+            }
+        }
+        return value;
     }
 
     private Path getPropertiesPathIfExists(FileSystem fileSystem) {
