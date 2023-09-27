@@ -53,7 +53,8 @@ class AgentPropertiesTest {
                     () -> assertFalse(properties.loadAgentConsumption()),
                     () -> assertFalse(properties.loadCallTreesConsumption()),
                     () -> assertFalse(properties.loadSaveCallTreesRuntimeData()),
-                    () -> assertFalse(properties.loadOverwriteCallTreeRuntimeData())
+                    () -> assertFalse(properties.loadOverwriteCallTreeRuntimeData()),
+                    () -> assertEquals(10, properties.loadStackMonitoringSampleRate())
             );
         }
     }
@@ -69,7 +70,8 @@ class AgentPropertiesTest {
                                 "hide-agent-consumption=true\n"+
                                 "enable-call-trees-consumption=true\n"+
                                 "save-call-trees-runtime-data=true\n"+
-                                "overwrite-call-trees-runtime-data=true";
+                                "overwrite-call-trees-runtime-data=true\n"+
+                                "stack-monitoring-sample-rate=1";
             Files.write(fs.getPath("config.properties"), (props).getBytes(StandardCharsets.UTF_8));
 
             AgentProperties properties = new AgentProperties(fs);
@@ -83,7 +85,8 @@ class AgentPropertiesTest {
                     () -> assertTrue(properties.hideAgentConsumption()),
                     () -> assertTrue(properties.callTreesConsumption()),
                     () -> assertTrue(properties.saveCallTreesRuntimeData()),
-                    () -> assertTrue(properties.overwriteCallTreesRuntimeData())
+                    () -> assertTrue(properties.overwriteCallTreesRuntimeData()),
+                    () -> assertEquals(1, properties.stackMonitoringSampleRate())
             );
         }
     }

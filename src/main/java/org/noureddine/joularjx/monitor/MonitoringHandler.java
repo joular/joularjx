@@ -39,9 +39,6 @@ import com.sun.management.OperatingSystemMXBean;
 public class MonitoringHandler implements Runnable {
 
     private static final String DESTROY_THREAD_NAME = "DestroyJavaVM";
-    private static final long SAMPLE_TIME_MILLISECONDS = 1000;
-    private static final long SAMPLE_RATE_MILLISECONDS = 10;
-    private static final int SAMPLE_ITERATIONS = (int) (SAMPLE_TIME_MILLISECONDS / SAMPLE_RATE_MILLISECONDS);
     private static final Logger logger = JoularJXLogging.getLogger();
 
     private final long appPid;
@@ -52,6 +49,9 @@ public class MonitoringHandler implements Runnable {
     private final OperatingSystemMXBean osBean;
     private final ThreadMXBean threadBean;
     private final ResultTreeManager resultTreeManager;
+    private final long sampleTimeMilliseconds = 1000;
+    private final long sampleRateMilliseconds;
+    private final int sampleIterations;
 
     /**
      * Creates a new MonitoringHandler.
@@ -74,6 +74,8 @@ public class MonitoringHandler implements Runnable {
         this.osBean = osBean;
         this.threadBean = threadBean;
         this.resultTreeManager = resultTreeManager;
+        this.sampleRateMilliseconds = properties.stackMonitoringSampleRate();
+        this.sampleIterations = (int) (sampleTimeMilliseconds / sampleRateMilliseconds);
     }
 
     @Override
@@ -149,7 +151,7 @@ public class MonitoringHandler implements Runnable {
                     }
                 }
 
-                Thread.sleep(SAMPLE_RATE_MILLISECONDS);
+                Thread.sleep(sampleRateMilliseconds);
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
             } catch (IOException exception) {
@@ -168,7 +170,7 @@ public class MonitoringHandler implements Runnable {
     private Map<Thread, List<StackTraceElement[]>> sample() {
         Map<Thread, List<StackTraceElement[]>> result = new HashMap<>();
         try {
-            for (int duration = 0; duration < SAMPLE_TIME_MILLISECONDS; duration += SAMPLE_RATE_MILLISECONDS) {
+            for (int duration = 0; duration < sampleTimeMilliseconds; duration += sampleRateMilliseconds) {
                 for (var entry : Thread.getAllStackTraces().entrySet()) {
                     String threadName = entry.getKey().getName();
                     //Ignoring agent related threads, if option is enabled
@@ -179,12 +181,12 @@ public class MonitoringHandler implements Runnable {
                     // Only check runnable threads (not waiting or blocked)
                     if (entry.getKey().getState() == Thread.State.RUNNABLE) {
                         var target = result.computeIfAbsent(entry.getKey(),
-                                t -> new ArrayList<>(SAMPLE_ITERATIONS));
+                                t -> new ArrayList<>(sampleIterations));
                         target.add(entry.getValue());
                     }
                 }
 
-                Thread.sleep(SAMPLE_RATE_MILLISECONDS);
+                Thread.sleep(sampleRateMilliseconds);
             }
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
@@ -256,7 +258,7 @@ public class MonitoringHandler implements Runnable {
         for (var entry : methodsStats.entrySet()) {
             long threadCpuTime = threadBean.getThreadCpuTime(entry.getKey().getId());
 
-            threadCpuTime *= entry.getValue().values().stream().mapToDouble(i -> i).sum() / SAMPLE_ITERATIONS;
+            threadCpuTime *= entry.getValue().values().stream().mapToDouble(i -> i).sum() / sampleIterations;
 
             // If thread already monitored, then calculate CPU time since last time
             threadCpuTime = threadsCpuTime.merge(entry.getKey().getId(), threadCpuTime,
