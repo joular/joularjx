@@ -300,7 +300,10 @@ public class MonitoringHandler implements Runnable {
         for (var threadEntry : methodsStats.entrySet()) {
             double totalEncounters = threadEntry.getValue().values().stream().mapToDouble(i -> i).sum();
             for (var methodEntry : threadEntry.getValue().entrySet()) {
-                double methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId()) * (methodEntry.getValue() / totalEncounters);
+                double methodPower = 0.0;
+                if(totalEncounters >= Double.MIN_VALUE) {
+                    methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId()) * (methodEntry.getValue() / totalEncounters);
+                }
 
                 //Only of consumption evolution tracking is enabled
                 if (this.properties.trackConsumptionEvolution()) {
@@ -330,8 +333,11 @@ public class MonitoringHandler implements Runnable {
             double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
 
             for (var callTreeEntry : entry.getValue().entrySet()) {
-                double stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId()) * (callTreeEntry.getValue() / totalEncounters);
-                
+                double stackTracePower = 0.0;
+                if (totalEncounters >= Double.MIN_VALUE) {
+                     stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId()) * (callTreeEntry.getValue() / totalEncounters);
+                }
+
                 callTreeConsumer.accept(callTreeEntry.getKey(), stackTracePower);
             }
         }
