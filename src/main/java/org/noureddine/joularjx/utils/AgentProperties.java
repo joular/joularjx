@@ -125,14 +125,15 @@ public class AgentProperties {
     private Properties loadProperties(FileSystem fileSystem) {
         Properties result = new Properties();
 
-        // Read properties file
-        try (InputStream input = new BufferedInputStream(Files.newInputStream(getPropertiesPathIfExists(fileSystem)))) {
-            result.load(input);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Cannot load properties: \"{0}\"", e.getMessage());
-            logger.throwing(getClass().getName(), "loadProperties", e);
-            System.exit(1);
-        }
+        // Read properties file if possible
+        getPropertiesPathIfExists(fileSystem).ifPresent(path -> {
+            try (InputStream input = new BufferedInputStream(Files.newInputStream(path))) {
+                result.load(input);
+            } catch (IOException e) {
+                logger.log(Level.INFO, "Couldn't load local config: \"{0}\"", e.getMessage());
+            }
+        });
+
         return result;
     }
 
@@ -201,14 +202,14 @@ public class AgentProperties {
         return value;
     }
 
-    private Path getPropertiesPathIfExists(FileSystem fileSystem) {
+    private Optional<Path> getPropertiesPathIfExists(FileSystem fileSystem) {
         Path path = fileSystem.getPath("config.properties");
 
         if (Files.notExists(path)) {
-            logger.log(Level.SEVERE, "Could not locate config.properties");
-            System.exit(1);
+            logger.log(Level.INFO, "Could not locate config.properties, will use default values");
+           return Optional.empty();
         }
 
-        return path;
+        return Optional.of(path);
     }
 }
