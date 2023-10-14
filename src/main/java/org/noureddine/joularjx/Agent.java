@@ -58,7 +58,7 @@ public class Agent {
         // Creating the required folders to store the result files generated later on
         ResultTreeManager resultTreeManager = new ResultTreeManager(properties, appPid, System.currentTimeMillis());
         if (!resultTreeManager.create()) {
-            logger.log(Level.WARNING, "Error(s) occured while creating the result folder hierarchy. Some results may not be reported.");
+            logger.log(Level.WARNING, "Error(s) occurred while creating the result folder hierarchy. Some results may not be reported.");
         }
 
         Cpu cpu = CpuFactory.getCpu(properties);
