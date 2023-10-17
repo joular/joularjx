@@ -15,6 +15,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -75,6 +76,10 @@ public class AgentProperties {
         this.saveCtRuntimeData = loadSaveCallTreesRuntimeData();
         this.overwriteCtRuntimeData = loadOverwriteCallTreeRuntimeData();
         this.stackMonitoringSampleRate = loadStackMonitoringSampleRate();
+    }
+
+    public AgentProperties() {
+        this(FileSystems.getDefault());
     }
 
     public boolean filtersMethod(String methodName) {
