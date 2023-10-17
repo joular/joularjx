@@ -11,10 +11,12 @@
 
 package org.noureddine.joularjx.cpu;
 
+import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +40,10 @@ public class IntelWindows implements Cpu {
     private boolean initialized;
 
     public IntelWindows(final String programPath) {
+        if (programPath == null || programPath.isBlank()) {
+            logger.severe("Can''t start because of missing power monitor path. Set it in config.properties under the ''" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "'' key.");
+            System.exit(1);
+        }
         this.programPath = programPath;
     }
 

@@ -30,7 +30,7 @@ public class AgentProperties {
 
     //Properties names in the config.properties file
     private static final String FILTER_METHOD_NAME_PROPERTY = "filter-method-names";
-    private static final String POWER_MONITOR_PATH_PROPERTY = "powermonitor-path";
+    public static final String POWER_MONITOR_PATH_PROPERTY = "powermonitor-path";
     private static final String SAVE_RUNTIME_DATA_PROPERTY = "save-runtime-data";
     private static final String OVERWRITE_RUNTIME_DATA_PROPERTY = "overwrite-runtime-data";
     private static final String LOGGER_LEVEL_PROPERTY = "logger-level";
