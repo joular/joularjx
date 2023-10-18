@@ -22,6 +22,7 @@ public class PowermetricsMacOS implements Cpu {
         }
         
         try {
+            // todo: detect when sudo fails as this currently won't throw an exception
             process = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 1000");
             initialized = true;
         } catch (Exception exception) {
