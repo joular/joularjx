@@ -41,7 +41,7 @@ public class IntelWindows implements Cpu {
 
     public IntelWindows(final String programPath) {
         if (programPath == null || programPath.isBlank()) {
-            logger.severe("Can''t start because of missing power monitor path. Set it in config.properties under the ''" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "'' key.");
+            logger.severe("Can't start because of missing power monitor path. Set it in config.properties under the '" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");
             System.exit(1);
         }
         this.programPath = programPath;
@@ -62,7 +62,7 @@ public class IntelWindows implements Cpu {
 
             initialized = true;
         } catch (Exception exception) {
-            logger.log(Level.SEVERE, "Can''t start power monitor \"{0}\" on Windows. Exiting...", programPath);
+            logger.log(Level.SEVERE, "Can't start power monitor \"{0}\" on Windows. Exiting...", programPath);
             logger.throwing(getClass().getName(), "initialize", exception);
             System.exit(1);
         }
