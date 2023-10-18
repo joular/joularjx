@@ -22,9 +22,7 @@ public class PowermetricsMacOS implements Cpu {
         }
         
         try {
-            process = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 500");
-            
-
+            process = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 1000");
             initialized = true;
         } catch (Exception exception) {
             logger.log(Level.SEVERE, "Can''t start powermetrics. Exiting...");
