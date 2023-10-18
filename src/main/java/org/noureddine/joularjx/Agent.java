@@ -12,11 +12,11 @@
 package org.noureddine.joularjx;
 
 import com.sun.management.OperatingSystemMXBean;
+import org.noureddine.joularjx.cpu.Cpu;
+import org.noureddine.joularjx.cpu.CpuFactory;
 import org.noureddine.joularjx.monitor.MonitoringHandler;
 import org.noureddine.joularjx.monitor.MonitoringStatus;
 import org.noureddine.joularjx.monitor.ShutdownHandler;
-import org.noureddine.joularjx.cpu.Cpu;
-import org.noureddine.joularjx.cpu.CpuFactory;
 import org.noureddine.joularjx.result.CsvResultWriter;
 import org.noureddine.joularjx.result.ResultTreeManager;
 import org.noureddine.joularjx.result.ResultWriter;
@@ -26,7 +26,6 @@ import org.noureddine.joularjx.utils.JoularJXLogging;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
-import java.nio.file.FileSystems;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +42,7 @@ public class Agent {
      */
     public static void premain(String args, Instrumentation inst) {
         Thread.currentThread().setName(NAME_THREAD_NAME);
-        AgentProperties properties = new AgentProperties(FileSystems.getDefault());
+        AgentProperties properties = new AgentProperties();
         JoularJXLogging.updateLevel(properties.getLoggerLevel());
 
         logger.info("+---------------------------------+");
