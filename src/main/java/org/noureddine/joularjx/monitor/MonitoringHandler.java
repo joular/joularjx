@@ -37,8 +37,6 @@ import com.sun.management.OperatingSystemMXBean;
  * The MonitoringHandler performs all the sampling and energy computation step, and stores the data in dedicated MonitoringStatus structures or in files.
  */
 public class MonitoringHandler implements Runnable {
-
-    private static final String DESTROY_THREAD_NAME = "DestroyJavaVM";
     private static final Logger logger = JoularJXLogging.getLogger();
 
     private final long appPid;
@@ -85,7 +83,7 @@ public class MonitoringHandler implements Runnable {
         // CPU time for each thread
         Map<Long, Long> threadsCpuTime = new HashMap<>();
 
-        while (!destroyingVM()) {
+        while (true) {
             try {
                 double energyBefore = cpu.getInitialPower();
 
@@ -375,14 +373,5 @@ public class MonitoringHandler implements Runnable {
             }
         
             resultWriter.closeTarget();
-    }
-
-    /**
-     * Indicate if the JVM is destroying
-     * @return true if the JVM destroying thread is present, false otherwise
-     */
-    private boolean destroyingVM() {
-        return Thread.getAllStackTraces().keySet().stream()
-                .anyMatch(thread -> thread.getName().equals(DESTROY_THREAD_NAME));
     }
 }
