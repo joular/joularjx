@@ -39,9 +39,14 @@ public class CpuFactory {
         // Get OS
         String osName = System.getProperty("os.name").toLowerCase();
         String osArch = System.getProperty("os.arch").toLowerCase();
+        logger.info("Initializing for platform: '" + osName + "' running on architecture: '" + osArch + '\'');
 
         if (osName.contains("win")) {
             return new IntelWindows(properties.getPowerMonitorPath());
+        }
+
+        if(osName.contains("mac os x")) {
+            return new PowermetricsMacOS();
         }
 
         if (!osName.contains("linux")) {
