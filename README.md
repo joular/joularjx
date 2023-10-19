@@ -129,23 +129,6 @@ For example, if ```Package1.MethodA``` calls ```java.io.PrintStream.println``` t
 
 We manage to do this by analyzing the stacktrace of all running threads on runtime.
 
-## :camera_flash: Graphical User Interface (GUI)
-
-JoularJX GUI is a graphical interface that reads the generated folder and files, and displays power and energy consumption, along with analysis, of the various methods and execution branches.
-
-JoularJX GUI adopts WinUI 3 style and is currently only available on Windows, and in a beta release.
-
-To compile the GUI, open the project (in the ```GUI``` folder) in Visual Studio and compile there.
-Or open, Developer Command Prompt for VS (or Developer PowerShell for VS), and compile with this command:
-```
-msbuild.exe joularjx-gui.sln /property:Configuration=Release
-```
-
-<figure>
-  <img src="./images/joularjx-gui-1.png" width=50%>
-  <figcaption>Main interface of JoularJX GUI</figcaption>
-</figure> 
-
 ## :bookmark_tabs: Cite this work
 
 To cite our work in a research paper, please cite our paper in the 18th International Conference on Intelligent Environments (IE2022).
