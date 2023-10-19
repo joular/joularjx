@@ -129,6 +129,11 @@ For example, if ```Package1.MethodA``` calls ```java.io.PrintStream.println``` t
 
 We manage to do this by analyzing the stacktrace of all running threads on runtime.
 
+## JoularJX Reader
+
+JoularJX Reader is a GUI to process, analyze and visualize JoularJX generated energy files.
+It is available at its [own repository here](https://github.com/joular/joularjx-reader).
+
 ## :bookmark_tabs: Cite this work
 
 To cite our work in a research paper, please cite our paper in the 18th International Conference on Intelligent Environments (IE2022).
