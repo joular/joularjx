@@ -236,7 +236,7 @@ public class MonitoringHandler implements Runnable {
 
             for (var stackTraceEntry : entry.getValue()) {
                 List<StackTraceElement> stackTrace = StackTraceFilter.filter(stackTraceEntry, filter);
-                if (stackTrace.size() > 0) {
+                if (!stackTrace.isEmpty()) {
                     target.merge(new CallTree(stackTrace), 1, Integer::sum);
                 }
             }
