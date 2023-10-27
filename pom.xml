@@ -18,7 +18,7 @@
 
     <groupId>org.noureddine</groupId>
     <artifactId>joularjx</artifactId>
-    <version>2.5</version>
+    <version>2.8.0</version>
 
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
@@ -110,7 +110,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.2.1</version>
             </plugin>
         </plugins>
     </build>
