@@ -261,8 +261,10 @@ public class MonitoringHandler implements Runnable {
             threadCpuTime *= entry.getValue().values().stream().mapToDouble(i -> i).sum() / sampleIterations;
 
             // If thread already monitored, then calculate CPU time since last time
+            // Fix for issue #7 (https://github.com/joular/joularjx/issues/7)
+            // If the last thread cpu time is 0, don't subtract, simply take the previous value 
             threadCpuTime = threadsCpuTime.merge(entry.getKey().getId(), threadCpuTime,
-                    (present, newValue) -> newValue - present);
+                    (present, newValue) -> (newValue > 0 ? newValue - present : present));
 
             totalThreadsCpuTime += threadCpuTime;
         }
