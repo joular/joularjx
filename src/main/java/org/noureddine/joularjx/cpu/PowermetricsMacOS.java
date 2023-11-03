@@ -44,14 +44,17 @@ public class PowermetricsMacOS implements Cpu {
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = input.readLine()) != null) {
-                // look for line that contains combined power measurement
+            	// look for line that contains combined power measurement
                 // which should look similar to: `Combined Power (CPU + GPU + ANE): 377 mW`
-                if (!line.startsWith("Combined")) {
+            	// it seems this output is for older versions (?), current version (Sonoma 14.0) gives the following line:
+            	// `Intel energy model derived package power (CPUs+GT+SA): 48.61W`
+                if (!line.startsWith("Intel energy model derived package power")) {
                     continue;
                 }
                 final var powerValue = line.split(":")[1];
-                final var powerInMilliwatts = powerValue.split("m")[0];
-                return Double.parseDouble(powerInMilliwatts) / 1000;
+                final var powerInMilliwatts = powerValue.split("W")[0];
+                //logger.info("Current power (w): " + powerInMilliwatts);
+                return Double.parseDouble(powerInMilliwatts); // / 1000; // NOTE not needed to divide by 1000 since the values is not in mW!
             }
         } catch (Exception exception) {
             logger.throwing(getClass().getName(), "getCurrentPower", exception);

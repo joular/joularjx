@@ -14,8 +14,10 @@ import java.io.IOException;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.ObjDoubleConsumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -256,21 +258,22 @@ public class MonitoringHandler implements Runnable {
     private long updateThreadsCpuTime(Map<Thread, Map<String, Integer>> methodsStats, Map<Long, Long> threadsCpuTime) {
         long totalThreadsCpuTime = 0;
         for (var entry : methodsStats.entrySet()) {
-            long threadCpuTime = threadBean.getThreadCpuTime(entry.getKey().getId());
+        	// the call could return a value of -1, which means thread not found or otherwise some other problem in reading cpu time for the PID
+        	long threadCpuTime = Math.abs(threadBean.getThreadCpuTime(entry.getKey().getId()));
 
-            threadCpuTime *= entry.getValue().values().stream().mapToDouble(i -> i).sum() / sampleIterations;
-
-            // If thread already monitored, then calculate CPU time since last time
-            // Fix for issue #7 (https://github.com/joular/joularjx/issues/7)
-            // If the last thread cpu time is 0, don't subtract, simply take the previous value 
-            threadCpuTime = threadsCpuTime.merge(entry.getKey().getId(), threadCpuTime,
-                    (present, newValue) -> (newValue > 0 ? newValue - present : present));
-
-            totalThreadsCpuTime += threadCpuTime;
+        	threadCpuTime *= entry.getValue().values().stream().mapToDouble(i -> i).sum() / sampleIterations;
+	
+			// If thread already monitored, then calculate CPU time since last time
+			// Fix for issue #7 (https://github.com/joular/joularjx/issues/7)
+			// If the last thread cpu time is <= 0, don't subtract, simply take the previous value 
+			threadCpuTime = threadsCpuTime.merge(entry.getKey().getId(), threadCpuTime,
+			        (present, newValue) -> (newValue > present?newValue - present:present));
+			
+			totalThreadsCpuTime += threadCpuTime;
         }
         return totalThreadsCpuTime;
     }
-
+    
     /**
      * Returns for each thread (PID) it's percentage of CPU time used
      * @param threadsCpuTime a map of CPU time per PID
