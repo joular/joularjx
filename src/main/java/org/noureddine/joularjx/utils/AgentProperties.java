@@ -15,6 +15,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -30,7 +31,7 @@ public class AgentProperties {
 
     //Properties names in the config.properties file
     private static final String FILTER_METHOD_NAME_PROPERTY = "filter-method-names";
-    private static final String POWER_MONITOR_PATH_PROPERTY = "powermonitor-path";
+    public static final String POWER_MONITOR_PATH_PROPERTY = "powermonitor-path";
     private static final String SAVE_RUNTIME_DATA_PROPERTY = "save-runtime-data";
     private static final String OVERWRITE_RUNTIME_DATA_PROPERTY = "overwrite-runtime-data";
     private static final String LOGGER_LEVEL_PROPERTY = "logger-level";
@@ -39,6 +40,7 @@ public class AgentProperties {
     private static final String CALL_TREES_CONSUMPTION_PROPERTY = "enable-call-trees-consumption";
     private static final String SAVE_CT_RUNTIME_DATA_PROPERTY = "save-call-trees-runtime-data";
     private static final String OVERWRITE_CT_RUNTIME_DATA_PROPERTY = "overwrite-call-trees-runtime-data";
+    private static final String STACK_MONITORING_SAMPLE_RATE_PROPERTY = "stack-monitoring-sample-rate";
 
     /**
      * Loaded configuration properties
@@ -55,6 +57,7 @@ public class AgentProperties {
     private final boolean callTreesConsumption;
     private final boolean saveCtRuntimeData;
     private final boolean overwriteCtRuntimeData;
+    private final int stackMonitoringSampleRate;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -72,6 +75,11 @@ public class AgentProperties {
         this.callTreesConsumption = loadCallTreesConsumption();
         this.saveCtRuntimeData = loadSaveCallTreesRuntimeData();
         this.overwriteCtRuntimeData = loadOverwriteCallTreeRuntimeData();
+        this.stackMonitoringSampleRate = loadStackMonitoringSampleRate();
+    }
+
+    public AgentProperties() {
+        this(FileSystems.getDefault());
     }
 
     public boolean filtersMethod(String methodName) {
@@ -115,21 +123,22 @@ public class AgentProperties {
         return this.saveCtRuntimeData;
     }
 
-    public boolean overwriteCallTreesRuntimeData() {
-        return this.overwriteCtRuntimeData;
-    }
+    public boolean overwriteCallTreesRuntimeData() { return this.overwriteCtRuntimeData; }
+
+    public int stackMonitoringSampleRate() { return this.stackMonitoringSampleRate; }
 
     private Properties loadProperties(FileSystem fileSystem) {
         Properties result = new Properties();
 
-        // Read properties file
-        try (InputStream input = new BufferedInputStream(Files.newInputStream(getPropertiesPathIfExists(fileSystem)))) {
-            result.load(input);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Cannot load properties: \"{0}\"", e.getMessage());
-            logger.throwing(getClass().getName(), "loadProperties", e);
-            System.exit(1);
-        }
+        // Read properties file if possible
+        getPropertiesPathIfExists(fileSystem).ifPresent(path -> {
+            try (InputStream input = new BufferedInputStream(Files.newInputStream(path))) {
+                result.load(input);
+            } catch (IOException e) {
+                logger.log(Level.INFO, "Couldn't load local config: \"{0}\"", e.getMessage());
+            }
+        });
+
         return result;
     }
 
@@ -186,14 +195,26 @@ public class AgentProperties {
         return Boolean.parseBoolean(properties.getProperty(OVERWRITE_CT_RUNTIME_DATA_PROPERTY));
     }
 
-    private Path getPropertiesPathIfExists(FileSystem fileSystem) {
+    public int loadStackMonitoringSampleRate() {
+        String property = properties.getProperty(STACK_MONITORING_SAMPLE_RATE_PROPERTY);
+        int value = 10; // default of 10 milliseconds
+        if(property != null) {
+            int parsedValue = Integer.parseInt(property);
+            if (parsedValue > 0 && parsedValue <= 1000) {
+                value = parsedValue;
+            }
+        }
+        return value;
+    }
+
+    private Optional<Path> getPropertiesPathIfExists(FileSystem fileSystem) {
         Path path = fileSystem.getPath("config.properties");
 
         if (Files.notExists(path)) {
-            logger.log(Level.SEVERE, "Could not locate config.properties");
-            System.exit(1);
+            logger.log(Level.INFO, "Could not locate config.properties, will use default values");
+           return Optional.empty();
         }
 
-        return path;
+        return Optional.of(path);
     }
 }

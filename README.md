@@ -30,6 +30,7 @@ JoularJX requires a minimum version of Java 11+.
 JoularJX depend on the following software or packages in order to get power reading:
 - On Windows, JoularJX uses a custom power monitor program that uses Intel Power Gadget API on Windows, and therefore require installing the [Intel Power Gadget tool](https://www.intel.com/content/www/us/en/developer/articles/tool/power-gadget.html) and using a supported Intel CPU.
 - On PC/server GNU/Linux, JoularJX uses Intel RAPL interface through powercap, and therefore requires running on an Intel CPU or an AMD Ryzen CPU.
+- On macOS, JoularJX uses `powermetrics`, a tool bundled with macOS which requires running with `sudo` access. It is recommended to authorize the current users to run `/usr/bin/powermetrics` without requiring a password by making the proper modification to the `sudoers` file.
 - On Raspberry Pi devices on GNU/Linux, JoularJX uses our own research-based regression models to estimate CPU power consumption with support for the following device models:
   - Model Zero W (rev 1.1), for 32-bit OS
   - Model 1 B (rev 2), for 32-bit OS
@@ -105,7 +106,7 @@ Alternatively, you can use the Maven wrappen shipped with the project with the c
 
 ```
 Linux: ./mvnw clean install
-Windows: mvnw.cmd clean install
+Windows: ./mvnw.cmd clean install
 ```
 
 To compile the Windows power monitor tool, required by JoularJX on Windows, open the project in Visual Studio and compile there.
@@ -128,22 +129,10 @@ For example, if ```Package1.MethodA``` calls ```java.io.PrintStream.println``` t
 
 We manage to do this by analyzing the stacktrace of all running threads on runtime.
 
-## :camera_flash: Graphical User Interface (GUI)
+## JoularJX Reader
 
-JoularJX GUI is a graphical interface that reads the generated folder and files, and displays power and energy consumption, along with analysis, of the various methods and execution branches.
-
-JoularJX GUI adopts WinUI 3 style and is currently only available on Windows, and in a beta release.
-
-To compile the GUI, open the project (in the ```GUI``` folder) in Visual Studio and compile there.
-Or open, Developer Command Prompt for VS (or Developer PowerShell for VS), and compile with this command:
-```
-msbuild.exe juolarjx-gui.sln /property:Configuration=Release
-```
-
-<figure>
-  <img src="./images/joularjx-gui-1.png" width=50%>
-  <figcaption>Main interface of JoularJX GUI</figcaption>
-</figure> 
+JoularJX Reader is a GUI to process, analyze and visualize JoularJX generated energy files.
+It is available at its [own repository here](https://github.com/joular/joularjx-reader).
 
 ## :bookmark_tabs: Cite this work
 

@@ -29,14 +29,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class AgentPropertiesTest {
 
     @Test
-    @ExpectSystemExitWithStatus(1)
-    void loadNonExistentFile() throws IOException {
-        try (final FileSystem fs = MemoryFileSystemBuilder.newEmpty().build()) {
-            new AgentProperties(fs);
-        }
-    }
-
-    @Test
     void loadEmptyFile() throws IOException {
         try (final FileSystem fs = MemoryFileSystemBuilder.newEmpty().build()) {
             Files.createFile(fs.getPath("config.properties"));
@@ -53,8 +45,28 @@ class AgentPropertiesTest {
                     () -> assertFalse(properties.loadAgentConsumption()),
                     () -> assertFalse(properties.loadCallTreesConsumption()),
                     () -> assertFalse(properties.loadSaveCallTreesRuntimeData()),
-                    () -> assertFalse(properties.loadOverwriteCallTreeRuntimeData())
+                    () -> assertFalse(properties.loadOverwriteCallTreeRuntimeData()),
+                    () -> assertEquals(10, properties.loadStackMonitoringSampleRate())
             );
+        }
+    }
+
+    @Test
+    void shouldHaveSaneDefaultsWithoutConfiguration() throws IOException {
+        try (final FileSystem fs = MemoryFileSystemBuilder.newEmpty().build()) {
+            AgentProperties properties = new AgentProperties(fs);
+
+            assertFalse(properties.filtersMethod(""));
+            assertNull(properties.getPowerMonitorPath());
+            assertFalse(properties.overwritesRuntimeData());
+            assertFalse(properties.savesRuntimeData());
+            assertEquals(Level.INFO, properties.getLoggerLevel());
+            assertFalse(properties.loadConsumptionEvolution());
+            assertFalse(properties.loadAgentConsumption());
+            assertFalse(properties.loadCallTreesConsumption());
+            assertFalse(properties.loadSaveCallTreesRuntimeData());
+            assertFalse(properties.loadOverwriteCallTreeRuntimeData());
+            assertEquals(10, properties.loadStackMonitoringSampleRate());
         }
     }
 
@@ -62,14 +74,15 @@ class AgentPropertiesTest {
     void fullConfiguration() throws IOException {
         try (final FileSystem fs = MemoryFileSystemBuilder.newEmpty().build()) {
             String props = "filter-method-names=org.noureddine.joularjx\n" +
-                                "powermonitor-path=C:\\\\joularjx\\\\PowerMonitor.exe\n" +
-                                "save-runtime-data=true\n"+
-                                "overwrite-runtime-data=true\n"+
-                                "track-consumption-evolution=true\n"+
-                                "hide-agent-consumption=true\n"+
-                                "enable-call-trees-consumption=true\n"+
-                                "save-call-trees-runtime-data=true\n"+
-                                "overwrite-call-trees-runtime-data=true";
+                    "powermonitor-path=C:\\\\joularjx\\\\PowerMonitor.exe\n" +
+                    "save-runtime-data=true\n" +
+                    "overwrite-runtime-data=true\n" +
+                    "track-consumption-evolution=true\n" +
+                    "hide-agent-consumption=true\n" +
+                    "enable-call-trees-consumption=true\n" +
+                    "save-call-trees-runtime-data=true\n" +
+                    "overwrite-call-trees-runtime-data=true\n" +
+                    "stack-monitoring-sample-rate=1";
             Files.write(fs.getPath("config.properties"), (props).getBytes(StandardCharsets.UTF_8));
 
             AgentProperties properties = new AgentProperties(fs);
@@ -83,7 +96,8 @@ class AgentPropertiesTest {
                     () -> assertTrue(properties.hideAgentConsumption()),
                     () -> assertTrue(properties.callTreesConsumption()),
                     () -> assertTrue(properties.saveCallTreesRuntimeData()),
-                    () -> assertTrue(properties.overwriteCallTreesRuntimeData())
+                    () -> assertTrue(properties.overwriteCallTreesRuntimeData()),
+                    () -> assertEquals(1, properties.stackMonitoringSampleRate())
             );
         }
     }
