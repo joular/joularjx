@@ -96,20 +96,16 @@ public class CpuFactory {
             return Optional.empty();
         }
 
-        Path procstatPath = Path.of(deviceTreeModel);
+        Path deviceTreeModelPath = Path.of(deviceTreeModel);
         try {
-            // Read only first line of stat file
-            // We need to read values at index 1, 2, 3 and 4 (assuming index starts at 0)
-            // Example of line: cpu  83141 56 28074 2909632 3452 10196 3416 0 0 0
-            // Split the first line over spaces to get each column
-            List<String> allLines = Files.readAllLines(procstatPath);
+            List<String> allLines = Files.readAllLines(deviceTreeModelPath);
             for (String currentLine : allLines) {
+                // SBC models and revisions
                 if (currentLine.contains("Raspberry Pi 400 Rev 1.0")) {
                     if (osArch.contains("aarch64")) {
                         return Optional.of(RaspberryPiModels.RPI_400_10_64);
                     }
-                }
-                if (currentLine.contains("Raspberry Pi 4 Model B Rev 1.2")) {
+                } else if (currentLine.contains("Raspberry Pi 4 Model B Rev 1.2")) {
                     if (osArch.contains("aarch64")) {
                         return Optional.of(RaspberryPiModels.RPI_4B_12_64);
                     } else {
@@ -134,6 +130,34 @@ public class CpuFactory {
                 } else if (currentLine.contains("Raspberry Pi Zero W Rev 1.1")) {
                     return Optional.of(RaspberryPiModels.RPI_ZW_11);
                 } else if (currentLine.contains("ASUS Tinker Board (S)")) {
+                    return Optional.of(RaspberryPiModels.ASUSTBS);
+                }
+
+                // Support other revisions of supported SBC models
+                // By using existing power models of related revision
+                if (currentLine.contains("Raspberry Pi 400")) {
+                    if (osArch.contains("aarch64")) {
+                        return Optional.of(RaspberryPiModels.RPI_400_10_64);
+                    }
+                } else if (currentLine.contains("Raspberry Pi 4 Model B")) {
+                    if (osArch.contains("aarch64")) {
+                        return Optional.of(RaspberryPiModels.RPI_4B_12_64);
+                    } else {
+                        return Optional.of(RaspberryPiModels.RPI_4B_12);
+                    }
+                } else if (currentLine.contains("Raspberry Pi 3 Model B Plus")) {
+                    return Optional.of(RaspberryPiModels.RPI_3BP_13);
+                } else if (currentLine.contains("Raspberry Pi 3 Model B")) {
+                    return Optional.of(RaspberryPiModels.RPI_3B_12);
+                } else if (currentLine.contains("Raspberry Pi 2 Model B")) {
+                    return Optional.of(RaspberryPiModels.RPI_2B_11);
+                } else if (currentLine.contains("Raspberry Pi Model B Plus")) {
+                    return Optional.of(RaspberryPiModels.RPI_1BP_12);
+                } else if (currentLine.contains("Raspberry Pi Model B")) {
+                    return Optional.of(RaspberryPiModels.RPI_1B_2);
+                } else if (currentLine.contains("Raspberry Pi Zero W")) {
+                    return Optional.of(RaspberryPiModels.RPI_ZW_11);
+                } else if (currentLine.contains("ASUS Tinker Board")) {
                     return Optional.of(RaspberryPiModels.ASUSTBS);
                 }
             }
