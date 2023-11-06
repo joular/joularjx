@@ -106,7 +106,7 @@ Alternatively, you can use the Maven wrappen shipped with the project with the c
 
 ```
 Linux: ./mvnw clean install
-Windows: mvnw.cmd clean install
+Windows: ./mvnw.cmd clean install
 ```
 
 To compile the Windows power monitor tool, required by JoularJX on Windows, open the project in Visual Studio and compile there.
