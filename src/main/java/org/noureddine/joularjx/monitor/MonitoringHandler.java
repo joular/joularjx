@@ -108,7 +108,14 @@ public class MonitoringHandler implements Runnable {
 
                 double energyAfter = cpu.getCurrentPower(cpuLoad);
                 double cpuEnergy = energyAfter - energyBefore;
-
+                
+                // if cpuEnergy is negative, skip this cycle.
+                // this happens when energy counter is reset during program execution
+                if (cpuEnergy < 0) {
+                	logger.info("Negative energy delta detected, skipping this cycle: " + cpuEnergy);
+                	continue;
+                }
+                
                 // Calculate CPU energy consumption of the process of the JVM all its apps
                 double processEnergy = calculateProcessCpuEnergy(cpuLoad, processCpuLoad, cpuEnergy);
 
@@ -119,9 +126,11 @@ public class MonitoringHandler implements Runnable {
                 // CPU energy for JVM process
                 // CPU energy for all processes
                 // We need to calculate energy for each thread
-                long totalThreadsCpuTime = updateThreadsCpuTime(methodsStats, threadsCpuTime);
-                var threadCpuTimePercentages = getThreadsCpuTimePercentage(threadsCpuTime, totalThreadsCpuTime, processEnergy);
+//                long totalThreadsCpuTime = updateThreadsCpuTime(methodsStats, threadsCpuTime);
+//                var threadCpuTimePercentages = getThreadsCpuTimePercentage(threadsCpuTime, totalThreadsCpuTime, processEnergy);
 
+                var threadCpuTimePercentages = getThreadsCpuTimePercentage(methodsStats, threadsCpuTime, processEnergy);
+                
                 updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy, Scope.ALL);
                 updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages, status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
 
@@ -164,7 +173,7 @@ public class MonitoringHandler implements Runnable {
         }
     }
 
-    /**
+	/**
      * Performs the sampling step. Collects a set of stack traces for each thread.
      * The sampling step is performed multiple time at the frequecy of SAMPLE_RATE_MILLSECONDS, for the duration of SAMPLE_TIME_MILLISECONDS
      * @return for each Thread, a List of it's the stack traces
@@ -249,50 +258,92 @@ public class MonitoringHandler implements Runnable {
         return stats;
     }
 
-    /**
-     * Updates the CPU times for each Thread.
-     * @param methodsStats a map of method occurences for each thread
-     * @param threadsCpuTime a map of CPU time per PID
-     * @return the total CPU time used by all the monitored threads
-     */
-    private long updateThreadsCpuTime(Map<Thread, Map<String, Integer>> methodsStats, Map<Long, Long> threadsCpuTime) {
-        long totalThreadsCpuTime = 0;
-        for (var entry : methodsStats.entrySet()) {
-        	// the call could return a value of -1, which means thread not found or otherwise some other problem in reading cpu time for the PID
-        	long threadCpuTime = Math.abs(threadBean.getThreadCpuTime(entry.getKey().getId()));
+//    /**
+//     * Updates the CPU times for each Thread.
+//     * @param methodsStats a map of method occurences for each thread
+//     * @param threadsCpuTime a map of CPU time per PID
+//     * @return the total CPU time used by all the monitored threads
+//     */
+//    private long updateThreadsCpuTime(Map<Thread, Map<String, Integer>> methodsStats, Map<Long, Long> threadsCpuTime) {
+//        long totalThreadsCpuTime = 0;
+//        for (var entry : methodsStats.entrySet()) {
+//        	// the call could return a value of -1, which means thread not found or otherwise some other problem in reading cpu time for the PID
+//        	long threadCpuTime = threadBean.getThreadCpuTime(entry.getKey().getId());
+//
+//        	threadCpuTime *= entry.getValue().values().stream().mapToDouble(i -> i).sum() / sampleIterations;
+//	
+//			// If thread already monitored, then calculate CPU time since last time
+//			// Fix for issue #7 (https://github.com/joular/joularjx/issues/7)
+//			// If the last thread cpu time is <= 0, don't subtract, simply take the previous value 
+//			threadCpuTime = threadsCpuTime.merge(entry.getKey().getId(), threadCpuTime,
+//			        (present, newValue) -> newValue - present);
+//			
+//			totalThreadsCpuTime += threadCpuTime;
+//        }
+//        return totalThreadsCpuTime;
+//    }
+//    
+//    /**
+//     * Returns for each thread (PID) it's percentage of CPU time used
+//     * @param threadsCpuTime a map of CPU time per PID
+//     * @param totalThreadsCpuTime the CPU time used by all the monitored threads
+//     * @param processEnergy the energy consumed by the process
+//     * @return for each PID, the percentage of CPU time used by the associated thread
+//     */
+//    private Map<Long, Double> getThreadsCpuTimePercentage(Map<Long, Long> threadsCpuTime,
+//                                                          long totalThreadsCpuTime,
+//                                                          double processEnergy) {
+//        Map<Long, Double> threadsPower = new HashMap<>();
+//        for (var entry : threadsCpuTime.entrySet()) {
+//            double percentageCpuTime = (entry.getValue() * 100.0) / totalThreadsCpuTime;
+//            double threadPower = processEnergy * (percentageCpuTime / 100.0);
+//            threadsPower.put(entry.getKey(), threadPower);
+//        }
+//        return threadsPower;
+//    }
 
-        	threadCpuTime *= entry.getValue().values().stream().mapToDouble(i -> i).sum() / sampleIterations;
-	
-			// If thread already monitored, then calculate CPU time since last time
-			// Fix for issue #7 (https://github.com/joular/joularjx/issues/7)
-			// If the last thread cpu time is <= 0, don't subtract, simply take the previous value 
-			threadCpuTime = threadsCpuTime.merge(entry.getKey().getId(), threadCpuTime,
-			        (present, newValue) -> (newValue > present?newValue - present:present));
-			
-			totalThreadsCpuTime += threadCpuTime;
-        }
-        return totalThreadsCpuTime;
-    }
     
     /**
-     * Returns for each thread (PID) it's percentage of CPU time used
-     * @param threadsCpuTime a map of CPU time per PID
-     * @param totalThreadsCpuTime the CPU time used by all the monitored threads
-     * @param processEnergy the energy consumed by the process
-     * @return for each PID, the percentage of CPU time used by the associated thread
+     * 
+     * @param methodsStats a map of method occurrences for each thread
+     * @param threadsCpuTime a map of CPU time per PID, contains the cpu time for each tread, resulting from the last call to getThreadCpuTime(threadId)
+     * @param processEnergy the energy consumed by the process in the last monitoring period
+     * @return for each PID, the percentage of energy used by the associated thread
      */
-    private Map<Long, Double> getThreadsCpuTimePercentage(Map<Long, Long> threadsCpuTime,
-                                                          long totalThreadsCpuTime,
-                                                          double processEnergy) {
-        Map<Long, Double> threadsPower = new HashMap<>();
-        for (var entry : threadsCpuTime.entrySet()) {
-            double percentageCpuTime = (entry.getValue() * 100.0) / totalThreadsCpuTime;
-            double threadPower = processEnergy * (percentageCpuTime / 100.0);
-            threadsPower.put(entry.getKey(), threadPower);
-        }
-        return threadsPower;
-    }
-
+    private Map<Long, Double> getThreadsCpuTimePercentage(Map<Thread, Map<String, Integer>> methodsStats,
+			Map<Long, Long> threadsCpuTime, double processEnergy) {
+		Map<Long, Double> threadsCpuTimePercentage = new HashMap<Long, Double>();
+    	
+		Map<Long, Double> actualThreadsCpuTime = new HashMap<Long, Double>(); 
+		double totalThreadsCpuTime = 0;
+		// first compute the proportion of cpu time for each thread in the last sampling period
+		for (Entry<Thread, Map<String, Integer>> threadEntry : methodsStats.entrySet()) {
+			long threadId = threadEntry.getKey().getId();
+			long currentThreadCpuTime = threadBean.getThreadCpuTime(threadId);
+			long previousThreadCpuTime = threadsCpuTime.getOrDefault(threadId, 0l);
+			if (currentThreadCpuTime < 0) { // thread has quit
+				// TODO ignore last sampling period??
+				currentThreadCpuTime = previousThreadCpuTime + 1; // FIXME assume interval of 1 nanosecond, ok?? 
+				logger.info("Thread CPU time negative, taking previous time + 1: " + currentThreadCpuTime + " for thread: " + threadId);
+			}
+			
+			threadsCpuTime.put(threadId, currentThreadCpuTime);
+			long delta = currentThreadCpuTime - previousThreadCpuTime;
+			double adjustedThreadCpuTime = delta * threadEntry.getValue().values().stream().mapToDouble(i -> i).sum() / sampleIterations;
+			totalThreadsCpuTime += adjustedThreadCpuTime;
+			actualThreadsCpuTime.put(threadId, adjustedThreadCpuTime);
+		}
+		
+		logger.info("Going to divide total process energy: " + processEnergy + ", over total threads cpu time: " + totalThreadsCpuTime);
+		// compute the proportion of total energy consumed by the thread using its proportion of cpu time in the last sampling period
+    	for (Entry<Long, Double> threadEntry : actualThreadsCpuTime.entrySet()) {
+    		double threadEnergy = totalThreadsCpuTime > 0d?threadEntry.getValue() * processEnergy / totalThreadsCpuTime : 0d;
+    		threadsCpuTimePercentage.put(threadEntry.getKey(), threadEnergy);
+    	}
+		
+		return threadsCpuTimePercentage;
+	}
+    
     /**
      * Update method's consumed energy. 
      * @param methodsStats method's encounters statistics per Thread
