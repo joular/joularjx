@@ -334,7 +334,6 @@ public class MonitoringHandler implements Runnable {
 			actualThreadsCpuTime.put(threadId, adjustedThreadCpuTime);
 		}
 		
-		logger.info("Going to divide total process energy: " + processEnergy + ", over total threads cpu time: " + totalThreadsCpuTime);
 		// compute the proportion of total energy consumed by the thread using its proportion of cpu time in the last sampling period
     	for (Entry<Long, Double> threadEntry : actualThreadsCpuTime.entrySet()) {
     		double threadEnergy = totalThreadsCpuTime > 0d?threadEntry.getValue() * processEnergy / totalThreadsCpuTime : 0d;
