@@ -48,6 +48,7 @@ public class PowermetricsMacOS implements Cpu {
             // Should not be closed since it closes the process, so no try-with-resource
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
+            boolean processingPower = false;
             while ((line = input.readLine()) != null) {
                 if (headerLinesToSkip != 0) {
                     headerLinesToSkip--;
@@ -61,10 +62,18 @@ public class PowermetricsMacOS implements Cpu {
 
                 // looking for line fitting the: "<name> Power: xxx mW" pattern and add all of the associated values together
                 final var powerIndicatorIndex = line.indexOf(POWER_INDICATOR);
+
+                // we need an exit condition to avoid looping forever (since there are always new lines, the process being periodical)
+                // if we started processing power lines and we don't find any anymore, we've reached the end of this "page" so exit the loop
+                if(processingPower && powerIndicatorIndex < 0) {
+                    break;
+                }
+
                 // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the pattern but shouldn't be considered
                 // also ignore Combined Power if available since it is the sum of the other components
                 if (powerIndicatorIndex >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
                     powerInMilliwatts += extractPowerInMilliwatts(line, powerIndicatorIndex);
+                    processingPower = true; // record we're in the power lines section of the powermetrics output
                 }
             }
             return (double) powerInMilliwatts / 1000;
