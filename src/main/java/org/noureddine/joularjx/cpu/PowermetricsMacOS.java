@@ -3,6 +3,7 @@ package org.noureddine.joularjx.cpu;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,6 +13,8 @@ import java.util.logging.Logger;
  */
 public class PowermetricsMacOS implements Cpu {
     private static final Logger logger = JoularJXLogging.getLogger();
+    private static final String POWER_INDICATOR = " Power: ";
+    private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
     private Process process;
     private boolean initialized;
 
@@ -39,28 +42,59 @@ public class PowermetricsMacOS implements Cpu {
 
     @Override
     public double getCurrentPower(double cpuLoad) {
+        int headerLinesToSkip = 10;
+        int powerInMilliwatts = 0;
         try {
-            // Should not be closed since it closes the process
+            // Should not be closed since it closes the process, so no try-with-resource
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
+            boolean processingPower = false;
             while ((line = input.readLine()) != null) {
-                // look for line that contains combined power measurement
-                // which should look similar to: `Combined Power (CPU + GPU + ANE): 377 mW`
-                if (!line.startsWith("Combined")) {
+                if (headerLinesToSkip != 0) {
+                    headerLinesToSkip--;
                     continue;
                 }
-                final var powerValue = line.split(":")[1];
-                final var powerInMilliwatts = powerValue.split("m")[0];
-                return Double.parseDouble(powerInMilliwatts) / 1000;
+
+                // skip empty / header lines
+                if (line.isEmpty() || line.startsWith("*")) {
+                    continue;
+                }
+
+                // looking for line fitting the: "<name> Power: xxx mW" pattern and add all of the associated values together
+                final var powerIndicatorIndex = line.indexOf(POWER_INDICATOR);
+
+                // we need an exit condition to avoid looping forever (since there are always new lines, the process being periodical)
+                // if we started processing power lines and we don't find any anymore, we've reached the end of this "page" so exit the loop
+                if(processingPower && powerIndicatorIndex < 0) {
+                    break;
+                }
+
+                // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the pattern but shouldn't be considered
+                // also ignore Combined Power if available since it is the sum of the other components
+                if (powerIndicatorIndex >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
+                    powerInMilliwatts += extractPowerInMilliwatts(line, powerIndicatorIndex);
+                    processingPower = true; // record we're in the power lines section of the powermetrics output
+                }
             }
-        } catch (Exception exception) {
-            logger.throwing(getClass().getName(), "getCurrentPower", exception);
+            return (double) powerInMilliwatts / 1000;
+        } catch (IOException e) {
+            logger.throwing(getClass().getName(), "getCurrentPower", e);
+        }
+
+        return 0.0;
+    }
+
+    private static int extractPowerInMilliwatts(String line, int powerIndex) {
+        try {
+            return Integer.parseInt(line.substring(powerIndex + POWER_INDICATOR_LENGTH, line.indexOf('m') - 1));
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Cannot parse power value from line '" + line + "'", e);
         }
         return 0;
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         if (initialized) {
             process.destroy();
         }
