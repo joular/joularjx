@@ -12,6 +12,7 @@
 package org.noureddine.joularjx.cpu;
 
 public enum RaspberryPiModels {
+    RPI_5B_10_64,
     RPI_400_10_64,
     RPI_4B_12_64,
     RPI_4B_12,

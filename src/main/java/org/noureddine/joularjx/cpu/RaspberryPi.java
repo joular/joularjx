@@ -32,6 +32,17 @@ public class RaspberryPi implements Cpu {
         double result = 0.0;
 
         switch (rpiModel) {
+            case RPI_5B_10_64:
+                result = 8.71648242592654 + (-186.5634686 * cpuUsage) +
+                         (2676.08397456 * Math.pow(cpuUsage, 2)) +
+                         (-18839.18873015 * Math.pow(cpuUsage, 3)) +
+                         (75110.3949109 * Math.pow(cpuUsage, 4)) +
+                         (-180373.73562042 * Math.pow(cpuUsage, 5)) +
+                         (267380.23597063 * Math.pow(cpuUsage, 6)) +
+                         (-240403.81341249 * Math.pow(cpuUsage, 7)) +
+                         (120509.01405772 * Math.pow(cpuUsage, 8)) +
+                         (-25877.41360901 * Math.pow(cpuUsage, 9));
+                break;
             case RPI_400_10_64:
                 result = 2.6630056198236938 + (0.82814554 * cpuUsage) +
                         (-112.17687631 * Math.pow(cpuUsage, 2)) +

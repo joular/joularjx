@@ -101,7 +101,11 @@ public class CpuFactory {
             List<String> allLines = Files.readAllLines(deviceTreeModelPath);
             for (String currentLine : allLines) {
                 // SBC models and revisions
-                if (currentLine.contains("Raspberry Pi 400 Rev 1.0")) {
+                if (currentLine.contains("Raspberry Pi 5 Model B Rev 1.0")) {
+                    if (osArch.contains("aarch64")) {
+                        return Optional.of(RaspberryPiModels.RPI_5B_10_64);
+                    }
+                } else if (currentLine.contains("Raspberry Pi 400 Rev 1.0")) {
                     if (osArch.contains("aarch64")) {
                         return Optional.of(RaspberryPiModels.RPI_400_10_64);
                     }
@@ -135,7 +139,11 @@ public class CpuFactory {
 
                 // Support other revisions of supported SBC models
                 // By using existing power models of related revision
-                if (currentLine.contains("Raspberry Pi 400")) {
+                if (currentLine.contains("Raspberry Pi 5 Model B")) {
+                    if (osArch.contains("aarch64")) {
+                        return Optional.of(RaspberryPiModels.RPI_5B_10_64);
+                    }
+                } else if (currentLine.contains("Raspberry Pi 400")) {
                     if (osArch.contains("aarch64")) {
                         return Optional.of(RaspberryPiModels.RPI_400_10_64);
                     }
