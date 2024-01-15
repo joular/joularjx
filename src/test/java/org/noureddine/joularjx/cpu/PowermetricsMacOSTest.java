@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -16,6 +14,7 @@ public class PowermetricsMacOSTest {
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
             protected BufferedReader getReader() {
+                // using data from https://abhimanbhau.github.io/mac/m1-mac-power-usage-monitor/
                 return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-m1-m2.txt")));
             }
         };
