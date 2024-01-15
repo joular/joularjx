@@ -4,6 +4,7 @@ import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,9 +14,11 @@ import java.util.logging.Logger;
  */
 public class PowermetricsMacOS implements Cpu {
     private static final Logger logger = JoularJXLogging.getLogger();
-    private static final String POWER_INDICATOR = " Power: ";
-    private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
+    private static final String POWER_INDICATOR_M_CHIP = " Power: ";
+    private static final String POWER_INDICATOR_INTEL_CHIP = "Intel energy model derived package power (CPUs+GT+SA): ";
     private Process process;
+    private BufferedReader reader;
+
     private boolean initialized;
 
     @Override
@@ -27,6 +30,7 @@ public class PowermetricsMacOS implements Cpu {
         try {
             // todo: detect when sudo fails as this currently won't throw an exception
             process = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 1000");
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             initialized = true;
         } catch (Exception exception) {
             logger.log(Level.SEVERE, "Can't start powermetrics. Exiting...");
@@ -45,11 +49,9 @@ public class PowermetricsMacOS implements Cpu {
         int headerLinesToSkip = 10;
         int powerInMilliwatts = 0;
         try {
-            // Should not be closed since it closes the process, so no try-with-resource
-            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            boolean processingPower = false;
-            while ((line = input.readLine()) != null) {
+            BufferedReader reader = getReader();
+            while (reader.ready() && (line = reader.readLine()) != null) {
                 if (headerLinesToSkip != 0) {
                     headerLinesToSkip--;
                     continue;
@@ -61,19 +63,17 @@ public class PowermetricsMacOS implements Cpu {
                 }
 
                 // looking for line fitting the: "<name> Power: xxx mW" pattern and add all of the associated values together
-                final var powerIndicatorIndex = line.indexOf(POWER_INDICATOR);
-
-                // we need an exit condition to avoid looping forever (since there are always new lines, the process being periodical)
-                // if we started processing power lines and we don't find any anymore, we've reached the end of this "page" so exit the loop
-                if(processingPower && powerIndicatorIndex < 0) {
-                    break;
-                }
+                // or, for Intel chips, the: "Intel energy model derived package power (CPUs+GT+SA): xxx W" pattern
+                final var powerIndicatorIndexM = line.indexOf(POWER_INDICATOR_M_CHIP);
+                final var powerIndicatorIndexIntel = line.indexOf(POWER_INDICATOR_INTEL_CHIP);
 
                 // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the pattern but shouldn't be considered
                 // also ignore Combined Power if available since it is the sum of the other components
-                if (powerIndicatorIndex >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
-                    powerInMilliwatts += extractPowerInMilliwatts(line, powerIndicatorIndex);
-                    processingPower = true; // record we're in the power lines section of the powermetrics output
+                if (powerIndicatorIndexM >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
+                    powerInMilliwatts += extractPowerInMilliwatts(line, powerIndicatorIndexM + POWER_INDICATOR_M_CHIP.length());
+                }
+                if (powerIndicatorIndexIntel >= 0) {
+                    powerInMilliwatts += extractPowerInMilliwatts(line, powerIndicatorIndexIntel + POWER_INDICATOR_INTEL_CHIP.length());
                 }
             }
             return (double) powerInMilliwatts / 1000;
@@ -84,9 +84,22 @@ public class PowermetricsMacOS implements Cpu {
         return 0.0;
     }
 
+    /**
+     * Override point for testing.
+     */
+    protected BufferedReader getReader() {
+        return reader;
+    }
+
     private static int extractPowerInMilliwatts(String line, int powerIndex) {
         try {
-            return Integer.parseInt(line.substring(powerIndex + POWER_INDICATOR_LENGTH, line.indexOf('m') - 1));
+            if (line.trim().endsWith("mW")) {
+                return Integer.parseInt(line.substring(powerIndex, line.indexOf('m') - 1));
+            } else if (line.trim().endsWith("W")) {
+                return (int) (1000.0 * Double.parseDouble(line.substring(powerIndex, line.indexOf('W'))));
+            } else {
+                logger.log(Level.SEVERE, "Power line does not end with mW or W, ignoring line: " + line);
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Cannot parse power value from line '" + line + "'", e);
         }
