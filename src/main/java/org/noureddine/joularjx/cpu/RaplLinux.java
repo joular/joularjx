@@ -19,9 +19,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,7 +37,7 @@ public class RaplLinux implements Cpu {
      * RAPL files existing on the current system. All files in this list will be used for reading the
      * energy values.
      */
-    private final Set<Path> raplFilesToRead = new HashSet<>(3);
+    private final List<Path> raplFilesToRead = new ArrayList<>(3);
 
     /**
      * Filesystem where the RAPL files are located.
