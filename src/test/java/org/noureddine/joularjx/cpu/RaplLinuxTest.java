@@ -16,6 +16,8 @@ import com.github.marschall.memoryfilesystem.MemoryFileSystemBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.IOException;
@@ -28,6 +30,7 @@ import java.util.logging.Level;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@EnabledOnOs(OS.LINUX)
 class RaplLinuxTest {
 
     private FileSystem fileSystem;
