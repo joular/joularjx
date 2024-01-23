@@ -1,0 +1,68 @@
+Machine model: Mac14,2
+OS version: 21G72
+Boot arguments:
+Boot time: Mon Oct  2 10:37:21 2023
+
+
+
+*** Sampled system activity (Mon Oct 23 16:51:12 2023 +0200) (1012.07ms elapsed) ***
+
+*** Running tasks ***
+
+Name                               ID     CPU ms/s  samp ms/s  User%  Deadlines (<2 ms, 2-5 ms)  Wakeups (Intr, Pkg idle)  GPU ms/s
+WindowServer                       391    281.98    283.25     82.97  1.97    0.00               428.87  8.85              0.00
+mdworker_shared                    29420  183.26    112.83     65.49  0.00    0.00               0.00    0.00              0.00
+powermetrics                       29419  23.78     23.88      6.05   0.00    0.00               0.98    0.00              0.00
+ALL_TASKS                          -2     1222.65   1222.65    65.70  1161.97 15.81              2875.29 132.40            0.00
+
+*** Sampled system activity (Tue Nov 28 11:28:55 2023 +0100) (1002.80ms elapsed) ***
+
+
+**** Processor usage ****
+
+E-Cluster Power: 6 mW
+E-Cluster HW active frequency: 919 MHz
+E-Cluster HW active residency:   5.37% (600 MHz:   0% 912 MHz: 100% 1284 MHz:   0% 1752 MHz:   0% 2004 MHz:   0% 2256 MHz:   0% 2424 MHz: .44%)
+E-Cluster idle residency:  94.63%
+E-Cluster instructions retired: 5.66564e+07
+E-Cluster instructions per clock: 0.996462
+CPU 0 frequency: 920 MHz
+CPU 0 idle residency:  97.09%
+CPU 0 active residency:   2.91% (600 MHz:   0% 912 MHz: 2.9% 1284 MHz:   0% 1752 MHz:   0% 2004 MHz:   0% 2256 MHz:   0% 2424 MHz: .02%)
+CPU 1 frequency: 922 MHz
+CPU 1 idle residency:  98.03%
+CPU 1 active residency:   1.97% (600 MHz:   0% 912 MHz: 2.0% 1284 MHz:   0% 1752 MHz:   0% 2004 MHz:   0% 2256 MHz:   0% 2424 MHz: .01%)
+CPU 2 frequency: 943 MHz
+CPU 2 idle residency:  98.82%
+CPU 2 active residency:   1.18% (600 MHz:   0% 912 MHz: 1.2% 1284 MHz:   0% 1752 MHz:   0% 2004 MHz:   0% 2256 MHz:   0% 2424 MHz: .02%)
+CPU 3 frequency: 913 MHz
+CPU 3 idle residency:  99.04%
+CPU 3 active residency:   0.96% (600 MHz:   0% 912 MHz: .96% 1284 MHz:   0% 1752 MHz:   0% 2004 MHz:   0% 2256 MHz:   0% 2424 MHz: .00%)
+
+P-Cluster Power: 4 mW
+P-Cluster HW active frequency: 667 MHz
+P-Cluster HW active residency:   0.00% (660 MHz: 100% 924 MHz:   0% 1188 MHz:   0% 1452 MHz:   0% 1704 MHz:   0% 1968 MHz:   0% 2208 MHz:   0% 2400 MHz:   0% 2568 MHz:   0% 2724 MHz:   0% 2868 MHz:   0% 2988 MHz:   0% 3096 MHz:   0% 3204 MHz: .03% 3324 MHz: .25% 3408 MHz:   0% 3504 MHz:   0%)
+P-Cluster idle residency: 100.00%
+P-Cluster instructions retired: 6.11748e+07
+P-Cluster instructions per clock: 2.88735
+CPU 4 frequency: 3079 MHz
+CPU 4 idle residency:  99.81%
+CPU 4 active residency:   0.19% (660 MHz: .03% 924 MHz:   0% 1188 MHz:   0% 1452 MHz:   0% 1704 MHz:   0% 1968 MHz:   0% 2208 MHz:   0% 2400 MHz:   0% 2568 MHz:   0% 2724 MHz:   0% 2868 MHz:   0% 2988 MHz:   0% 3096 MHz:   0% 3204 MHz:   0% 3324 MHz: .04% 3408 MHz:   0% 3504 MHz: .12%)
+CPU 5 frequency: 1814 MHz
+CPU 5 idle residency:  99.99%
+CPU 5 active residency:   0.01% (660 MHz: .00% 924 MHz:   0% 1188 MHz:   0% 1452 MHz:   0% 1704 MHz:   0% 1968 MHz:   0% 2208 MHz:   0% 2400 MHz:   0% 2568 MHz:   0% 2724 MHz:   0% 2868 MHz:   0% 2988 MHz:   0% 3096 MHz:   0% 3204 MHz:   0% 3324 MHz: .00% 3408 MHz:   0% 3504 MHz:   0%)
+CPU 6 frequency: 660 MHz
+CPU 6 idle residency: 100.00%
+CPU 6 active residency:   0.00% (660 MHz: .00% 924 MHz:   0% 1188 MHz:   0% 1452 MHz:   0% 1704 MHz:   0% 1968 MHz:   0% 2208 MHz:   0% 2400 MHz:   0% 2568 MHz:   0% 2724 MHz:   0% 2868 MHz:   0% 2988 MHz:   0% 3096 MHz:   0% 3204 MHz:   0% 3324 MHz:   0% 3408 MHz:   0% 3504 MHz:   0%)
+CPU 7 frequency: 660 MHz
+CPU 7 idle residency: 100.00%
+CPU 7 active residency:   0.00% (660 MHz: .00% 924 MHz:   0% 1188 MHz:   0% 1452 MHz:   0% 1704 MHz:   0% 1968 MHz:   0% 2208 MHz:   0% 2400 MHz:   0% 2568 MHz:   0% 2724 MHz:   0% 2868 MHz:   0% 2988 MHz:   0% 3096 MHz:   0% 3204 MHz:   0% 3324 MHz:   0% 3408 MHz:   0% 3504 MHz:   0%)
+
+System instructions retired: 1.17831e+08
+System instructions per clock: 1.50979
+ANE Power: 0 mW
+DRAM Power: 19 mW
+DCS Power: 36 mW
+CPU Power: 10 mW
+GPU Power: 0 mW
+Package Power: 25 mW

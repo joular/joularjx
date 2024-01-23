@@ -5,22 +5,78 @@ import org.junit.jupiter.api.Test;
 import java.io.*;
 import java.net.URISyntaxException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PowermetricsMacOSTest {
 
     @Test
-    void parseM1M2PowerLines() {
+    void parseSonomaM1MaxPowerLines() {
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
             protected BufferedReader getReader() {
-                // using data from https://abhimanbhau.github.io/mac/m1-mac-power-usage-monitor/
-                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-m1-m2.txt")));
+                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-m1max.txt")));
+            }
+        };
+        cpu.intelCpu = false;
+
+
+        // the ??-Cluster and Combined lines are to be ignored, hence do not count the 359mW
+        assertEquals(0.211d + 0.147d + 0d /* +0.359d */, cpu.getCurrentPower(0), 0.0001d);
+    }
+
+    @Test
+    void parseMontereyM2PowerLines() {
+        PowermetricsMacOS cpu = new PowermetricsMacOS() {
+            @Override
+            protected BufferedReader getReader() {
+                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-monterey-m2.txt")));
+            }
+        };
+        cpu.intelCpu = false;
+
+        // the ??-Cluster and Combined lines are to be ignored, hence do not count the 6mW
+        assertEquals(/*0.006d*/ + 0d + 0.019d + 0.036d + 0.010d + 0d + 0.025d , cpu.getCurrentPower(0), 0.0001d);
+    }
+
+    @Test
+    void parseSonomaIntelPowerLines() {
+        PowermetricsMacOS cpu = new PowermetricsMacOS() {
+            @Override
+            protected BufferedReader getReader() {
+                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-intel.txt")));
             }
         };
 
-        // the ??-Cluster lines are to be ignored, hence do not count the 100mW
-        assertEquals(/*0.100d +*/ 0d + 0.688d+0.742d + 0.026d + 2.151d, cpu.getCurrentPower(0), 0.0001d);
+        cpu.intelCpu = true;
+
+        assertEquals(4.87d + 3.43d + 3.38d + 4.21d + 3.21d , cpu.getCurrentPower(0), 0.0001d);
+    }
+
+
+    @Test
+    void parseHeaderIntel() throws IOException {
+        PowermetricsMacOS cpu = new PowermetricsMacOS() {
+            @Override
+            protected BufferedReader getReader() {
+                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-intel.txt")));
+            }
+        };
+
+        cpu.readHeader();
+        assertTrue(cpu.intelCpu);
+    }
+
+    @Test
+    void parseHeaderM1() throws IOException {
+        PowermetricsMacOS cpu = new PowermetricsMacOS() {
+            @Override
+            protected BufferedReader getReader() {
+                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-monterey-m2.txt")));
+            }
+        };
+
+        cpu.readHeader();
+        assertFalse(cpu.intelCpu);
     }
 
     /**
@@ -37,7 +93,7 @@ public class PowermetricsMacOSTest {
 
         // create the content blocks including headers
         final String contents1 = "\n".repeat(10) + "CPU Power: 742 mW\n".repeat(2);
-        final String contents2 = "\n".repeat(10) + "CPU Power: 1.2W\n".repeat(2);
+        final String contents2 = "\n".repeat(10) + "CPU Power: 1200 mW\n".repeat(2);
 
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
@@ -81,16 +137,5 @@ public class PowermetricsMacOSTest {
         return writerBlock1;
     }
 
-    @Test
-    void parseIntelPowerLines() {
-        PowermetricsMacOS cpu = new PowermetricsMacOS() {
-            @Override
-            protected BufferedReader getReader() {
-                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-intel.txt")));
-            }
-        };
-
-        assertEquals(4.87d + 3.43d + 3.38d + 4.21d + 3.21d , cpu.getCurrentPower(0), 0.0001d);
-    }
 
 }
