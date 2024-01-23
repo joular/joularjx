@@ -23,10 +23,10 @@ public class PowermetricsMacOS implements Cpu {
 
     @Override
     public void initialize() {
-        if(initialized) {
+        if (initialized) {
             return;
         }
-        
+
         try {
             // todo: detect when sudo fails as this currently won't throw an exception
             process = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 1000");
@@ -42,7 +42,7 @@ public class PowermetricsMacOS implements Cpu {
 
     void readHeader() throws IOException {
         BufferedReader reader = getReader();
-        for (int i=0; i<6; i++) {
+        for (int i = 0; i < 6; i++) {
             String line = reader.readLine();
             if (line.startsWith("EFI version")) {
                 intelCpu = true;
@@ -76,7 +76,7 @@ public class PowermetricsMacOS implements Cpu {
                     continue;
                 }
 
-                // ofor Intel chips, the: "Intel energy model derived package power (CPUs+GT+SA): xxx W" pattern
+                // for Intel chips, the: "Intel energy model derived package power (CPUs+GT+SA): xxx W" pattern
                 final var i = line.indexOf(POWER_INDICATOR_INTEL_CHIP);
                 if (i >= 0) {
                     powerInWatts += Double.parseDouble(line.substring(i + POWER_INDICATOR_INTEL_CHIP.length(), line.indexOf('W')));
@@ -103,11 +103,10 @@ public class PowermetricsMacOS implements Cpu {
                 }
 
                 // looking for line fitting the: "<name> Power: xxx mW" pattern and add all of the associated values together
-                // or, for Intel chips, the: "Intel energy model derived package power (CPUs+GT+SA): xxx W" pattern
-                    final var i = line.indexOf(POWER_INDICATOR_M_CHIP);
-                    if (i >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
-                        powerInMilliwatts += Integer.parseInt(line.substring(i + POWER_INDICATOR_M_CHIP.length(), line.indexOf('m') - 1));
-                    }
+                final var i = line.indexOf(POWER_INDICATOR_M_CHIP);
+                if (i >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
+                    powerInMilliwatts += Integer.parseInt(line.substring(i + POWER_INDICATOR_M_CHIP.length(), line.indexOf('m') - 1));
+                }
             }
             return (double) powerInMilliwatts / 1000;
         } catch (IOException e) {
