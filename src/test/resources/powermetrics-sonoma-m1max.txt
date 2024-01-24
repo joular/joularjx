@@ -1,0 +1,178 @@
+Machine model: MacBookPro18,4
+OS version: 22G120
+Boot arguments:
+Boot time: Sat Oct 21 19:09:01 2023
+
+
+
+*** Sampled system activity (Mon Oct 23 16:51:12 2023 +0200) (1012.07ms elapsed) ***
+
+*** Running tasks ***
+
+Name                               ID     CPU ms/s  samp ms/s  User%  Deadlines (<2 ms, 2-5 ms)  Wakeups (Intr, Pkg idle)  GPU ms/s
+WindowServer                       391    281.98    283.25     82.97  1.97    0.00               428.87  8.85              0.00
+mdworker_shared                    29420  183.26    112.83     65.49  0.00    0.00               0.00    0.00              0.00
+powermetrics                       29419  23.78     23.88      6.05   0.00    0.00               0.98    0.00              0.00
+firefox                            678    151.38    152.06     75.55  0.00    0.98               34.43   0.98              0.00
+kernel_task                        0      116.12    116.64     0.00   422.96  0.00               805.60  74.76             0.00
+idea                               21834  126.37    126.94     64.94  708.22  4.92               898.06  26.56             0.00
+iTerm2                             1008   32.62     32.77      76.15  0.00    0.00               22.62   0.00              0.00
+plugin-container                   1096   28.85     28.98      84.36  0.00    0.00               6.89    0.00              0.00
+Music                              669    41.97     42.16      72.99  0.00    0.00               86.56   0.98              0.00
+coreaudiod                         412    35.09     35.25      87.47  0.00    0.00               86.56   1.97              0.00
+plugin-container                   1088   41.86     42.05      93.85  9.84    4.92               44.26   0.00              0.00
+plugin-container                   1037   24.55     24.67      84.93  4.92    3.93               17.71   0.00              0.00
+plugin-container                   1089   13.66     13.72      85.91  0.00    0.00               3.93    0.00              0.00
+cfprefsd                           604    6.33      6.36       45.20  0.00    0.00               0.00    0.00              0.00
+DEAD_TASKS                         -1     12.64     12.64      29.96  0.00    0.00               0.00    0.00              0.00
+launchd                            1      7.86      7.90       38.55  0.00    0.00               0.00    0.00              0.00
+jetbrains-toolbox                  1015   10.18     10.23      63.26  0.98    0.00               46.23   1.97              0.00
+sentineld                          824    10.29     10.34      75.10  0.00    0.00               0.98    0.00              0.00
+cfprefsd                           392    4.59      4.61       45.98  0.00    0.00               0.00    0.00              0.00
+splunkd                            1501   9.18      9.22       37.18  4.92    0.00               40.33   1.97              0.00
+WindowManager                      619    4.12      4.13       88.28  0.00    0.00               0.00    0.00              0.00
+mds_stores                         610    5.72      5.75       46.17  0.00    0.00               0.00    0.00              0.00
+mds                                350    5.55      5.58       53.73  0.00    0.00               1.97    0.00              0.00
+plugin-container                   1085   7.85      7.89       88.19  1.97    0.98               11.80   2.95              0.00
+opendirectoryd                     362    3.59      3.61       50.33  0.00    0.00               0.00    0.00              0.00
+Signal Helper (GPU)                26193  2.58      2.59       26.50  0.00    0.00               0.00    0.00              0.00
+notifyd                            385    3.49      3.50       59.15  0.00    0.00               0.00    0.00              0.00
+1Password Helper (GPU)             1027   2.08      2.09       28.14  0.00    0.00               0.00    0.00              0.00
+plugin-container                   1187   3.58      3.59       88.38  0.00    0.00               13.77   0.98              0.00
+LaunchBar                          952    4.79      4.81       69.92  0.00    0.00               52.13   2.95              0.00
+logd                               322    3.60      3.62       47.91  0.00    0.00               0.00    0.00              0.00
+OnlySwitch                         1017   3.85      3.86       72.79  0.00    0.00               42.30   1.97              0.00
+Ferdi                              12523  3.97      3.99       80.01  0.98    0.00               1.97    0.00              0.00
+plugin-container                   1186   2.74      2.75       83.76  0.00    0.00               10.82   0.00              0.00
+plugin-container                   1119   2.77      2.78       81.36  0.00    0.00               11.80   0.00              0.00
+java                               22015  2.95      2.96       59.12  0.00    0.00               24.59   0.00              0.00
+java                               21951  3.22      3.24       52.44  0.00    0.00               24.59   0.98              0.00
+plugin-container                   23298  2.72      2.73       81.68  0.00    0.00               10.82   0.98              0.00
+java                               21923  2.87      2.88       56.29  0.00    0.00               25.57   1.97              0.00
+java                               22095  2.85      2.86       57.81  0.00    0.00               24.59   0.98              0.00
+Ferdi Helper (GPU)                 12531  1.70      1.71       49.64  0.00    0.00               1.97    0.00              0.00
+jcef Helper (GPU)                  21932  1.11      1.12       32.20  0.00    0.00               0.00    0.00              0.00
+diskarbitrationd                   353    0.38      0.38       59.74  0.00    0.00               0.00    0.00              0.00
+plugin-container                   1114   1.48      1.48       72.19  0.00    0.00               0.98    0.00              0.00
+SentinelAgent                      936    1.06      1.07       32.01  0.00    0.00               0.00    0.00              0.00
+fseventsd                          327    1.82      1.83       19.75  0.00    0.00               2.95    0.00              0.00
+corebrightnessd                    387    2.47      2.48       53.16  0.00    0.00               0.98    0.00              0.00
+com.apple.AmbientDisplayAgent      822    1.73      1.73       56.59  0.00    0.00               0.00    0.00              0.00
+searchpartyd                       534    3.02      3.04       85.12  0.00    0.00               0.00    0.00              0.00
+Python                             931    2.57      2.59       71.71  0.00    0.00               5.90    0.00              0.00
+Ferdi Helper (Renderer)            12533  1.44      1.44       92.33  0.00    0.00               0.98    0.00              0.00
+sentineld_helper                   585    1.60      1.60       43.98  0.00    0.00               0.00    0.00              0.00
+locationd                          370    2.31      2.32       71.00  0.00    0.00               0.00    0.00              0.00
+bluetoothd                         384    2.60      2.61       61.28  0.00    0.00               0.00    0.00              0.00
+pboard                             666    1.44      1.44       47.17  0.00    0.00               0.00    0.00              0.00
+lsd                                621    0.84      0.84       53.44  0.00    0.00               0.00    0.00              0.00
+plugin-container                   9519   3.07      3.09       91.80  0.00    0.00               2.95    0.00              0.00
+Ferdi Helper                       12532  1.37      1.38       77.37  0.00    0.00               3.93    0.00              0.00
+coreservicesd                      397    0.76      0.76       54.01  0.00    0.00               0.00    0.00              0.00
+plugin-container                   9000   1.11      1.12       75.19  0.00    0.00               3.93    0.00              0.00
+plugin-container                   1118   0.84      0.84       80.90  0.00    0.00               3.93    0.00              0.00
+Ferdi Helper (Renderer)            12541  1.09      1.09       93.65  0.00    0.00               0.00    0.00              0.00
+Ferdi Helper (Renderer)            29240  1.49      1.50       90.96  0.00    0.00               1.97    0.00              0.00
+plugin-container                   9198   1.00      1.01       77.50  0.00    0.00               3.93    0.00              0.00
+Ferdi Helper (Renderer)            12543  0.78      0.79       91.89  0.00    0.00               0.00    0.00              0.00
+plugin-container                   23543  1.34      1.35       92.66  0.00    0.00               1.97    0.00              0.00
+distnoted                          603    0.51      0.52       37.12  0.00    0.00               0.00    0.00              0.00
+Finder                             700    0.49      0.50       51.78  0.00    0.00               0.00    0.00              0.00
+audioclocksyncd                    543    0.84      0.84       57.84  0.00    0.00               0.00    0.00              0.00
+PerfPowerServices                  17302  0.96      0.97       83.19  0.00    0.00               0.00    0.00              0.00
+plugin-container                   9055   0.63      0.64       87.29  0.00    0.00               1.97    0.00              0.00
+storagekitd                        7040   0.34      0.34       53.18  0.00    0.00               0.98    0.00              0.00
+heard                              922    0.35      0.35       67.45  0.00    0.00               0.98    0.00              0.00
+lockoutagent                       641    0.28      0.29       41.08  0.00    0.00               0.98    0.00              0.00
+nearbyd                            1024   0.20      0.20       37.90  0.00    0.00               0.98    0.00              0.00
+plugin-container                   1091   0.36      0.36       84.72  0.00    0.00               1.97    0.00              0.00
+plugin-container                   1190   0.35      0.35       86.92  0.00    0.00               2.95    0.00              0.00
+fsnotifier                         21921  0.21      0.21       32.94  0.00    0.00               0.00    0.00              0.00
+plugin-container                   9001   0.52      0.52       76.73  0.00    0.00               1.97    0.00              0.00
+plugin-container                   9190   0.49      0.49       87.71  0.00    0.00               1.97    0.00              0.00
+plugin-container                   28295  0.38      0.38       85.60  0.00    0.00               1.97    0.00              0.00
+gamecontrollerd                    613    0.25      0.25       50.77  0.00    0.00               0.98    0.00              0.00
+plugin-container                   9191   0.37      0.37       84.36  0.00    0.00               1.97    0.00              0.00
+launchservicesd                    364    0.22      0.22       52.01  0.00    0.00               0.98    0.00              0.00
+1Password                          1021   0.31      0.31       41.60  0.00    0.00               3.93    0.00              0.00
+thermalmonitord                    361    0.31      0.32       43.75  0.00    0.00               0.98    0.00              0.00
+askpermissiond                     938    0.09      0.09       20.67  0.00    0.00               0.98    0.00              0.00
+ContinuityCaptureAgent             728    0.15      0.15       28.65  0.00    0.00               1.97    0.00              0.00
+appleh13camerad                    545    0.12      0.12       29.55  0.00    0.00               0.98    0.00              0.00
+com.apple.WebKit.WebContent        1874   0.18      0.18       58.02  0.00    0.00               0.98    0.00              0.00
+CAReportingService                 562    0.07      0.07       37.92  0.00    0.00               0.98    0.00              0.00
+appstoreagent                      1107   0.16      0.16       26.86  0.00    0.00               0.98    0.00              0.00
+contextstored                      400    0.18      0.18       20.74  0.00    0.00               0.98    0.00              0.00
+akd                                731    0.08      0.08       45.70  0.00    0.00               0.98    0.00              0.00
+mDNSResponderHelper                508    0.08      0.08       35.75  0.00    0.00               0.98    0.00              0.00
+AMPArtworkAgent                    799    0.11      0.11       71.12  0.00    0.00               0.98    0.00              0.00
+weatherd                           1912   0.09      0.09       47.37  0.00    0.00               0.98    0.00              0.00
+photoanalysisd                     16189  0.09      0.09       32.44  0.00    0.00               0.98    0.00              0.00
+bookdatastored                     9301   0.07      0.07       42.43  0.00    0.00               0.98    0.00              0.00
+nbagent                            6922   0.08      0.08       56.92  0.00    0.00               0.98    0.00              0.00
+osqueryd                           24140  0.13      0.13       86.31  0.00    0.00               0.98    0.00              0.00
+cloudphotod                        1575   0.06      0.06       43.66  0.00    0.00               0.98    0.00              0.00
+storekitagent                      800    0.06      0.06       44.65  0.00    0.00               0.98    0.00              0.00
+mlruntimed                         1542   0.06      0.06       44.98  0.00    0.00               0.98    0.00              0.00
+newsd                              6844   0.06      0.06       45.11  0.00    0.00               0.98    0.00              0.00
+ALL_TASKS                          -2     1222.65   1222.65    65.70  1161.97 15.81              2875.29 132.40            0.00
+
+**** Processor usage ****
+
+E-Cluster Online: 100%
+E-Cluster HW active frequency: 1499 MHz
+E-Cluster HW active residency:  67.87% (600 MHz:   0% 972 MHz:  27% 1332 MHz:  24% 1704 MHz:  26% 2064 MHz:  23%)
+E-Cluster idle residency:  32.13%
+E-Cluster instructions retired: 1.20745e+09
+E-Cluster instructions per clock: 0.703911
+CPU 0 frequency: 1527 MHz
+CPU 0 active residency:  54.12% (600 MHz:   0% 972 MHz:  12% 1332 MHz:  15% 1704 MHz:  13% 2064 MHz:  14%)
+CPU 0 idle residency:  45.88%
+CPU 1 frequency: 1530 MHz
+CPU 1 active residency:  55.47% (600 MHz:   0% 972 MHz:  13% 1332 MHz:  15% 1704 MHz:  13% 2064 MHz:  15%)
+CPU 1 idle residency:  44.53%
+
+P0-Cluster Online: 100%
+P0-Cluster HW active frequency: 876 MHz
+P0-Cluster HW active residency:  16.05% (600 MHz:  62% 828 MHz: 5.7% 1056 MHz:  18% 1296 MHz: 4.9% 1524 MHz: 3.3% 1752 MHz: 1.3% 1980 MHz: 1.5% 2208 MHz: 1.4% 2448 MHz: .39% 2676 MHz: .37% 2904 MHz:   0% 3036 MHz: .07% 3132 MHz: .28% 3168 MHz: .19% 3228 MHz: 1.2%)
+P0-Cluster idle residency:  83.95%
+P0-Cluster instructions retired: 4.30488e+08
+P0-Cluster instructions per clock: 1.87471
+CPU 2 frequency: 1237 MHz
+CPU 2 active residency:  12.66% (600 MHz: 1.6% 828 MHz: .53% 1056 MHz: 5.9% 1296 MHz: 1.9% 1524 MHz: 1.3% 1752 MHz: .40% 1980 MHz: .10% 2208 MHz: .17% 2448 MHz: .01% 2676 MHz: .08% 2904 MHz:   0% 3036 MHz: .01% 3132 MHz: .00% 3168 MHz: .00% 3228 MHz: .62%)
+CPU 2 idle residency:  87.34%
+CPU 3 frequency: 1066 MHz
+CPU 3 active residency:   4.02% (600 MHz: .96% 828 MHz: .46% 1056 MHz: 1.3% 1296 MHz: .68% 1524 MHz: .44% 1752 MHz: .07% 1980 MHz: .02% 2208 MHz: .00% 2448 MHz: .00% 2676 MHz: .03% 2904 MHz:   0% 3036 MHz: .00% 3132 MHz:   0% 3168 MHz:   0% 3228 MHz: .05%)
+CPU 3 idle residency:  95.98%
+CPU 4 frequency: 1212 MHz
+CPU 4 active residency:   2.01% (600 MHz: .12% 828 MHz: .34% 1056 MHz: .92% 1296 MHz: .26% 1524 MHz: .17% 1752 MHz: .04% 1980 MHz: .05% 2208 MHz: .03% 2448 MHz: .01% 2676 MHz: .01% 2904 MHz:   0% 3036 MHz: .01% 3132 MHz: .01% 3168 MHz: .00% 3228 MHz: .06%)
+CPU 4 idle residency:  97.99%
+CPU 5 frequency: 1104 MHz
+CPU 5 active residency:   0.82% (600 MHz: .02% 828 MHz: .16% 1056 MHz: .46% 1296 MHz: .10% 1524 MHz: .06% 1752 MHz: .00% 1980 MHz:   0% 2208 MHz: .00% 2448 MHz:   0% 2676 MHz: .00% 2904 MHz:   0% 3036 MHz:   0% 3132 MHz:   0% 3168 MHz:   0% 3228 MHz: .01%)
+CPU 5 idle residency:  99.18%
+
+P1-Cluster Online: 100%
+P1-Cluster HW active frequency: 629 MHz
+P1-Cluster HW active residency:   0.61% (600 MHz:  94% 828 MHz: 2.1% 1056 MHz: 2.7% 1296 MHz: 1.5% 1524 MHz: .13% 1752 MHz:   0% 1980 MHz:   0% 2208 MHz:   0% 2448 MHz:   0% 2676 MHz:   0% 2904 MHz:   0% 3036 MHz:   0% 3132 MHz:   0% 3168 MHz:   0% 3228 MHz:   0%)
+P1-Cluster idle residency:  99.39%
+P1-Cluster instructions retired: 4.84998e+06
+P1-Cluster instructions per clock: 0.692523
+CPU 6 frequency: 962 MHz
+CPU 6 active residency:   0.56% (600 MHz: .07% 828 MHz: .21% 1056 MHz: .17% 1296 MHz: .11% 1524 MHz: .00% 1752 MHz:   0% 1980 MHz:   0% 2208 MHz:   0% 2448 MHz:   0% 2676 MHz:   0% 2904 MHz:   0% 3036 MHz:   0% 3132 MHz:   0% 3168 MHz:   0% 3228 MHz:   0%)
+CPU 6 idle residency:  99.44%
+CPU 7 frequency: 1074 MHz
+CPU 7 active residency:   0.10% (600 MHz: .01% 828 MHz: .01% 1056 MHz: .06% 1296 MHz: .02% 1524 MHz: .00% 1752 MHz:   0% 1980 MHz:   0% 2208 MHz:   0% 2448 MHz:   0% 2676 MHz:   0% 2904 MHz:   0% 3036 MHz:   0% 3132 MHz:   0% 3168 MHz:   0% 3228 MHz:   0%)
+CPU 7 idle residency:  99.90%
+CPU 8 frequency: 1245 MHz
+CPU 8 active residency:   0.02% (600 MHz:   0% 828 MHz: .00% 1056 MHz: .00% 1296 MHz: .02% 1524 MHz: .00% 1752 MHz:   0% 1980 MHz:   0% 2208 MHz:   0% 2448 MHz:   0% 2676 MHz:   0% 2904 MHz:   0% 3036 MHz:   0% 3132 MHz:   0% 3168 MHz:   0% 3228 MHz:   0%)
+CPU 8 idle residency:  99.98%
+CPU 9 frequency: 1289 MHz
+CPU 9 active residency:   0.02% (600 MHz:   0% 828 MHz:   0% 1056 MHz: .00% 1296 MHz: .02% 1524 MHz: .00% 1752 MHz:   0% 1980 MHz:   0% 2208 MHz:   0% 2448 MHz:   0% 2676 MHz:   0% 2904 MHz:   0% 3036 MHz:   0% 3132 MHz:   0% 3168 MHz:   0% 3228 MHz:   0%)
+CPU 9 idle residency:  99.98%
+
+System instructions retired: 1.64279e+09
+System instructions per clock: 0.841601
+CPU Power: 211 mW
+GPU Power: 147 mW
+ANE Power: 0 mW
+Combined Power (CPU + GPU + ANE): 359 mW
