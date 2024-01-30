@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * Copyright (c) 2021-2024, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the
  * GNU General Public License v3.0 only (GPL-3.0-only)
@@ -101,7 +101,11 @@ public class CpuFactory {
             List<String> allLines = Files.readAllLines(deviceTreeModelPath);
             for (String currentLine : allLines) {
                 // SBC models and revisions
-                if (currentLine.contains("Raspberry Pi 400 Rev 1.0")) {
+                if (currentLine.contains("Raspberry Pi 5 Model B Rev 1.0")) {
+                    if (osArch.contains("aarch64")) {
+                        return Optional.of(RaspberryPiModels.RPI_5B_10_64);
+                    }
+                } else if (currentLine.contains("Raspberry Pi 400 Rev 1.0")) {
                     if (osArch.contains("aarch64")) {
                         return Optional.of(RaspberryPiModels.RPI_400_10_64);
                     }
@@ -135,7 +139,11 @@ public class CpuFactory {
 
                 // Support other revisions of supported SBC models
                 // By using existing power models of related revision
-                if (currentLine.contains("Raspberry Pi 400")) {
+                if (currentLine.contains("Raspberry Pi 5 Model B")) {
+                    if (osArch.contains("aarch64")) {
+                        return Optional.of(RaspberryPiModels.RPI_5B_10_64);
+                    }
+                } else if (currentLine.contains("Raspberry Pi 400")) {
                     if (osArch.contains("aarch64")) {
                         return Optional.of(RaspberryPiModels.RPI_400_10_64);
                     }

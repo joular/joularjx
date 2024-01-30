@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2021-2024, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the
+ * GNU General Public License v3.0 only (GPL-3.0-only)
+ * which accompanies this distribution, and is available at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ */
+
 package org.noureddine.joularjx.cpu;
 
 import org.noureddine.joularjx.utils.JoularJXLogging;
@@ -13,25 +23,40 @@ import java.util.logging.Logger;
  */
 public class PowermetricsMacOS implements Cpu {
     private static final Logger logger = JoularJXLogging.getLogger();
-    private static final String POWER_INDICATOR = " Power: ";
-    private static final int POWER_INDICATOR_LENGTH = POWER_INDICATOR.length();
+    private static final String POWER_INDICATOR_M_CHIP = " Power: ";
+    private static final String POWER_INDICATOR_INTEL_CHIP = "Intel energy model derived package power (CPUs+GT+SA): ";
     private Process process;
+    private BufferedReader reader;
+
     private boolean initialized;
+    boolean intelCpu = false;
 
     @Override
     public void initialize() {
-        if(initialized) {
+        if (initialized) {
             return;
         }
-        
+
         try {
             // todo: detect when sudo fails as this currently won't throw an exception
             process = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 1000");
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             initialized = true;
+            readHeader();
         } catch (Exception exception) {
             logger.log(Level.SEVERE, "Can't start powermetrics. Exiting...");
             logger.throwing(getClass().getName(), "initialize", exception);
             System.exit(1);
+        }
+    }
+
+    void readHeader() throws IOException {
+        BufferedReader reader = getReader();
+        for (int i = 0; i < 6; i++) {
+            String line = reader.readLine();
+            if (line.startsWith("EFI version")) {
+                intelCpu = true;
+            }
         }
     }
 
@@ -42,18 +67,45 @@ public class PowermetricsMacOS implements Cpu {
 
     @Override
     public double getCurrentPower(double cpuLoad) {
-        int headerLinesToSkip = 10;
-        int powerInMilliwatts = 0;
+        if (intelCpu) {
+            return getCurrentPowerIntel();
+        } else {
+            return getCurrentPowerM();
+        }
+    }
+
+    private double getCurrentPowerIntel() {
+        double powerInWatts = 0;
         try {
-            // Should not be closed since it closes the process, so no try-with-resource
-            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            boolean processingPower = false;
-            while ((line = input.readLine()) != null) {
-                if (headerLinesToSkip != 0) {
-                    headerLinesToSkip--;
+            BufferedReader reader = getReader();
+            while (reader.ready() && (line = reader.readLine()) != null) {
+
+                // skip empty / header lines
+                if (line.isEmpty() || line.startsWith("*")) {
                     continue;
                 }
+
+                // for Intel chips, the: "Intel energy model derived package power (CPUs+GT+SA): xxx W" pattern
+                final var i = line.indexOf(POWER_INDICATOR_INTEL_CHIP);
+                if (i >= 0) {
+                    powerInWatts += Double.parseDouble(line.substring(i + POWER_INDICATOR_INTEL_CHIP.length(), line.indexOf('W')));
+                }
+            }
+            return powerInWatts;
+        } catch (IOException e) {
+            logger.throwing(getClass().getName(), "getCurrentPower", e);
+        }
+
+        return 0.0;
+    }
+
+    public double getCurrentPowerM() {
+        int powerInMilliwatts = 0;
+        try {
+            String line;
+            BufferedReader reader = getReader();
+            while (reader.ready() && (line = reader.readLine()) != null) {
 
                 // skip empty / header lines
                 if (line.isEmpty() || line.startsWith("*")) {
@@ -61,19 +113,9 @@ public class PowermetricsMacOS implements Cpu {
                 }
 
                 // looking for line fitting the: "<name> Power: xxx mW" pattern and add all of the associated values together
-                final var powerIndicatorIndex = line.indexOf(POWER_INDICATOR);
-
-                // we need an exit condition to avoid looping forever (since there are always new lines, the process being periodical)
-                // if we started processing power lines and we don't find any anymore, we've reached the end of this "page" so exit the loop
-                if(processingPower && powerIndicatorIndex < 0) {
-                    break;
-                }
-
-                // lines with `-` as the second char are disregarded as of the form: "E-Cluster Power: 6 mW" which fits the pattern but shouldn't be considered
-                // also ignore Combined Power if available since it is the sum of the other components
-                if (powerIndicatorIndex >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
-                    powerInMilliwatts += extractPowerInMilliwatts(line, powerIndicatorIndex);
-                    processingPower = true; // record we're in the power lines section of the powermetrics output
+                final var i = line.indexOf(POWER_INDICATOR_M_CHIP);
+                if (i >= 0 && '-' != line.charAt(1) && !line.startsWith("Combined")) {
+                    powerInMilliwatts += Integer.parseInt(line.substring(i + POWER_INDICATOR_M_CHIP.length(), line.indexOf('m') - 1));
                 }
             }
             return (double) powerInMilliwatts / 1000;
@@ -84,9 +126,22 @@ public class PowermetricsMacOS implements Cpu {
         return 0.0;
     }
 
+    /**
+     * Override point for testing.
+     */
+    protected BufferedReader getReader() {
+        return reader;
+    }
+
     private static int extractPowerInMilliwatts(String line, int powerIndex) {
         try {
-            return Integer.parseInt(line.substring(powerIndex + POWER_INDICATOR_LENGTH, line.indexOf('m') - 1));
+            if (line.trim().endsWith("mW")) {
+                return Integer.parseInt(line.substring(powerIndex, line.indexOf('m') - 1));
+            } else if (line.trim().endsWith("W")) {
+                return (int) (1000.0 * Double.parseDouble(line.substring(powerIndex, line.indexOf('W'))));
+            } else {
+                logger.log(Level.SEVERE, "Power line does not end with mW or W, ignoring line: " + line);
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Cannot parse power value from line '" + line + "'", e);
         }
