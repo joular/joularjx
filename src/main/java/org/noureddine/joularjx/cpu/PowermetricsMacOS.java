@@ -154,4 +154,11 @@ public class PowermetricsMacOS implements Cpu {
             process.destroy();
         }
     }
+
+    /**
+     * Nothing to do here. Method only useful for RAPL
+     */
+    public double getMaxPower(final double cpuLoad) {
+        return 0;
+    }
 }

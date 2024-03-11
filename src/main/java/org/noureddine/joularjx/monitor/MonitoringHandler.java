@@ -109,6 +109,12 @@ public class MonitoringHandler implements Runnable {
                 double energyAfter = cpu.getCurrentPower(cpuLoad);
                 double cpuEnergy = energyAfter - energyBefore;
                 
+                // Check if energy after is smaller than before
+                // Meaning: RAPL energy has wrapped
+                if (energyBefore > energyAfter) {
+                    cpuEnergy += cpu.getMaxPower(cpuLoad);
+                }
+
                 // if cpuEnergy is negative, skip this cycle.
                 // this happens when energy counter is reset during program execution
                 if (cpuEnergy < 0) {
