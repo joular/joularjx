@@ -395,7 +395,11 @@ public class MonitoringHandler implements Runnable {
      * @return true if the JVM destroying thread is present, false otherwise
      */
     private boolean destroyingVM() {
-        return Thread.getAllStackTraces().keySet().stream()
+        if (!this.properties.isApplicationServer()) {
+            return Thread.getAllStackTraces().keySet().stream()
                 .anyMatch(thread -> thread.getName().equals(DESTROY_THREAD_NAME));
+        } else {
+            return false;
+        }
     }
 }

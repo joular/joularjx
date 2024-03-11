@@ -41,6 +41,7 @@ public class AgentProperties {
     private static final String SAVE_CT_RUNTIME_DATA_PROPERTY = "save-call-trees-runtime-data";
     private static final String OVERWRITE_CT_RUNTIME_DATA_PROPERTY = "overwrite-call-trees-runtime-data";
     private static final String STACK_MONITORING_SAMPLE_RATE_PROPERTY = "stack-monitoring-sample-rate";
+    private static final String APPLICATION_SERVER_PROPERTY = "application-server";
 
     /**
      * Loaded configuration properties
@@ -58,6 +59,7 @@ public class AgentProperties {
     private final boolean saveCtRuntimeData;
     private final boolean overwriteCtRuntimeData;
     private final int stackMonitoringSampleRate;
+    private final boolean applicationServer;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -76,6 +78,7 @@ public class AgentProperties {
         this.saveCtRuntimeData = loadSaveCallTreesRuntimeData();
         this.overwriteCtRuntimeData = loadOverwriteCallTreeRuntimeData();
         this.stackMonitoringSampleRate = loadStackMonitoringSampleRate();
+        this.applicationServer = loadApplicationServer();
     }
 
     public AgentProperties() {
@@ -126,6 +129,8 @@ public class AgentProperties {
     public boolean overwriteCallTreesRuntimeData() { return this.overwriteCtRuntimeData; }
 
     public int stackMonitoringSampleRate() { return this.stackMonitoringSampleRate; }
+
+    public boolean isApplicationServer() { return this.applicationServer; }
 
     private Properties loadProperties(FileSystem fileSystem) {
         Properties result = new Properties();
@@ -193,6 +198,10 @@ public class AgentProperties {
 
     public boolean loadOverwriteCallTreeRuntimeData() {
         return Boolean.parseBoolean(properties.getProperty(OVERWRITE_CT_RUNTIME_DATA_PROPERTY));
+    }
+
+    public boolean loadApplicationServer() {
+        return Boolean.parseBoolean(properties.getProperty(APPLICATION_SERVER_PROPERTY));
     }
 
     public int loadStackMonitoringSampleRate() {
