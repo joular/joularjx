@@ -33,11 +33,22 @@ public class RaplLinux implements Cpu {
 
     static final String RAPL_DRAM = "/sys/class/powercap/intel-rapl/intel-rapl:0/intel-rapl:0:2/energy_uj";
 
+    static final String RAPL_PSYS_MAX = "/sys/class/powercap/intel-rapl/intel-rapl:1/max_energy_range_uj";
+
+    static final String RAPL_PKG_MAX = "/sys/class/powercap/intel-rapl/intel-rapl:0/max_energy_range_uj";
+
+    static final String RAPL_DRAM_MAX = "/sys/class/powercap/intel-rapl/intel-rapl:0/intel-rapl:0:2/max_energy_range_uj";
+
     /**
      * RAPL files existing on the current system. All files in this list will be used for reading the
      * energy values.
      */
     private final List<Path> raplFilesToRead = new ArrayList<>(3);
+
+    /**
+     * RAPL max values files existing on the current system. All files in this list will be used for reading the energy values.
+     */
+    private final List<Path> maxRaplFilesToRead = new ArrayList<>(3);
 
     /**
      * Filesystem where the RAPL files are located.
@@ -66,23 +77,32 @@ public class RaplLinux implements Cpu {
     @Override
     public void initialize() {
         final Path psysFile = fileSystem.getPath(RAPL_PSYS);
+        final Path psysMaxFile = fileSystem.getPath(RAPL_PSYS_MAX);
         if (Files.exists(psysFile)) {
             checkFileReadable(psysFile);
+            checkFileReadable(psysMaxFile);
             // psys exists, so use this for energy readings
             raplFilesToRead.add(psysFile);
+            maxRaplFilesToRead.add(psysMaxFile);
         } else {
             // No psys supported, then check for pkg and dram
             final Path pkgFile = fileSystem.getPath(RAPL_PKG);
+            final Path pkgMaxFile = fileSystem.getPath(RAPL_PKG_MAX);
             if (Files.exists(pkgFile)) {
                 checkFileReadable(pkgFile);
+                checkFileReadable(pkgMaxFile);
                 // pkg exists, check also for dram
                 raplFilesToRead.add(pkgFile);
+                maxRaplFilesToRead.add(pkgMaxFile);
 
                 final Path dramFile = fileSystem.getPath(RAPL_DRAM);
+                final Path dramMaxFile = fileSystem.getPath(RAPL_DRAM_MAX);
                 if (Files.exists(dramFile)) {
                     checkFileReadable(dramFile);
+                    checkFileReadable(dramMaxFile);
                     // dram and pkg exists, then get sum of both
                     raplFilesToRead.add(dramFile);
+                    maxRaplFilesToRead.add(dramMaxFile);
                 }
             }
         }
@@ -119,6 +139,26 @@ public class RaplLinux implements Cpu {
                 energyData += Double.parseDouble(Files.readString(raplFile));
             } catch (IOException exception) {
                 logger.throwing(getClass().getName(), "getCurrentPower", exception);
+            }
+        }
+
+        // Divide by 1 million to convert microJoules to Joules
+        return energyData / 1000000;
+    }
+
+    /**
+     * Get max energy value of RAPL interface through powercap
+     * @return Maximum energy value of RAPL interface
+     */
+    @Override
+    public double getMaxPower(final double cpuLoad) {
+        double energyData = 0.0;
+
+        for (final Path raplFile : maxRaplFilesToRead) {
+            try {
+                energyData += Double.parseDouble(Files.readString(raplFile));
+            } catch (IOException exception) {
+                logger.throwing(getClass().getName(), "getMaxPower", exception);
             }
         }
 

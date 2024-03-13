@@ -59,8 +59,10 @@ class RaplLinuxTest {
     @Test
     void psysFileSupported() throws IOException {
         Path psys = fileSystem.getPath(RaplLinux.RAPL_PSYS);
+        Path psysMax = fileSystem.getPath(RaplLinux.RAPL_PSYS_MAX);
         Files.createDirectories(psys.getParent());
         Files.writeString(psys, "1000000");
+        Files.writeString(psysMax, "1000000");
 
         cpu.initialize();
 
@@ -70,8 +72,10 @@ class RaplLinuxTest {
     @Test
     void pkgFileSupported() throws IOException {
         Path pkg = fileSystem.getPath(RaplLinux.RAPL_PKG);
+        Path pkgMax = fileSystem.getPath(RaplLinux.RAPL_PKG_MAX);
         Files.createDirectories(pkg.getParent());
         Files.writeString(pkg, "1000000");
+        Files.writeString(pkgMax, "1000000");
 
         cpu.initialize();
 
@@ -83,11 +87,16 @@ class RaplLinuxTest {
         Path pkg = fileSystem.getPath(RaplLinux.RAPL_PKG);
         Path dram = fileSystem.getPath(RaplLinux.RAPL_DRAM);
 
+        Path pkgMax = fileSystem.getPath(RaplLinux.RAPL_PKG_MAX);
+        Path dramMax = fileSystem.getPath(RaplLinux.RAPL_DRAM_MAX);
+
         Files.createDirectories(pkg.getParent());
         Files.createDirectories(dram.getParent());
 
         Files.writeString(pkg, "1000000");
         Files.writeString(dram, "1000000");
+        Files.writeString(pkgMax, "1000000");
+        Files.writeString(dramMax, "1000000");
 
         cpu.initialize();
 
@@ -98,8 +107,10 @@ class RaplLinuxTest {
     @ExpectSystemExitWithStatus(1)
     void raplFileNotReadable() throws IOException {
         Path psys = fileSystem.getPath(RaplLinux.RAPL_PSYS);
+        Path psysMax = fileSystem.getPath(RaplLinux.RAPL_PSYS_MAX);
         Files.createDirectories(psys.getParent());
         Files.writeString(psys, "1000000");
+        Files.writeString(psysMax, "1000000");
 
         assertTrue(Files.isReadable(psys));
         assertTrue(Files.isWritable(psys));

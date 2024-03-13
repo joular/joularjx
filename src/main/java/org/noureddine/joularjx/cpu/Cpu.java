@@ -18,4 +18,6 @@ public interface Cpu extends AutoCloseable {
     double getInitialPower();
 
     double getCurrentPower(double cpuLoad);
+
+    double getMaxPower(double cpuLoad);
 }
