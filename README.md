@@ -91,6 +91,7 @@ JoularJX can be configured by modifying the ```config.properties``` files:
 - ```enable-call-trees-consumption```: compute methods call trees energy consumption. A CSV file will be generated at the end of the agent's execution, associating to each call tree it's total energy consumption.
 - ```save-call-trees-runtime-data```: write runtime call trees power consumption in a CSV file. For each monitoring cycle (1 second), a new CSV file will be generated, containing the runtime power consumption of the call trees. The generated files will include timestamps in their names.
 - ```overwrite-call-trees-runtime-data```: overwrite runtime call trees power data file, or if set to false, it will write new file for each monitoring cycle.
+- ```application-server```: properly handles application servers and frameworks (Sprig Boot, Tomcat, etc.). Set ```true``` when running on application servers. If false, the monitoring loop will check if the JVM is destroyed, hence closing JoularJX when the application ends (in regular Java application). If true, JoularJX will continue to monitor correctly as the JVM isn't destroyed in a application server.
 
 You can install the jar package (and the PowerMonitor.exe on Windows) wherever you want, and call it in the ```javaagent``` with the full path.
 However, ```config.properties``` must be copied to the same folder as where you run the Java command.
