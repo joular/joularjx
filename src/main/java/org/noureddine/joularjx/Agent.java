@@ -46,7 +46,7 @@ public class Agent {
         JoularJXLogging.updateLevel(properties.getLoggerLevel());
 
         logger.info("+---------------------------------+");
-        logger.info("| JoularJX Agent Version 2.8.2    |");
+        logger.info("| JoularJX Agent Version 2.8.3    |");
         logger.info("+---------------------------------+");
 
         ThreadMXBean threadBean = createThreadBean();
