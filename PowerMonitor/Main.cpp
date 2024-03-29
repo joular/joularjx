@@ -10,61 +10,37 @@
  */
 
 #include <iostream>
-
-#include <SDKDDKVer.h>
-
 #include <stdio.h>
-#include <tchar.h>
-#include "IntelPowerGadgetLib.h"
+#include <signal.h>
+
+#include "hubbloRAPL.h"
 
 using namespace std;
 
-int main() {
-    CIntelPowerGadgetLib energyLib;
+void sighandler(int snum) {
+    closeDriver();
+    exit(1);
+}
 
-    if (energyLib.IntelEnergyLibInitialize() == false) {
+int main() {
+    signal(SIGINT, sighandler);
+
+    if (loadDriver()) {
+        float beforeEnergy = 0.0;
+        float afterEnergy = 0.0;
+        float energy = 0.0;
+        while (true) {
+            afterEnergy = getRAPLEnergy();
+            energy = afterEnergy - beforeEnergy;
+            beforeEnergy = afterEnergy;
+            cout << energy << endl;
+
+            // Sleep for one second
+            Sleep(1000);
+        }
         return 0;
     }
-
-    int nNodes = 0;
-    int nMsrs = 0;
-
-    energyLib.GetNumNodes(&nNodes);
-    energyLib.GetNumMsrs(&nMsrs);
-
-    while (true) {
-        if (!energyLib.ReadSample()) {
-            return 0;
-        }
-
-        double data[3];
-        int nData, funcId;
-        double power = 0;
-        wchar_t szName[MAX_PATH];
-
-        // Processor (i=0, j=1)
-        energyLib.GetMsrFunc(1, &funcId);
-        energyLib.GetMsrName(1, szName);
-
-        if (funcId != 1) {
-            continue;
-        }
-        energyLib.GetPowerData(0, 1, data, &nData);
-        power += data[0]; // power in W %6.2f
-
-        // Now check for DRAM and add it to total power (i=0, j=4)
-        energyLib.GetMsrFunc(4, &funcId);
-        energyLib.GetMsrName(4, szName);
-
-        if (funcId == 1) {
-            energyLib.GetPowerData(0, 4, data, &nData);
-            power += data[0]; // power in W %6.2f
-        }
-
-        cout << power << endl;
-
-        // Sleep for one second
-        Sleep(1000);
+    else {
+        cout << "Driver failed" << endl;
     }
-    return 0;
 }
