@@ -203,4 +203,11 @@ public class RaspberryPi implements Cpu {
     public void close() {
         // Nothing to do for Raspberry Pi
     }
+
+    /**
+     * Nothing to do here. Method only useful for RAPL
+     */
+    public double getMaxPower(final double cpuLoad) {
+        return 0;
+    }
 }
