@@ -13,7 +13,7 @@ Detailed documentation (including user and reference guides) are available at: [
 
 - Monitor power consumption of each method at runtime
 - Uses a Java agent, no source code instrumentation needed
-- Uses Intel RAPL (powercap interface) for getting accurate power reading on GNU/Linux, our research-based regression models on Raspberry Pi devices, and a custom program monitor (based on Intel Power Gadget) for accurate power readings on Windows
+- Uses Intel RAPL (powercap interface) for getting accurate power reading on GNU/Linux, our research-based regression models on Raspberry Pi devices, and a custom program monitor (using a RAPL driver) for accurate power readings on Windows
 - Provides real-time power consumption of every method in the monitored program
 - Provides total energy for every method on program exit
 
@@ -28,8 +28,8 @@ You can also just use the compiled jar package for JoularJX.
 JoularJX requires a minimum version of Java 11+.
 
 JoularJX depend on the following software or packages in order to get power reading:
-- On Windows, JoularJX uses a custom power monitor program that uses Intel Power Gadget API on Windows, and therefore require installing the [Intel Power Gadget tool](https://www.intel.com/content/www/us/en/developer/articles/tool/power-gadget.html) and using a supported Intel CPU.
-- On PC/server GNU/Linux, JoularJX uses Intel RAPL interface through powercap, and therefore requires running on an Intel CPU or an AMD Ryzen CPU.
+- On Windows, JoularJX uses a custom power monitor program that uses the [Windows RAPL driver by Hubblo](https://github.com/hubblo-org/windows-rapl-driver), and therefore require installing the driver first, and runs on Intel or AMD CPUs (since Ryzen).
+- On PC/server GNU/Linux, JoularJX uses Intel RAPL interface through powercap, and therefore requires running on an Intel CPU or an AMD CPU (since Ryzen).
 - On macOS, JoularJX uses `powermetrics`, a tool bundled with macOS which requires running with `sudo` access. It is recommended to authorize the current users to run `/usr/bin/powermetrics` without requiring a password by making the proper modification to the `sudoers` file.
 - On Raspberry Pi devices on GNU/Linux, JoularJX uses our own research-based regression models to estimate CPU power consumption with support for the following device models (we support all revisions of each model lineup. However, the model is generated and trained on a specific revision, listed between brackets, and the accuracy is best on this particular revision):
   - Model Zero W (rev 1.1), for 32-bit OS
