@@ -69,7 +69,7 @@ class RaplLinuxTest {
         assertEquals(1.0, cpu.getCurrentPower(0));
     }
 
-    @Test
+   @Test
     void pkgFileSupported() throws IOException {
         Path pkg = fileSystem.getPath(RaplLinux.RAPL_PKG);
         Path pkgMax = fileSystem.getPath(RaplLinux.RAPL_PKG_MAX);
@@ -103,7 +103,7 @@ class RaplLinuxTest {
         assertEquals(2.0, cpu.getCurrentPower(0));
     }
 
-    @Test
+@Test
     @ExpectSystemExitWithStatus(1)
     void raplFileNotReadable() throws IOException {
         Path psys = fileSystem.getPath(RaplLinux.RAPL_PSYS);

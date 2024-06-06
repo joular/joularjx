@@ -13,11 +13,11 @@ package org.noureddine.joularjx.cpu;
 
 public interface Cpu extends AutoCloseable {
 
-    void initialize();
+    public void initialize();
 
-    double getInitialPower();
+    public double getInitialPower();
 
-    double getCurrentPower(double cpuLoad);
+    public double getCurrentPower(double cpuLoad);
 
-    double getMaxPower(double cpuLoad);
+    public double getMaxPower(double cpuLoad);
 }
