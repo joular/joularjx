@@ -42,6 +42,9 @@ public class AgentProperties {
     private static final String OVERWRITE_CT_RUNTIME_DATA_PROPERTY = "overwrite-call-trees-runtime-data";
     private static final String STACK_MONITORING_SAMPLE_RATE_PROPERTY = "stack-monitoring-sample-rate";
     private static final String APPLICATION_SERVER_PROPERTY = "application-server";
+    private static final String VM_MONITORING_PROPERTY = "vm-monitoring";
+    private static final String VM_POWER_PATH_PROPERTY = "vm-power-path";
+    private static final String VM_POWER_FORMAT_PROPERTY = "vm-power-format";
 
     /**
      * Loaded configuration properties
@@ -60,6 +63,9 @@ public class AgentProperties {
     private final boolean overwriteCtRuntimeData;
     private final int stackMonitoringSampleRate;
     private final boolean applicationServer;
+    private final boolean vmMonitoring;
+    private final String vmPowerPath;
+    private final String vmPowerFormat;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -79,6 +85,9 @@ public class AgentProperties {
         this.overwriteCtRuntimeData = loadOverwriteCallTreeRuntimeData();
         this.stackMonitoringSampleRate = loadStackMonitoringSampleRate();
         this.applicationServer = loadApplicationServer();
+        this.vmMonitoring = loadVMMonitoring();
+        this.vmPowerPath = loadVMPowerPath();
+        this.vmPowerFormat = loadVMPowerFormat();
     }
 
     public AgentProperties() {
@@ -131,6 +140,12 @@ public class AgentProperties {
     public int stackMonitoringSampleRate() { return this.stackMonitoringSampleRate; }
 
     public boolean isApplicationServer() { return this.applicationServer; }
+
+    public boolean isVirtualMachine() { return this.vmMonitoring; }
+
+    public String getVMPowerPath() { return this.vmPowerPath; }
+
+    public String getVMPowerFormat() { return this.vmPowerFormat; }
 
     private Properties loadProperties(FileSystem fileSystem) {
         Properties result = new Properties();
@@ -225,5 +240,17 @@ public class AgentProperties {
         }
 
         return Optional.of(path);
+    }
+
+    public boolean loadVMMonitoring() {
+        return Boolean.parseBoolean(properties.getProperty(VM_MONITORING_PROPERTY));
+    }
+
+    public String loadVMPowerPath() {
+        return properties.getProperty(VM_POWER_PATH_PROPERTY);
+    }
+
+    public String loadVMPowerFormat() {
+        return properties.getProperty(VM_POWER_FORMAT_PROPERTY);
     }
 }
