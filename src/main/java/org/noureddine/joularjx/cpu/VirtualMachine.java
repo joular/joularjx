@@ -32,6 +32,7 @@ public class VirtualMachine implements Cpu {
     public void initialize() {
         // initialize VM_POWER_PATH and VM_POWER_FORMAT
         this.VM_POWER_PATH = fileSystem.getPath(VM_POWER_PATH_NAME);
+        // todo: check if file exists and readable
     }
 
     /**
