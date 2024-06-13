@@ -50,6 +50,7 @@ public class VirtualMachine implements Cpu {
 
         try {
             powerData += Double.parseDouble(Files.readString(VM_POWER_PATH));
+            // todo: check for power format (powerjoular or watts)
         } catch (IOException exception) {
             logger.throwing(getClass().getName(), "getCurrentPower", exception);
         }
