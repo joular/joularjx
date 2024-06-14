@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.FileSystems;
 import java.nio.file.FileSystem;
+import java.util.logging.Level;
 
 public class VirtualMachine implements Cpu {
     
@@ -30,9 +31,27 @@ public class VirtualMachine implements Cpu {
 
     @Override
     public void initialize() {
-        // initialize VM_POWER_PATH and VM_POWER_FORMAT
+        // Check if VM_POWER_PATH exists and can be read
         this.VM_POWER_PATH = fileSystem.getPath(VM_POWER_PATH_NAME);
-        // todo: check if file exists and readable
+
+        if (Files.exists(this.VM_POWER_PATH)) {
+            checkFileReadable(this.VM_POWER_PATH);
+        } else {
+            logger.log(Level.SEVERE, "The shared VM power file cannot be found. Exiting...");
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Check that the passed file can be read by the program. Log error message and exit if reading the file is not
+     * possible.
+     * @param file the file to check the read access
+     */
+    private void checkFileReadable(final Path file) {
+        if (!Files.isReadable(file)) {
+            logger.log(Level.SEVERE, "Failed to read the shared VM power file. Please check you have permissions to read it.");
+            System.exit(1);
+        }
     }
 
     /**
