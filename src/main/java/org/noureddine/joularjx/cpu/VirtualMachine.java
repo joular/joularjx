@@ -1,5 +1,6 @@
 package org.noureddine.joularjx.cpu;
 
+import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 import java.util.logging.Logger;
 import java.nio.file.Files;
@@ -21,8 +22,10 @@ public class VirtualMachine implements Cpu {
 
     private final FileSystem fileSystem;
 
-    public VirtualMachine() {
+    public VirtualMachine(String VMPowerPath, String VMPowerFormat) {
         this(FileSystems.getDefault());
+        VM_POWER_PATH_NAME = VMPowerPath;
+        VM_POWER_FORMAT = VMPowerFormat;
     }
 
     public VirtualMachine(final FileSystem fileSystem) {

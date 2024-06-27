@@ -43,7 +43,7 @@ public class AgentProperties {
     private static final String STACK_MONITORING_SAMPLE_RATE_PROPERTY = "stack-monitoring-sample-rate";
     private static final String APPLICATION_SERVER_PROPERTY = "application-server";
     private static final String VM_MONITORING_PROPERTY = "vm-monitoring";
-    private static final String VM_POWER_PATH_PROPERTY = "vm-power-path";
+    public static final String VM_POWER_PATH_PROPERTY = "vm-power-path";
     private static final String VM_POWER_FORMAT_PROPERTY = "vm-power-format";
 
     /**
