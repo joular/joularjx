@@ -71,9 +71,17 @@ public class VirtualMachine implements Cpu {
     public double getCurrentPower(double cpuLoad) {
         double powerData = 0.0;
 
+
         try {
-            powerData += Double.parseDouble(Files.readString(VM_POWER_PATH));
-            // todo: check for power format (powerjoular or watts)
+            if (VM_POWER_FORMAT.equals("watts")) {
+                powerData = Double.parseDouble(Files.readString(VM_POWER_PATH));
+            } else if (VM_POWER_FORMAT.equals("powerjoular")) {
+                String[] powerDataInfo = Files.readString(VM_POWER_PATH).split(",");
+                // Get 3rd column (index 2) for power consumption
+                powerData = Double.parseDouble(powerDataInfo[2]);
+            } else {
+                logger.log(Level.WARNING, "Power data format for VM not supported. Returning 0.");
+            }
         } catch (IOException exception) {
             logger.throwing(getClass().getName(), "getCurrentPower", exception);
         }
@@ -91,7 +99,7 @@ public class VirtualMachine implements Cpu {
     
     @Override
     public void close() {
-        // Nothign to do for virtual machines
+        // Nothing to do for virtual machines
     }
     
 }
