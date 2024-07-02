@@ -14,21 +14,28 @@ Detailed documentation (including user and reference guides) are available at: [
 - Monitor power consumption of each method at runtime
 - Uses a Java agent, no source code instrumentation needed
 - Uses Intel RAPL (powercap interface) for getting accurate power reading on GNU/Linux, our research-based regression models on Raspberry Pi devices, and a custom program monitor (using a RAPL driver) for accurate power readings on Windows
+- Monitor energy of Java applications running in virtual machines
 - Provides real-time power consumption of every method in the monitored program
 - Provides total energy for every method on program exit
 
-## :package: Installation
+## :package: Compilation and Installation
 
-Just run the installation script in the ```install/``` folder:
-- On Windows, run in a command line: ```windows-install.bat```. This will install JoularJX jar and ProgramMonitor to ```C:\joularjx```.
-- On GNU/Linux, run in a terminal: ```sh linux-install.sh```. This will install JoularJX to ```/opt/joularjx```.
+To build JoularJX, you need Java 11+ and Maven, then just build:
 
-You can also just use the compiled jar package for JoularJX.
+```
+mvn clean install -DskipTests
+```
 
-JoularJX requires a minimum version of Java 11+.
+Alternatively, you can use the Maven wrapper shipped with the project with the command:
+
+```
+Linux: ./mvnw clean install -DskipTests
+Windows: ./mvnw.cmd clean install -DskipTests
+```
 
 JoularJX depend on the following software or packages in order to get power reading:
 - On Windows, JoularJX uses a custom power monitor program that uses the [Windows RAPL driver by Hubblo](https://github.com/hubblo-org/windows-rapl-driver), and therefore require installing the driver first, and runs on Intel or AMD CPUs (since Ryzen).
+- On Windows, to read the data from the RAPL driver, we use a custom program monitor called [Power Monitor for Windows](https://github.com/joular/WinPowerMonitor). It used to be part of JoularJX, but now it is in its own repository. Download the binary (or compile the source code), and specify its path in ```config.properties```.
 - On PC/server GNU/Linux, JoularJX uses Intel RAPL interface through powercap, and therefore requires running on an Intel CPU or an AMD CPU (since Ryzen).
 - On macOS, JoularJX uses `powermetrics`, a tool bundled with macOS which requires running with `sudo` access. It is recommended to authorize the current users to run `/usr/bin/powermetrics` without requiring a password by making the proper modification to the `sudoers` file.
 - On Raspberry Pi devices on GNU/Linux, JoularJX uses our own research-based regression models to estimate CPU power consumption with support for the following device models (we support all revisions of each model lineup. However, the model is generated and trained on a specific revision, listed between brackets, and the accuracy is best on this particular revision):
@@ -40,7 +47,8 @@ JoularJX depend on the following software or packages in order to get power read
   - Model 3 B+ (rev 1.3), for 32-bit OS
   - Model 4 B (rev 1.1, and rev 1.2), for both 32 bits and 64-bit OS
   - Model 400 (rev 1.0), for 64-bit OS
-  - Model 5 B (rev 1.0), for 64 bits OS
+  - Model 5 B (rev 1.0), for 64-bit OS
+- On virtual machines, JoularJX reads the power consumption of the virtual machine (measured in the host) from a file shared between the host and the guest.
 
 We also support Asus Tinker Board (S).
 
@@ -85,37 +93,23 @@ JoularJX can be configured by modifying the ```config.properties``` files:
 - ```save-runtime-data```: write runtime methods power consumption in a CSV file.
 - ```overwrite-runtime-data```: overwrite runtime power data files, or if set to false, it will write new files for each monitoring cycle.
 - ```logger-level```: set the level of information (by logger) given by JoularJX in the terminal (allowed values: OFF, INFO, WARNING, SEVERE).
-- ```powermonitor-path```: Full path to the power monitor program (only for Windows).
+- ```powermonitor-path```: Full path to the [Power Monitor for Windows](https://github.com/joular/WinPowerMonitor) program (only for Windows).
 - ```track-consumption-evolution```: generate CSV files for each method containing details of the method's consumption over the time. Each consumption value is mapped to an Unix timestamp.
 - ```hide-agent-consumption```: if set to true, the energy consumption of the agent threads will not be reported.
 - ```enable-call-trees-consumption```: compute methods call trees energy consumption. A CSV file will be generated at the end of the agent's execution, associating to each call tree it's total energy consumption.
 - ```save-call-trees-runtime-data```: write runtime call trees power consumption in a CSV file. For each monitoring cycle (1 second), a new CSV file will be generated, containing the runtime power consumption of the call trees. The generated files will include timestamps in their names.
 - ```overwrite-call-trees-runtime-data```: overwrite runtime call trees power data file, or if set to false, it will write new file for each monitoring cycle.
 - ```application-server```: properly handles application servers and frameworks (Sprig Boot, Tomcat, etc.). Set ```true``` when running on application servers. If false, the monitoring loop will check if the JVM is destroyed, hence closing JoularJX when the application ends (in regular Java application). If true, JoularJX will continue to monitor correctly as the JVM isn't destroyed in a application server.
+- ```vm-power-path```: the path for the power consumption of the virtual machine. Inside a virtual machine, indicate the file containing power consumption of the VM (which is usually a file in the host that is shared with the guest).
+- ```vm-power-format```: power format of the shared VM power file. We currently support two formats: ```watts``` (a file containing one float value which is the power consumption of the VM), and ```powerjoular``` (a csv file generated by [PowerJoular](https://github.com/joular/powerjoular) in the host, containing 3 columns: timestamp, CPU utilization of the VM and CPU power of the VM).
 
 You can install the jar package (and the PowerMonitor.exe on Windows) wherever you want, and call it in the ```javaagent``` with the full path.
 However, ```config.properties``` must be copied to the same folder as where you run the Java command.
 
-## :floppy_disk: Compilation
-
-To build JoularJX, you need Java 11+ and Maven, then just build:
-
-```
-mvn clean install -DskipTests
-```
-
-Alternatively, you can use the Maven wrappen shipped with the project with the command:
-
-```
-Linux: ./mvnw clean install -DskipTests
-Windows: ./mvnw.cmd clean install -DskipTests
-```
-
-To compile the Windows power monitor tool, required by JoularJX on Windows, open the project in Visual Studio and compile there.
-Or open, Developer Command Prompt for VS (or Developer PowerShell for VS), and compile with this command:
-```
-msbuild.exe PowerMonitor.sln /property:Configuration=Release
-```
+In virtual machines, JoularJX requires two steps:
+- Installing a power monitoring tool in the host machine, which will monitor the virtual machine power consumption every second and writing it to a file (to be shared with the guest VM).
+For example, you can use our [PowerJoular](https://github.com/joular/powerjoular).
+- Use JoularJ in the guest VM while specifying the path of the power file shared with the host and its format.
 
 ## Generated files
 

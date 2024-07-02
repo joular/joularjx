@@ -207,6 +207,7 @@ public class RaspberryPi implements Cpu {
     /**
      * Nothing to do here. Method only useful for RAPL
      */
+    @Override
     public double getMaxPower(final double cpuLoad) {
         return 0;
     }
