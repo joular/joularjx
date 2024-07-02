@@ -41,6 +41,11 @@ public class CpuFactory {
         String osArch = System.getProperty("os.arch").toLowerCase();
         logger.info("Initializing for platform: '" + osName + "' running on architecture: '" + osArch + '\'');
 
+        if (properties.isVirtualMachine()) {
+            logger.info("Initializing for running inside a virtual machine");
+            return new VirtualMachine(properties.getVMPowerPath(), properties.getVMPowerFormat());
+        }
+
         if (osName.contains("win")) {
             return new IntelWindows(properties.getPowerMonitorPath());
         }
