@@ -232,7 +232,7 @@ public class AgentProperties {
     }
 
     private Optional<Path> getPropertiesPathIfExists(FileSystem fileSystem) {
-        Path path = fileSystem.getPath("config.properties");
+        Path path = fileSystem.getPath(System.getProperty("joularjx.config", "config.properties"));
 
         if (Files.notExists(path)) {
             logger.log(Level.INFO, "Could not locate config.properties, will use default values");
