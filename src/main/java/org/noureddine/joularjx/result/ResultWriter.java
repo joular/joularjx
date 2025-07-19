@@ -14,9 +14,30 @@ import java.io.IOException;
 
 public interface ResultWriter {
 
-    void setTarget(String name, boolean overwrite) throws IOException;
+	/**
+	 * Close the target. Call this method once all writing operations have completed
+	 *
+	 * @throws IOException in case of error
+	 */
+	void closeTarget() throws IOException;
 
-    void write(String methodName, double methodPower) throws IOException;
+	/**
+	 * Set the target for this writer, aka the place where the data will be written.
+	 * Call this method before any writing operation.
+	 *
+	 * @param name      name of the target (can be a file name, for example)
+	 * @param overwrite true to overwrite any existing data in the target
+	 * @throws IOException in case of error
+	 */
+	void setTarget(String name, boolean overwrite) throws IOException;
 
-    void closeTarget() throws IOException;
+	/**
+	 * Write a line. {@link #setTarget(String, boolean)} should have been called
+	 * before using this method.
+	 *
+	 * @param methodName  name of the method
+	 * @param methodPower power consumption of the method
+	 * @throws IOException in case of error
+	 */
+	void write(String methodName, double methodPower) throws IOException;
 }

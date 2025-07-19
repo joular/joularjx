@@ -18,46 +18,52 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Locale;
 
+import com.google.auto.service.AutoService;
+
+@AutoService(ResultWriter.class)
 public class CsvResultWriter implements ResultWriter {
 
-    private static final OpenOption[] APPEND_OPEN_OPTIONS =
-            new OpenOption[] {StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND};
-    private static final OpenOption[] OVERWRITE_OPEN_OPTIONS
-            = new OpenOption[] {StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING};
+	private static final OpenOption[] APPEND_OPEN_OPTIONS = new OpenOption[] { StandardOpenOption.CREATE,
+			StandardOpenOption.WRITE, StandardOpenOption.APPEND };
+	private static final OpenOption[] OVERWRITE_OPEN_OPTIONS = new OpenOption[] { StandardOpenOption.CREATE,
+			StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING };
 
-    private final ThreadLocal<BufferedWriter> writer;
+	private final ThreadLocal<BufferedWriter> writer;
 
-    public CsvResultWriter() {
-        this.writer = new ThreadLocal<>();
-    }
+	public CsvResultWriter() {
+		this.writer = new ThreadLocal<>();
+	}
 
-    @Override
-    public void setTarget(String name, boolean overwrite) throws IOException {
-        BufferedWriter previousWriter = writer.get();
-        if (previousWriter != null) {
-            previousWriter.close();
-        }
+	/** {@inheritDoc} */
+	@Override
+	public void closeTarget() throws IOException {
+		writer.get().close();
+		writer.remove();
+	}
 
-        writer.set(Files.newBufferedWriter(getPath(name), overwrite ? OVERWRITE_OPEN_OPTIONS : APPEND_OPEN_OPTIONS));
-    }
+	private Path getPath(String name) {
+		return Path.of(name + ".csv");
+	}
 
-    @Override
-    public void write(String methodName, double methodPower) throws IOException {
-        BufferedWriter writer = this.writer.get();
-        if (writer == null) {
-            throw new IllegalStateException("Please call ResultWriter#setTarget(String) first");
-        }
+	/** {@inheritDoc} */
+	@Override
+	public void setTarget(String name, boolean overwrite) throws IOException {
+		final BufferedWriter previousWriter = writer.get();
+		if (previousWriter != null) {
+			previousWriter.close();
+		}
 
-        writer.write(String.format(Locale.US, "%s,%.4f%n", methodName, methodPower));
-    }
+		writer.set(Files.newBufferedWriter(getPath(name), overwrite ? OVERWRITE_OPEN_OPTIONS : APPEND_OPEN_OPTIONS));
+	}
 
-    @Override
-    public void closeTarget() throws IOException {
-        writer.get().close();
-        writer.remove();
-    }
+	/** {@inheritDoc} */
+	@Override
+	public void write(String methodName, double methodPower) throws IOException {
+		final BufferedWriter writer = this.writer.get();
+		if (writer == null) {
+			throw new IllegalStateException("Please call ResultWriter#setTarget(String) first");
+		}
 
-    private Path getPath(String name) {
-        return Path.of(name + ".csv");
-    }
+		writer.write(String.format(Locale.US, "%s,%.4f%n", methodName, methodPower));
+	}
 }
