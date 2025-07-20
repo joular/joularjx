@@ -42,10 +42,10 @@ public class ResultTreeManager {
 
     private AgentProperties properties;
 
-    //The directory where the result of the current execution will be written
+    // The directory where the result of the current execution will be written
     private String runDirectoryPath;
 
-    //All leaf directory paths
+    // All leaf directory paths
     private String allTotalMethodsPath;
     private String filteredTotalMethodsPath;
     private String allRuntimeMethodsPath;
@@ -68,7 +68,7 @@ public class ResultTreeManager {
     public ResultTreeManager(AgentProperties properties, long pid, long startTimestamp) {
         this.properties = properties;
         
-        //Building the path of all the directories
+        // Building the path of all the directories
         this.runDirectoryPath =  GLOBAL_RESULT_DIRECTORY_NAME + "/" + String.format("%d-%d", pid, startTimestamp);
 
         String allDirectoryPath      = runDirectoryPath + "/" + ALL_DIRECTORY_NAME;
@@ -91,49 +91,51 @@ public class ResultTreeManager {
     }
 
     /**
-     * Creates the tree hierarchy. Creates the required folder, if they do not exists yet.
+     * Creates the tree hierarchy. Creates the required folder, if they do not exist yet.
      * Only the necessary folders are created, depending on the provided configuration properties.
-     * @return a boolean indicating werther an error occurs while creating the folder hierarchy (false), or no (true).
+     * @return a boolean indicating whether an error occurs while creating the folder hierarchy (false), or no (true).
      */
     public boolean create() {
-        //This boolean acts as a check. If an error occurs during the intialization of the file hierarchy, the method will continue its execution, as other directories may be created sucessfully, but this boolean will be set to false, to indicate that an error occured.
+        // This boolean acts as a check. If an error occurs during the initialization of the file hierarchy, the method will 
+        // continue its execution, as other directories may be created successfully, but this boolean will be set to false,
+        // to indicate that an error occurred.
         boolean verif = true; 
 
-        logger.log(Level.INFO, String.format("Results will be stored in %s/", this.runDirectoryPath));
+        logger.log(Level.INFO, String.format("Results will be stored in %s%s", this.runDirectoryPath, File.separator));
 
-        //List of all the directories that will be created
+        // List of all the directories that will be created
         List<String> directoriesToCreate = new ArrayList<>();
 
-        //Mandatory directories (directories that do not depend of configuration properties)
+        // Mandatory directories (directories that do not depend of configuration properties)
         directoriesToCreate.add(this.allTotalMethodsPath);
         directoriesToCreate.add(this.filteredTotalMethodsPath);
 
-        //Optional directories (directories that depends of configuration properties)
-        //Runtime
+        // Optional directories (directories that depends of configuration properties)
+        // Runtime
         if (properties.savesRuntimeData()) {
             directoriesToCreate.add(this.allRuntimeMethodsPath);
             directoriesToCreate.add(this.filteredRuntimeMethodsPath);
         }
 
-        //Call trees
+        // Call trees
         if (properties.callTreesConsumption()) {
-            //Runtime
+            // Runtime
             if (properties.saveCallTreesRuntimeData()) {
                 directoriesToCreate.add(this.allRuntimeCallTreePath);
                 directoriesToCreate.add(this.filteredRuntimeCallTreePath);
             }
-            //Total
+            // Total
             directoriesToCreate.add(this.allTotalCallTreePath);
             directoriesToCreate.add(this.filteredTotalCallTreePath);
         }
 
-        //Methods consumption evolution
+        // Methods consumption evolution
         if (properties.trackConsumptionEvolution()) {
             directoriesToCreate.add(this.allEvolutionPath);
             directoriesToCreate.add(this.filteredEvolutionPath);
         }
 
-        //Creating all the directories
+        // Creating all the directories
         for (String dirPath : directoriesToCreate) {
             File dir = new File(dirPath);
             if (!dir.exists() && !dir.mkdirs()) {
