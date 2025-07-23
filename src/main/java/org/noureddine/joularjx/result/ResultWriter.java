@@ -11,6 +11,7 @@
 package org.noureddine.joularjx.result;
 
 import java.io.IOException;
+import java.util.Properties;
 
 public interface ResultWriter {
 
@@ -20,6 +21,18 @@ public interface ResultWriter {
 	 * @throws IOException in case of error
 	 */
 	void closeTarget() throws IOException;
+
+	void setProperties(Properties props);
+
+	/**
+	 * Set the target for this writer, aka the place where the data will be written.
+	 * Call this method before any writing operation.
+	 *
+	 * @param scope     type of the target
+	 * @param overwrite true to overwrite any existing data in the target
+	 * @throws IOException in case of error
+	 */
+	void setTarget(ResultScope scope, boolean overwrite) throws IOException;
 
 	/**
 	 * Set the target for this writer, aka the place where the data will be written.

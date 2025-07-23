@@ -17,6 +17,8 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Properties;
 
 import com.google.auto.service.AutoService;
 
@@ -47,9 +49,23 @@ public class CsvResultWriter implements ResultWriter {
 
 	/** {@inheritDoc} */
 	@Override
+	public void setProperties(Properties props) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void setTarget(ResultScope scope, boolean overwrite) throws IOException {
+		// TODO Auto-generated method stub
+
+	}
+
+	/** {@inheritDoc} */
+	@Override
 	public void setTarget(String name, boolean overwrite) throws IOException {
 		final BufferedWriter previousWriter = writer.get();
-		if (previousWriter != null) {
+		if (Objects.nonNull(previousWriter)) {
 			previousWriter.close();
 		}
 
