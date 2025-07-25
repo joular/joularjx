@@ -11,7 +11,8 @@
 package org.noureddine.joularjx.result;
 
 import java.io.IOException;
-import java.util.Properties;
+
+import org.noureddine.joularjx.utils.AgentProperties;
 
 public interface ResultWriter {
 
@@ -22,7 +23,7 @@ public interface ResultWriter {
 	 */
 	void closeTarget() throws IOException;
 
-	void setProperties(Properties props);
+	void setProperties(AgentProperties props, long pid, long timestamp);
 
 	/**
 	 * Set the target for this writer, aka the place where the data will be written.

@@ -18,7 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Properties;
+
+import org.noureddine.joularjx.utils.AgentProperties;
 
 import com.google.auto.service.AutoService;
 
@@ -31,6 +32,8 @@ public class CsvResultWriter implements ResultWriter {
 			StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING };
 
 	private final ThreadLocal<BufferedWriter> writer;
+
+	private AgentProperties props;
 
 	public CsvResultWriter() {
 		this.writer = new ThreadLocal<>();
@@ -49,8 +52,8 @@ public class CsvResultWriter implements ResultWriter {
 
 	/** {@inheritDoc} */
 	@Override
-	public void setProperties(Properties props) {
-		// TODO Auto-generated method stub
+	public void setProperties(AgentProperties props, long pid, long timestamp) {
+		this.props = props;
 
 	}
 

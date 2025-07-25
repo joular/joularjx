@@ -12,6 +12,7 @@ package org.noureddine.joularjx.result;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.nio.file.Path;
 import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,105 +34,104 @@ public class ResultTreeManagerTest {
 
         this.appDirectory = String.format("%d-%d", pid, timestamp);
 
-        //For the moment, only peths are tested, so the AgentProperies parameter is not required
+        // For the moment, only paths are tested, so the AgentProperties parameter is not required
         this.manager = new ResultTreeManager(null, pid, timestamp);
     }
 
     @Test
     public void getAllRuntimeMethodsPathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-            +this.appDirectory+"/"
-            +ResultTreeManager.ALL_DIRECTORY_NAME+"/"
-            +ResultTreeManager.RUNTIME_DIRECTORY_NAME+"/"
-            +ResultTreeManager.METHOD_DIRECTORY_NAME
-            , this.manager.getAllRuntimeMethodsPath());
+    	Path reference = Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME, this.appDirectory, 
+                ResultTreeManager.ALL_DIRECTORY_NAME,
+                ResultTreeManager.RUNTIME_DIRECTORY_NAME,
+                ResultTreeManager.METHOD_DIRECTORY_NAME);
+        assertEquals(reference, this.manager.getAllRuntimeMethodsPath());
     }
 
     @Test
     public void getFilteredRuntimeMethodsPathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-        +this.appDirectory+"/"
-        +ResultTreeManager.FILTERED_DIRECTORY_NAME+"/"
-        +ResultTreeManager.RUNTIME_DIRECTORY_NAME+"/"
-        +ResultTreeManager.METHOD_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+        this.appDirectory,
+        ResultTreeManager.FILTERED_DIRECTORY_NAME,
+        ResultTreeManager.RUNTIME_DIRECTORY_NAME,
+        ResultTreeManager.METHOD_DIRECTORY_NAME)
         , this.manager.getFilteredRuntimeMethodsPath());
     }
 
     @Test
     public void getAllTotalMethodsPathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-        +this.appDirectory+"/"
-        +ResultTreeManager.ALL_DIRECTORY_NAME+"/"
-        +ResultTreeManager.TOTAL_DIRECTORY_NAME+"/"
-        +ResultTreeManager.METHOD_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+        this.appDirectory,
+        ResultTreeManager.ALL_DIRECTORY_NAME,
+        ResultTreeManager.TOTAL_DIRECTORY_NAME,
+        ResultTreeManager.METHOD_DIRECTORY_NAME)
         , this.manager.getAllTotalMethodsPath());
     }
 
     @Test
     public void getFilteredTotalMethodsPathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-        +this.appDirectory+"/"
-        +ResultTreeManager.FILTERED_DIRECTORY_NAME+"/"
-        +ResultTreeManager.TOTAL_DIRECTORY_NAME+"/"
-        +ResultTreeManager.METHOD_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+        this.appDirectory,
+        ResultTreeManager.FILTERED_DIRECTORY_NAME,
+        ResultTreeManager.TOTAL_DIRECTORY_NAME,
+        ResultTreeManager.METHOD_DIRECTORY_NAME)
         , this.manager.getFilteredTotalMethodsPath());
     }
 
     @Test
     public void getAllRuntimeCallTreePathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-            +this.appDirectory+"/"
-            +ResultTreeManager.ALL_DIRECTORY_NAME+"/"
-            +ResultTreeManager.RUNTIME_DIRECTORY_NAME+"/"
-            +ResultTreeManager.CALLTREE_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+            this.appDirectory,
+            ResultTreeManager.ALL_DIRECTORY_NAME,
+            ResultTreeManager.RUNTIME_DIRECTORY_NAME,
+            ResultTreeManager.CALLTREE_DIRECTORY_NAME)
             , this.manager.getAllRuntimeCallTreePath());
     }
 
     @Test
     public void getFilteredRuntimeCallTreePathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-            +this.appDirectory+"/"
-            +ResultTreeManager.FILTERED_DIRECTORY_NAME+"/"
-            +ResultTreeManager.RUNTIME_DIRECTORY_NAME+"/"
-            +ResultTreeManager.CALLTREE_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+            this.appDirectory,
+            ResultTreeManager.FILTERED_DIRECTORY_NAME,
+            ResultTreeManager.RUNTIME_DIRECTORY_NAME,
+            ResultTreeManager.CALLTREE_DIRECTORY_NAME)
             , this.manager.getFilteredRuntimeCallTreePath());
     }
 
     @Test
     public void getAllTotalCallTreePathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-            +this.appDirectory+"/"
-            +ResultTreeManager.ALL_DIRECTORY_NAME+"/"
-            +ResultTreeManager.TOTAL_DIRECTORY_NAME+"/"
-            +ResultTreeManager.CALLTREE_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+            this.appDirectory,
+            ResultTreeManager.ALL_DIRECTORY_NAME,
+            ResultTreeManager.TOTAL_DIRECTORY_NAME,
+            ResultTreeManager.CALLTREE_DIRECTORY_NAME)
             , this.manager.getAllTotalCallTreePath());
     }
 
     @Test
     public void getFilteredTotalCallTreePathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-            +this.appDirectory+"/"
-            +ResultTreeManager.FILTERED_DIRECTORY_NAME+"/"
-            +ResultTreeManager.TOTAL_DIRECTORY_NAME+"/"
-            +ResultTreeManager.CALLTREE_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+            this.appDirectory,
+            ResultTreeManager.FILTERED_DIRECTORY_NAME,
+            ResultTreeManager.TOTAL_DIRECTORY_NAME,
+            ResultTreeManager.CALLTREE_DIRECTORY_NAME)
             , this.manager.getFilteredTotalCallTreePath());
     }
 
     @Test
     public void getAllEvolutionPathTest(){
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-            +this.appDirectory+"/"
-            +ResultTreeManager.ALL_DIRECTORY_NAME+"/"
-            +ResultTreeManager.EVOLUTION_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+            this.appDirectory,
+            ResultTreeManager.ALL_DIRECTORY_NAME,
+            ResultTreeManager.EVOLUTION_DIRECTORY_NAME)
             , this.manager.getAllEvolutionPath());
     }
 
     @Test
     public void getFilteredEvolutionPathTest() {
-        assertEquals(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME+"/"
-            +this.appDirectory+"/"
-            +ResultTreeManager.FILTERED_DIRECTORY_NAME+"/"
-            +ResultTreeManager.EVOLUTION_DIRECTORY_NAME
+        assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
+            this.appDirectory,
+            ResultTreeManager.FILTERED_DIRECTORY_NAME,
+            ResultTreeManager.EVOLUTION_DIRECTORY_NAME)
             , this.manager.getFilteredEvolutionPath());
     }
 }
