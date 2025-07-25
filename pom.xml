@@ -35,6 +35,21 @@
         </license>
     </licenses>
 
+    <developers>
+        <developer>
+          <name>Adel Noureddine</name>
+          <email>adelnoureddine@users.noreply.github.com</email>
+          <organization>Université de Pau et des Pays de l'Adour</organization>
+          <organizationUrl>https://www.univ-pau.fr/</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+      <connection>scm:git:git://github.com/joular/joularjx.git</connection>
+      <developerConnection>scm:git:ssh://github.com:joular/joularjx.git</developerConnection>
+      <url>http://github.com/joular/joularjx/tree/develop</url>
+    </scm>
+
     <properties>
         <maven.compiler.release>11</maven.compiler.release>
         <encoding>UTF-8</encoding>
@@ -111,6 +126,68 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version>
+                <executions>
+                    <execution>
+                        <id>generate-javadoc</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <configuration>
+                            <target>
+                                <!-- md5 and sha1 are mandatory, despite being deprecated algorithms -->
+                                <checksum fileext=".md5">
+                                    <fileset dir="target">
+                                    <include name="*.jar"/>
+                                </fileset>
+                                </checksum>
+                                <checksum algorithm="SHA-1" fileext=".sha1">
+                                    <fileset dir="target">
+                                    <include name="*.jar"/>
+                                </fileset>
+                                </checksum>
+                                <!-- Add sha512 which is still safe -->
+                                <checksum algorithm="SHA-512" fileext=".sha512">
+                                    <fileset dir="target">
+                                    <include name="*.jar"/>
+                                </fileset>
+                                </checksum>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
