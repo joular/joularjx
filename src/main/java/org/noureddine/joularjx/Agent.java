@@ -39,6 +39,8 @@ public class Agent {
      * JVM hook to statically load the java agent at startup.
      * After the Java Virtual Machine (JVM) has initialized, the premain method
      * will be called. Then the real application main method will be called.
+     * @param args command line arguments
+     * @param inst JVM instrumentation
      */
     public static void premain(String args, Instrumentation inst) {
         Thread.currentThread().setName(NAME_THREAD_NAME);

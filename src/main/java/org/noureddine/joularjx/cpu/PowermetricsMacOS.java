@@ -128,6 +128,7 @@ public class PowermetricsMacOS implements Cpu {
 
     /**
      * Override point for testing.
+     * @return the reader getting outputs of the powermetrics tool
      */
     protected BufferedReader getReader() {
         return reader;

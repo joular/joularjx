@@ -29,7 +29,7 @@ public class AgentProperties {
 
     private static final Logger logger = JoularJXLogging.getLogger();
 
-    //Properties names in the config.properties file
+    // Properties names in the config.properties file
     private static final String FILTER_METHOD_NAME_PROPERTY = "filter-method-names";
     public static final String POWER_MONITOR_PATH_PROPERTY = "powermonitor-path";
     private static final String SAVE_RUNTIME_DATA_PROPERTY = "save-runtime-data";
@@ -69,6 +69,7 @@ public class AgentProperties {
 
     /**
      * Instantiate a new instance which will load the properties
+     * @param fileSystem file system abstraction for accessing properties
      */
     public AgentProperties(FileSystem fileSystem) {
         this.properties = loadProperties(fileSystem);
