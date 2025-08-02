@@ -11,14 +11,42 @@
 package org.noureddine.joularjx.result;
 
 public enum ResultScope {
-	ALL_EVOLUTION,
-	FILTERED_EVOLUTION,
-	ALL_RUNTIME_CALL_TREE,
-	FILTERED_RUNTIME_CALL_TREE,
-	ALL_RUNTIME_METHODS,
-	FILTERED_RUNTIME_METHODS,
-	ALL_TOTAL_CALL_TREE,
-	FILTERED_TOTAL_CALL_TREE,
-	ALL_TOTAL_METHODS,
-	FILTERED_TOTAL_METHODS
+	ALL_EVOLUTION("all", "evolution"),
+	FILTERED_EVOLUTION("filtered", "evolution"),
+	ALL_RUNTIME_CALL_TREE("all", "call-trees-power"),
+	FILTERED_RUNTIME_CALL_TREE("filtered", "call-trees-power"),
+	ALL_RUNTIME_METHODS("all", "methods-power"),
+	FILTERED_RUNTIME_METHODS("filtered", "methods-power"),
+	ALL_TOTAL_CALL_TREE("all", "call-trees-energy"),
+	FILTERED_TOTAL_CALL_TREE("filtered", "call-trees-energy"),
+	ALL_TOTAL_METHODS("all", "methods-energy"),
+	FILTERED_TOTAL_METHODS("filtered", "methods-energy");
+	
+	String scope;
+	String suffix;
+
+	/**
+	 * Constructor
+	 * 
+	 * @param string  scope (all or filtered)
+	 * @param string2 suffix for the file names
+	 */
+	ResultScope(String string, String string2) {
+		scope = string;
+		suffix = string2;
+	}
+
+	/**
+	 * @return the scope
+	 */
+	public String getScope() {
+		return scope;
+	}
+
+	/**
+	 * @return the suffix
+	 */
+	public String getSuffix() {
+		return suffix;
+	}
 }

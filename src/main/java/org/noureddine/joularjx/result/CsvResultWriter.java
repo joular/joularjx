@@ -33,8 +33,11 @@ public class CsvResultWriter implements ResultWriter {
 
 	private final ThreadLocal<BufferedWriter> writer;
 
-	private AgentProperties props;
+	private ResultTreeManager rtManager;
 
+	/**
+	 * Constructor
+	 */
 	public CsvResultWriter() {
 		this.writer = new ThreadLocal<>();
 	}
@@ -46,40 +49,39 @@ public class CsvResultWriter implements ResultWriter {
 		writer.remove();
 	}
 
-	private Path getPath(String name) {
-		return Path.of(name + ".csv");
+	private Path getCsvPath(Path path) {
+		return path.resolveSibling(path.getFileName() + ".csv");
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void setProperties(AgentProperties props, long pid, long timestamp) {
-		this.props = props;
-
+	public void initialize(AgentProperties props, long pid, long timestamp) {
+		rtManager = new ResultTreeManager(props, pid, timestamp);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void setTarget(ResultScope scope, boolean overwrite) throws IOException {
-		// TODO Auto-generated method stub
-
+	public void setConfiguration(ResultWriterConfiguration configuration) throws IOException {
+		final ResultTreeManager.PathBuilder builder = rtManager.new PathBuilder(configuration.getScope());
+		final Path target = builder.withMethodName(configuration.getMethodName())
+				.withTimestamp(configuration.isTimestamped()).build();
+		setTarget(target, configuration.isOverwrite());
 	}
 
-	/** {@inheritDoc} */
-	@Override
-	public void setTarget(String name, boolean overwrite) throws IOException {
+	private void setTarget(Path name, boolean overwrite) throws IOException {
 		final BufferedWriter previousWriter = writer.get();
 		if (Objects.nonNull(previousWriter)) {
 			previousWriter.close();
 		}
 
-		writer.set(Files.newBufferedWriter(getPath(name), overwrite ? OVERWRITE_OPEN_OPTIONS : APPEND_OPEN_OPTIONS));
+		writer.set(Files.newBufferedWriter(getCsvPath(name), overwrite ? OVERWRITE_OPEN_OPTIONS : APPEND_OPEN_OPTIONS));
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void write(String methodName, double methodPower) throws IOException {
 		final BufferedWriter writer = this.writer.get();
-		if (writer == null) {
+		if (Objects.isNull(writer)) {
 			throw new IllegalStateException("Please call ResultWriter#setTarget(String) first");
 		}
 

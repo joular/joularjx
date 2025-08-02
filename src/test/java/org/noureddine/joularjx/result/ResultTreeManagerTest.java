@@ -43,8 +43,9 @@ public class ResultTreeManagerTest {
     	Path reference = Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME, this.appDirectory, 
                 ResultTreeManager.ALL_DIRECTORY_NAME,
                 ResultTreeManager.RUNTIME_DIRECTORY_NAME,
-                ResultTreeManager.METHOD_DIRECTORY_NAME);
-        assertEquals(reference, this.manager.getAllRuntimeMethodsPath());
+                ResultTreeManager.METHOD_DIRECTORY_NAME,
+                String.format("joularJX-%d-all-methods-power", pid));
+        assertEquals(reference, this.manager.getPath(ResultScope.ALL_RUNTIME_METHODS));
     }
 
     @Test
@@ -53,8 +54,9 @@ public class ResultTreeManagerTest {
         this.appDirectory,
         ResultTreeManager.FILTERED_DIRECTORY_NAME,
         ResultTreeManager.RUNTIME_DIRECTORY_NAME,
-        ResultTreeManager.METHOD_DIRECTORY_NAME)
-        , this.manager.getFilteredRuntimeMethodsPath());
+        ResultTreeManager.METHOD_DIRECTORY_NAME,
+        String.format("joularJX-%d-filtered-methods-power", pid))
+        , this.manager.getPath(ResultScope.FILTERED_RUNTIME_METHODS));
     }
 
     @Test
@@ -63,7 +65,8 @@ public class ResultTreeManagerTest {
         this.appDirectory,
         ResultTreeManager.ALL_DIRECTORY_NAME,
         ResultTreeManager.TOTAL_DIRECTORY_NAME,
-        ResultTreeManager.METHOD_DIRECTORY_NAME)
+        ResultTreeManager.METHOD_DIRECTORY_NAME,
+        String.format("joularJX-%d-all-methods-energy", pid))
         , this.manager.getAllTotalMethodsPath());
     }
 
@@ -73,7 +76,8 @@ public class ResultTreeManagerTest {
         this.appDirectory,
         ResultTreeManager.FILTERED_DIRECTORY_NAME,
         ResultTreeManager.TOTAL_DIRECTORY_NAME,
-        ResultTreeManager.METHOD_DIRECTORY_NAME)
+        ResultTreeManager.METHOD_DIRECTORY_NAME,
+        String.format("joularJX-%d-filtered-methods-energy", pid))
         , this.manager.getFilteredTotalMethodsPath());
     }
 
@@ -83,8 +87,9 @@ public class ResultTreeManagerTest {
             this.appDirectory,
             ResultTreeManager.ALL_DIRECTORY_NAME,
             ResultTreeManager.RUNTIME_DIRECTORY_NAME,
-            ResultTreeManager.CALLTREE_DIRECTORY_NAME)
-            , this.manager.getAllRuntimeCallTreePath());
+            ResultTreeManager.CALLTREE_DIRECTORY_NAME,
+            String.format("joularJX-%d-all-call-trees-power", pid))
+            , this.manager.getPath(ResultScope.ALL_RUNTIME_CALL_TREE));
     }
 
     @Test
@@ -93,8 +98,9 @@ public class ResultTreeManagerTest {
             this.appDirectory,
             ResultTreeManager.FILTERED_DIRECTORY_NAME,
             ResultTreeManager.RUNTIME_DIRECTORY_NAME,
-            ResultTreeManager.CALLTREE_DIRECTORY_NAME)
-            , this.manager.getFilteredRuntimeCallTreePath());
+            ResultTreeManager.CALLTREE_DIRECTORY_NAME,
+            String.format("joularJX-%d-filtered-call-trees-power", pid))
+            , this.manager.getPath(ResultScope.FILTERED_RUNTIME_CALL_TREE));
     }
 
     @Test
@@ -103,7 +109,8 @@ public class ResultTreeManagerTest {
             this.appDirectory,
             ResultTreeManager.ALL_DIRECTORY_NAME,
             ResultTreeManager.TOTAL_DIRECTORY_NAME,
-            ResultTreeManager.CALLTREE_DIRECTORY_NAME)
+            ResultTreeManager.CALLTREE_DIRECTORY_NAME,
+            String.format("joularJX-%d-all-call-trees-energy", pid))
             , this.manager.getAllTotalCallTreePath());
     }
 
@@ -113,7 +120,8 @@ public class ResultTreeManagerTest {
             this.appDirectory,
             ResultTreeManager.FILTERED_DIRECTORY_NAME,
             ResultTreeManager.TOTAL_DIRECTORY_NAME,
-            ResultTreeManager.CALLTREE_DIRECTORY_NAME)
+            ResultTreeManager.CALLTREE_DIRECTORY_NAME,
+            String.format("joularJX-%d-filtered-call-trees-energy", pid))
             , this.manager.getFilteredTotalCallTreePath());
     }
 
@@ -122,8 +130,9 @@ public class ResultTreeManagerTest {
         assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
             this.appDirectory,
             ResultTreeManager.ALL_DIRECTORY_NAME,
-            ResultTreeManager.EVOLUTION_DIRECTORY_NAME)
-            , this.manager.getAllEvolutionPath());
+            ResultTreeManager.EVOLUTION_DIRECTORY_NAME,
+            String.format("joularJX-%d-all-evolution", pid))
+            , this.manager.getAllEvolutionPath(null));
     }
 
     @Test
@@ -131,7 +140,8 @@ public class ResultTreeManagerTest {
         assertEquals(Path.of(ResultTreeManager.GLOBAL_RESULT_DIRECTORY_NAME,
             this.appDirectory,
             ResultTreeManager.FILTERED_DIRECTORY_NAME,
-            ResultTreeManager.EVOLUTION_DIRECTORY_NAME)
-            , this.manager.getFilteredEvolutionPath());
+            ResultTreeManager.EVOLUTION_DIRECTORY_NAME,
+            String.format("joularJX-%d-filtered-evolution", pid))
+            , this.manager.getFilteredEvolutionPath(null));
     }
 }

@@ -17,8 +17,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.noureddine.joularjx.cpu.Cpu;
-import org.noureddine.joularjx.result.ResultTreeManager;
+import org.noureddine.joularjx.result.ResultScope;
 import org.noureddine.joularjx.result.ResultWriter;
+import org.noureddine.joularjx.result.ResultWriterConfiguration;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
@@ -36,28 +37,24 @@ public class ShutdownHandler implements Runnable {
 	private final Cpu cpu;
 	private final MonitoringStatus status;
 	private final AgentProperties properties;
-	private final ResultTreeManager resultTreeManager;
 
 	/**
 	 * Creates a new ShutdownHandler.
 	 *
-	 * @param appPid            the PID of the monitored application
-	 * @param resultWriters     the writer that will be used to save data in files
-	 * @param cpu               an implementation of the CPU interface, depending on
-	 *                          the OS and hardware
-	 * @param status            where all the runtime data will be saved
-	 * @param properties        the agent's configuration properties
-	 * @param resultTreeManager the ResultTreeManager used to provide correct
-	 *                          filepaths for the generated files
+	 * @param appPid        the PID of the monitored application
+	 * @param resultWriters the writer that will be used to save data in files
+	 * @param cpu           an implementation of the CPU interface, depending on the
+	 *                      OS and hardware
+	 * @param status        where all the runtime data will be saved
+	 * @param properties    the agent's configuration properties
 	 */
 	public ShutdownHandler(long appPid, List<ResultWriter> resultWriters, Cpu cpu, MonitoringStatus status,
-			AgentProperties properties, ResultTreeManager resultTreeManager) {
+			AgentProperties properties) {
 		this.appPid = appPid;
 		this.resultWriters = resultWriters;
 		this.cpu = cpu;
 		this.status = status;
 		this.properties = properties;
-		this.resultTreeManager = resultTreeManager;
 	}
 
 	@Override
@@ -74,37 +71,32 @@ public class ShutdownHandler implements Runnable {
 
 		try {
 			// Writing methods and filtered methods energy consumption
-			this.saveResults(status.getMethodsConsumedEnergy(), this.resultTreeManager.getAllTotalMethodsPath()
-					+ String.format("/joularJX-%d-all-methods-energy", appPid));
+			this.saveResults(status.getMethodsConsumedEnergy(),
+					new ResultWriterConfiguration(ResultScope.ALL_TOTAL_METHODS));
 			this.saveResults(status.getFilteredMethodsConsumedEnergy(),
-					this.resultTreeManager.getFilteredTotalMethodsPath()
-							+ String.format("/joularJX-%d-filtered-methods-energy", appPid));
+					new ResultWriterConfiguration(ResultScope.FILTERED_TOTAL_METHODS));
 
 			// Writing consumption evolution files only if the option is enabled
 			if (this.properties.trackConsumptionEvolution()) {
 				// All methods
 				for (final var methodEntry : this.status.getMethodsConsumptionEvolution().entrySet()) {
-					this.saveResults(methodEntry.getValue(),
-							this.resultTreeManager.getAllEvolutionPath() + String.format("/joularJX-%d-%s-evolution",
-									appPid, methodEntry.getKey().replace('<', '_').replace('>', '_')));
+					this.saveResults(methodEntry.getValue(), new ResultWriterConfiguration(ResultScope.ALL_EVOLUTION,
+							sanitizeMethodName(methodEntry.getKey())));
 				}
 
 				// Filtered methods
 				for (final var methodEntry : this.status.getFilteredMethodsConsumptionEvolution().entrySet()) {
-					this.saveResults(methodEntry.getValue(),
-							this.resultTreeManager.getFilteredEvolutionPath()
-									+ String.format("/joularJX-%d-%s-evolution", appPid,
-											methodEntry.getKey().replace('<', '_').replace('>', '_')));
+					this.saveResults(methodEntry.getValue(), new ResultWriterConfiguration(
+							ResultScope.FILTERED_EVOLUTION, sanitizeMethodName(methodEntry.getKey())));
 				}
 			}
 
 			// Writing call trees consumption file only if the option is enabled
 			if (this.properties.callTreesConsumption()) {
-				this.saveResults(status.getCallTreesConsumedEnergy(), this.resultTreeManager.getAllTotalCallTreePath()
-						+ String.format("/joularJX-%d-all-call-trees-energy", appPid));
+				this.saveResults(status.getCallTreesConsumedEnergy(),
+						new ResultWriterConfiguration(ResultScope.ALL_TOTAL_CALL_TREE));
 				this.saveResults(status.getFilteredCallTreesConsumedEnergy(),
-						this.resultTreeManager.getFilteredTotalCallTreePath()
-								+ String.format("/joularJX-%d-filtered-call-trees-energy", appPid));
+						new ResultWriterConfiguration(ResultScope.FILTERED_TOTAL_CALL_TREE));
 			}
 		} catch (final IOException exception) {
 			// Continue shutting down
@@ -114,20 +106,30 @@ public class ShutdownHandler implements Runnable {
 	}
 
 	/**
-	 * Writes the results in a file. The filename is partially defined by the given
+	 * Cleans a method name to make it suitable for inclusion in a filename
+	 *
+	 * @param methodName the method name
+	 * @return the sanitized version
+	 */
+	private String sanitizeMethodName(String methodName) {
+		return methodName.replaceAll("[<>]", "_");
+	}
+
+	/**
+	 * Writes the results. The filename is partially defined by the given
 	 * parameters.
 	 *
 	 * @param <K>               The type of key that will be written in the file.
-	 *                          Must implement the toString() method.*
+	 *                          Must implement the {@code toString()} method.
 	 * @param consumedEnergyMap the data to be written.
-	 * @param filePath          the path of the file where the data will be written.
+	 * @param config            configuration for the writers
 	 * @throws IOException if an I/O error occurs while writing the data.
 	 */
-	public <K> void saveResults(Map<K, Double> consumedEnergyMap, String filePath) throws IOException {
+	public <K> void saveResults(Map<K, Double> consumedEnergyMap, ResultWriterConfiguration config) throws IOException {
 		// String fileName = String.format("joularJX-%d-%s-%s", appPid, nodeType,
 		// dataType);
 		for (final ResultWriter resultWriter : resultWriters) {
-			resultWriter.setTarget(filePath, true);
+			resultWriter.setConfiguration(config);
 		}
 
 		for (final var entry : consumedEnergyMap.entrySet()) {

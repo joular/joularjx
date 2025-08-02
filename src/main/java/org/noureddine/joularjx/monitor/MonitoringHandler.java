@@ -24,8 +24,9 @@ import java.util.logging.Logger;
 
 import org.noureddine.joularjx.Agent;
 import org.noureddine.joularjx.cpu.Cpu;
-import org.noureddine.joularjx.result.ResultTreeManager;
+import org.noureddine.joularjx.result.ResultScope;
 import org.noureddine.joularjx.result.ResultWriter;
+import org.noureddine.joularjx.result.ResultWriterConfiguration;
 import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.CallTree;
 import org.noureddine.joularjx.utils.JoularJXLogging;
@@ -50,7 +51,6 @@ public class MonitoringHandler implements Runnable {
 	private final MonitoringStatus status;
 	private final OperatingSystemMXBean osBean;
 	private final ThreadMXBean threadBean;
-	private final ResultTreeManager resultTreeManager;
 	private final long sampleTimeMilliseconds = 1000;
 	private final long sampleRateMilliseconds;
 	private final int sampleIterations;
@@ -58,21 +58,18 @@ public class MonitoringHandler implements Runnable {
 	/**
 	 * Creates a new MonitoringHandler.
 	 *
-	 * @param appPid            the PID of the monitored application
-	 * @param properties        the agent's configuration properties
-	 * @param resultWriters     the writers that will be used to save data in files
-	 * @param cpu               an implementation of the CPU interface, depending on
-	 *                          the OS and hardware
-	 * @param status            where all the runtime data will be saved
-	 * @param osBean            the OperatingSystemMXBean, used to collect CPU and
-	 *                          process loads
-	 * @param threadBean        the ThreadMXBean, used to collect thread CPU time
-	 * @param resultTreeManager the ResultTreeManager, used to provide filepaths for
-	 *                          runtime generated files
+	 * @param appPid        the PID of the monitored application
+	 * @param properties    the agent's configuration properties
+	 * @param resultWriters the writers that will be used to save data in files
+	 * @param cpu           an implementation of the CPU interface, depending on the
+	 *                      OS and hardware
+	 * @param status        where all the runtime data will be saved
+	 * @param osBean        the OperatingSystemMXBean, used to collect CPU and
+	 *                      process loads
+	 * @param threadBean    the ThreadMXBean, used to collect thread CPU time
 	 */
 	public MonitoringHandler(long appPid, AgentProperties properties, List<ResultWriter> resultWriters, Cpu cpu,
-			MonitoringStatus status, OperatingSystemMXBean osBean, ThreadMXBean threadBean,
-			ResultTreeManager resultTreeManager) {
+			MonitoringStatus status, OperatingSystemMXBean osBean, ThreadMXBean threadBean) {
 		this.appPid = appPid;
 		this.properties = properties;
 		this.resultWriters = resultWriters;
@@ -80,7 +77,6 @@ public class MonitoringHandler implements Runnable {
 		this.status = status;
 		this.osBean = osBean;
 		this.threadBean = threadBean;
-		this.resultTreeManager = resultTreeManager;
 		this.sampleRateMilliseconds = properties.stackMonitoringSampleRate();
 		this.sampleIterations = (int) (sampleTimeMilliseconds / sampleRateMilliseconds);
 	}
@@ -140,12 +136,13 @@ public class MonitoringHandler implements Runnable {
 	}
 
 	/**
-	 * Return the occurences of each method call during monitoring loop, per thread.
+	 * Return the occurrences of each method call during monitoring loop, per
+	 * thread.
 	 *
-	 * @param samples the result of the sampking step. A List of StackTraces of each
+	 * @param samples the result of the sampling step. A List of StackTraces of each
 	 *                Thread
 	 * @param covers  a Predicate, used to filter method names
-	 * @return for each Thread, a Map of each method and its occurences during the
+	 * @return for each Thread, a Map of each method and its occurrences during the
 	 *         last monitoring loop
 	 */
 	private Map<Thread, Map<String, Integer>> extractStats(Map<Thread, List<StackTraceElement[]>> samples,
@@ -294,43 +291,20 @@ public class MonitoringHandler implements Runnable {
 
 					// Writing runtime call trees power only if option is enabled
 					if (this.properties.saveCallTreesRuntimeData()) {
-						if (this.properties.overwriteCallTreesRuntimeData()) {
-							this.saveResults(callTreesStats, threadCpuTimePercentages,
-									this.resultTreeManager.getAllRuntimeCallTreePath()
-											+ String.format("/joularJX-%d-all-call-trees-power", appPid));
-							this.saveResults(filteredCallTreeStats, threadCpuTimePercentages,
-									this.resultTreeManager.getFilteredRuntimeCallTreePath()
-											+ String.format("/joularJX-%d-filtered-call-trees-power", appPid));
-						} else {
-							this.saveResults(callTreesStats, threadCpuTimePercentages,
-									this.resultTreeManager.getAllRuntimeCallTreePath()
-											+ String.format("/joularJX-%d-%d-all-call-trees-power", appPid,
-													System.currentTimeMillis()));
-							this.saveResults(filteredCallTreeStats, threadCpuTimePercentages,
-									this.resultTreeManager.getFilteredRuntimeCallTreePath()
-											+ String.format("/joularJX-%d-%d-filtered-call-trees-power", appPid,
-													System.currentTimeMillis()));
-						}
+						this.saveResults(callTreesStats, threadCpuTimePercentages, new ResultWriterConfiguration(
+								ResultScope.ALL_RUNTIME_CALL_TREE, !this.properties.overwriteCallTreesRuntimeData()));
+						this.saveResults(filteredCallTreeStats, threadCpuTimePercentages,
+								new ResultWriterConfiguration(ResultScope.FILTERED_RUNTIME_CALL_TREE,
+										!this.properties.overwriteCallTreesRuntimeData()));
 					}
 				}
 
 				// Writing runtime method's power only if option is enabled
 				if (this.properties.savesRuntimeData()) {
-					if (this.properties.overwritesRuntimeData()) {
-						this.saveResults(methodsStats, threadCpuTimePercentages,
-								this.resultTreeManager.getAllRuntimeMethodsPath()
-										+ String.format("/joularJX-%d-all-methods-power", appPid));
-						this.saveResults(methodsStatsFiltered, threadCpuTimePercentages,
-								this.resultTreeManager.getFilteredRuntimeMethodsPath()
-										+ String.format("/joularJX-%d-filtered-methods-power", appPid));
-					} else {
-						this.saveResults(methodsStats, threadCpuTimePercentages,
-								this.resultTreeManager.getAllRuntimeMethodsPath() + String.format(
-										"/joularJX-%d-%d-all-methods-power", appPid, System.currentTimeMillis()));
-						this.saveResults(methodsStatsFiltered, threadCpuTimePercentages,
-								this.resultTreeManager.getFilteredRuntimeMethodsPath() + String.format(
-										"/joularJX-%d-%d-filtered-methods-power", appPid, System.currentTimeMillis()));
-					}
+					this.saveResults(methodsStats, threadCpuTimePercentages, new ResultWriterConfiguration(
+							ResultScope.ALL_RUNTIME_METHODS, !this.properties.overwritesRuntimeData()));
+					this.saveResults(methodsStatsFiltered, threadCpuTimePercentages, new ResultWriterConfiguration(
+							ResultScope.FILTERED_RUNTIME_METHODS, !this.properties.overwritesRuntimeData()));
 				}
 
 				Thread.sleep(sampleRateMilliseconds);
@@ -379,23 +353,23 @@ public class MonitoringHandler implements Runnable {
 	}
 
 	/**
-	 * Writes the results in a file. The filename is partially defined by the given
+	 * Writes the results. The filename is partially defined by the given
 	 * parameters.
 	 *
 	 * @param <K>                      The type of key that will be written in the
-	 *                                 file. Must implement the toString() method.
+	 *                                 file. Must implement the {@code toString()}
+	 *                                 method.
 	 * @param stats                    the data to be written, given under the form
 	 *                                 of a Map<Thread, Map<K>, Double>> where the
 	 *                                 Double is the enrgy consumption.
 	 * @param threadCpuTimePercentages a map of CPU time usage per Thread (PID)
-	 * @param filePath                 the path of the file where the data will be
-	 *                                 written
+	 * @param config                   configuration for the writers
 	 * @throws IOException if an I/O error occurs while writing the file
 	 */
 	public <K> void saveResults(Map<Thread, Map<K, Integer>> stats, Map<Long, Double> threadCpuTimePercentages,
-			String filePath) throws IOException {
+			ResultWriterConfiguration config) throws IOException {
 		for (final ResultWriter resultWriter : resultWriters) {
-			resultWriter.setTarget(filePath, true);
+			resultWriter.setConfiguration(config);
 		}
 
 		for (var statEntry : stats.entrySet()) {
@@ -444,7 +418,7 @@ public class MonitoringHandler implements Runnable {
 	 * @param threadCpuTimePercentages   a map of CPU time usage per PID
 	 * @param updateMethodConsumedEnergy an object consumer, used to update all or
 	 *                                   only filtered methods
-	 * @param scope                      the scope (all methods or only filterd
+	 * @param scope                      the scope (all methods or only filtered
 	 *                                   methods). Used for energy consumption
 	 *                                   tracking
 	 */
