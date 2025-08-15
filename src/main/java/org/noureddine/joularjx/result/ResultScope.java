@@ -11,8 +11,8 @@
 package org.noureddine.joularjx.result;
 
 public enum ResultScope {
-	ALL_EVOLUTION("all", "evolution"),
-	FILTERED_EVOLUTION("filtered", "evolution"),
+	ALL_EVOLUTION("", "evolution"),
+	FILTERED_EVOLUTION("", "evolution"),
 	ALL_RUNTIME_CALL_TREE("all", "call-trees-power"),
 	FILTERED_RUNTIME_CALL_TREE("filtered", "call-trees-power"),
 	ALL_RUNTIME_METHODS("all", "methods-power"),

@@ -21,24 +21,20 @@ public final class ResultWriterConfiguration {
 	private boolean overwrite;
 
 	/**
-	 * @param scope
+	 * Constructor
+	 *
+	 * @param scope scope of the data to be written
 	 */
 	public ResultWriterConfiguration(ResultScope scope) {
 		this.scope = scope;
 	}
 
 	/**
-	 * @param scope
-	 * @param methodName
-	 */
-	public ResultWriterConfiguration(ResultScope scope, String methodName) {
-		this(scope);
-		this.methodName = methodName;
-	}
-
-	/**
-	 * @param scope
-	 * @param timestamped
+	 * Specialized constructor for timestamped data
+	 *
+	 * @param scope       scope of the data to be written
+	 * @param timestamped true if the data to be written is timestamped, i.e.,
+	 *                    instant data
 	 */
 	public ResultWriterConfiguration(ResultScope scope, boolean timestamped) {
 		this(scope);
@@ -47,30 +43,29 @@ public final class ResultWriterConfiguration {
 	}
 
 	/**
-	 * @return the methodName
+	 * Specialized constructor for methods
+	 *
+	 * @param scope      scope of the data to be written
+	 * @param methodName name of the method
 	 */
+	public ResultWriterConfiguration(ResultScope scope, String methodName) {
+		this(scope);
+		this.methodName = methodName;
+	}
+
 	public String getMethodName() {
 		return methodName;
 	}
 
-	/**
-	 * @return the scope
-	 */
 	public ResultScope getScope() {
 		return scope;
 	}
 
-	/**
-	 * @return the timestamped
-	 */
-	public boolean isTimestamped() {
-		return timestamped;
-	}
-
-	/**
-	 * @return the overwrite
-	 */
 	public boolean isOverwrite() {
 		return overwrite;
+	}
+
+	public boolean isTimestamped() {
+		return timestamped;
 	}
 }

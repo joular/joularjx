@@ -39,10 +39,13 @@ public class ResultTreeManager {
 	public class PathBuilder {
 
 		private boolean timestamp;
-		private ResultScope scope;
+		private final ResultScope scope;
 		private String methodName;
 
 		/**
+		 * Constructor with argument. Since scope is mandatory, it makes sense to impose
+		 * it as a constructor argument.
+		 *
 		 * @param scope the scope
 		 */
 		public PathBuilder(ResultScope scope) {
@@ -63,7 +66,11 @@ public class ResultTreeManager {
 			if (Objects.nonNull(methodName)) {
 				joiner.add(methodName);
 			}
-			joiner.add(scope.getScope()).add(scope.getSuffix());
+			if (!scope.getScope().isBlank()) {
+				// Handle edge case for evolution scopes
+				joiner.add(scope.getScope());
+			}
+			joiner.add(scope.getSuffix());
 
 			final String fileName = joiner.toString();
 			return leafPaths.get(scope).resolve(fileName);
@@ -77,17 +84,6 @@ public class ResultTreeManager {
 		 */
 		public PathBuilder withMethodName(String methodName) {
 			this.methodName = methodName;
-			return this;
-		}
-
-		/**
-		 * Sets the result scope.
-		 *
-		 * @param scope the {@link ResultScope} to set
-		 * @return this builder instance
-		 */
-		public PathBuilder withScope(ResultScope scope) {
-			this.scope = scope;
 			return this;
 		}
 
@@ -171,8 +167,8 @@ public class ResultTreeManager {
 	}
 
 	/**
-	 * Creates the tree hierarchy. Creates the required folders, if they do not exist
-	 * yet. Only the necessary folders are created, depending on the provided
+	 * Creates the tree hierarchy. Creates the required folders, if they do not
+	 * exist yet. Only the necessary folders are created, depending on the provided
 	 * configuration properties.
 	 *
 	 * @return a boolean indicating whether an error occurs while creating the
@@ -240,98 +236,39 @@ public class ResultTreeManager {
 	 *
 	 * @return the path to the methods consumption evolution folder
 	 */
-	public Path getAllEvolutionPath(String methodName) {
+	Path getAllEvolutionPath(String methodName) {
 		return new PathBuilder(ResultScope.ALL_EVOLUTION).withMethodName(methodName).build();
 	}
 
 	/**
-	 * Returns the path to the call trees runtime consumption file
+	 * Get a {@link PathBuilder} ready to use
 	 *
-	 * @param timestamped if the file must have the current timestamp in its name
-	 * @return the path to the call trees runtime consumption file
+	 * @param scope scope to use
+	 * @return the initialized builder
 	 */
-	public Path getAllRuntimeCallTreePath(boolean timestamped) {
-		return new PathBuilder(ResultScope.ALL_RUNTIME_CALL_TREE).withTimestamp(timestamped).build();
-	}
-
-	/**
-	 * Returns the path to the methods runtime consumption file
-	 *
-	 * @param timestamped if the file must have the current timestamp in its name
-	 * @return the path to the methods runtime consumption file
-	 */
-	public Path getAllRuntimeMethodsPath(boolean timestamped) {
-		return new PathBuilder(ResultScope.ALL_RUNTIME_METHODS).withTimestamp(timestamped).build();
-	}
-
-	/**
-	 * Returns the path to the call trees total consumption file
-	 *
-	 * @return the path to the call trees total consumption file
-	 */
-	public Path getAllTotalCallTreePath() {
-		return getPath(ResultScope.ALL_TOTAL_CALL_TREE);
-	}
-
-	/**
-	 * Returns the path to the methods total consumption file
-	 *
-	 * @return the path to the methods total consumption file
-	 */
-	public Path getAllTotalMethodsPath() {
-		return getPath(ResultScope.ALL_TOTAL_METHODS);
+	public PathBuilder getBuilder(ResultScope scope) {
+		return new PathBuilder(scope);
 	}
 
 	/**
 	 * Returns the path to the filtered methods consumption evolution folder
 	 *
-	 * @param methodName TODO
+	 * @param methodName name of the method under study
 	 *
 	 * @return the path to the filtered methods consumption evolution folder
 	 */
-	public Path getFilteredEvolutionPath(String methodName) {
+	Path getFilteredEvolutionPath(String methodName) {
 		return new PathBuilder(ResultScope.FILTERED_EVOLUTION).withMethodName(methodName).build();
 	}
 
 	/**
-	 * Returns the path to the filtered call trees runtime consumption file
+	 * Generic path getter, wraps around the {@link PathBuilder} Useful for the
+	 * cases where just the scope is enough
 	 *
-	 * @param timestamped if the file must have the current timestamp in its name
-	 * @return the path to the filtered call trees runtime consumption file
+	 * @param scope scope of the result
+	 * @return the corresponding Path
 	 */
-	public Path getFilteredRuntimeCallTreePath(boolean timestamped) {
-		return new PathBuilder(ResultScope.FILTERED_RUNTIME_CALL_TREE).withTimestamp(timestamped).build();
-	}
-
-	/**
-	 * Returns the path to the filtered methods runtime consumption file
-	 *
-	 * @param timestamped if the file must have the current timestamp in its name
-	 * @return the path to the filtered methods runtime consumption file
-	 */
-	public Path getFilteredRuntimeMethodsPath(boolean timestamped) {
-		return new PathBuilder(ResultScope.FILTERED_RUNTIME_METHODS).withTimestamp(timestamped).build();
-	}
-
-	/**
-	 * Returns the path to the filtered call trees total consumption file
-	 *
-	 * @return the path to the filtered call trees total consumption file
-	 */
-	public Path getFilteredTotalCallTreePath() {
-		return getPath(ResultScope.FILTERED_TOTAL_CALL_TREE);
-	}
-
-	/**
-	 * Returns the path to the filtered methods total consumption file
-	 *
-	 * @return the path to the filtered methods total consumption file
-	 */
-	public Path getFilteredTotalMethodsPath() {
-		return getPath(ResultScope.FILTERED_TOTAL_METHODS);
-	}
-
-	public Path getPath(ResultScope scope) {
+	Path getPath(ResultScope scope) {
 		return new PathBuilder(scope).build();
 	}
 

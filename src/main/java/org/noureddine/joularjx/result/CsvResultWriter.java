@@ -62,7 +62,7 @@ public class CsvResultWriter implements ResultWriter {
 	/** {@inheritDoc} */
 	@Override
 	public void setConfiguration(ResultWriterConfiguration configuration) throws IOException {
-		final ResultTreeManager.PathBuilder builder = rtManager.new PathBuilder(configuration.getScope());
+		final ResultTreeManager.PathBuilder builder = rtManager.getBuilder(configuration.getScope());
 		final Path target = builder.withMethodName(configuration.getMethodName())
 				.withTimestamp(configuration.isTimestamped()).build();
 		setTarget(target, configuration.isOverwrite());
