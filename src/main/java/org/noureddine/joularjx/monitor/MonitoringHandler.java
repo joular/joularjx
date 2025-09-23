@@ -377,7 +377,7 @@ public class MonitoringHandler implements Runnable {
     /**
      * Writes the results in a file. The filename is partially defined by the given parameters.
      * @param <K> The type of key that will be written in the file. Must implement the toString() method.
-     * @param stats the data to be written, given under the form of a Map<Thread, Map<K>, Double>> where the Double is the enrgy consumption.
+     * @param stats the data to be written, given under the form of a {@code Map<Thread, Map<K>, Double>>} where the Double is the energy consumption.
      * @param threadCpuTimePercentages a map of CPU time usage per Thread (PID)
      * @param filePath the path of the file where the data will be written
      * @throws IOException if an I/O error occurs while writing the file
