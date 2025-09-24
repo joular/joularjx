@@ -219,235 +219,235 @@ public class MonitoringHandler implements Runnable {
 		return threadsCpuTimePercentage;
 	}
 
-	@Override
-	public void run() {
-		logger.log(Level.INFO, String.format("Started monitoring application with ID %d", appPid));
+	  @Override
+    public void run() {
+        logger.log(Level.INFO, String.format("Started monitoring application with ID %d", appPid));
 
-		// CPU time for each thread
-		Map<Long, Long> threadsCpuTime = new HashMap<>();
+        // CPU time for each thread
+        Map<Long, Long> threadsCpuTime = new HashMap<>();
 
-		while (!destroyingVM()) {
-			try {
-				double energyBefore = cpu.getInitialPower();
+        while (!destroyingVM()) {
+            try {
+                double energyBefore = cpu.getInitialPower();
 
-				var samples = sample();
-				var methodsStats = extractStats(samples, methodName -> true);
-				var methodsStatsFiltered = extractStats(samples, properties::filtersMethod);
+                var samples = sample();
+                var methodsStats = extractStats(samples, methodName -> true);
+                var methodsStatsFiltered = extractStats(samples, properties::filtersMethod);
 
-				// Collecting call trees stats only if the option is enabled
-				Map<Thread, Map<CallTree, Integer>> callTreesStats = null;
-				Map<Thread, Map<CallTree, Integer>> filteredCallTreeStats = null;
-				if (this.properties.callTreesConsumption()) {
-					callTreesStats = extractCallTreesStats(samples, methodName -> true);
-					filteredCallTreeStats = extractCallTreesStats(samples, properties::filtersMethod);
-				}
+                // Collecting call trees stats only if the option is enabled
+                Map<Thread, Map<CallTree, Integer>> callTreesStats = null;
+                Map<Thread, Map<CallTree, Integer>> filteredCallTreeStats = null;
+                if (this.properties.callTreesConsumption()) {
+                    callTreesStats = extractCallTreesStats(samples, methodName -> true);
+                    filteredCallTreeStats = extractCallTreesStats(samples, properties::filtersMethod);
+                }
 
-				double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use
-															// getCpuLoad() instead
-				double processCpuLoad = osBean.getProcessCpuLoad();
+                double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use
+                                                            // getCpuLoad() instead
+                double processCpuLoad = osBean.getProcessCpuLoad();
 
-				double energyAfter = cpu.getCurrentPower(cpuLoad);
-				double cpuEnergy = energyAfter - energyBefore;
+                double energyAfter = cpu.getCurrentPower(cpuLoad);
+                double cpuEnergy = energyAfter - energyBefore;
 
-				// Check if energy after is smaller than before
-				// Meaning: RAPL energy has wrapped
-				if (energyBefore > energyAfter) {
-					cpuEnergy += cpu.getMaxPower(cpuLoad);
-				}
+                // Check if energy after is smaller than before
+                // Meaning: RAPL energy has wrapped
+                if (energyBefore > energyAfter) {
+                    cpuEnergy += cpu.getMaxPower(cpuLoad);
+                }
 
-				// if cpuEnergy is negative, skip this cycle.
-				// this happens when energy counter is reset during program execution
-				if (cpuEnergy < 0) {
-					logger.info("Negative energy delta detected, skipping this cycle: " + cpuEnergy);
-					continue;
-				}
+                // if cpuEnergy is negative, skip this cycle.
+                // this happens when energy counter is reset during program execution
+                if (cpuEnergy < 0) {
+                    logger.info("Negative energy delta detected, skipping this cycle: " + cpuEnergy);
+                    continue;
+                }
 
-				// Calculate CPU energy consumption of the process of the JVM all its apps
-				double processEnergy = calculateProcessCpuEnergy(cpuLoad, processCpuLoad, cpuEnergy);
+                // Calculate CPU energy consumption of the process of the JVM all its apps
+                double processEnergy = calculateProcessCpuEnergy(cpuLoad, processCpuLoad, cpuEnergy);
 
-				// Adds current power to total energy
-				status.addConsumedEnergy(processEnergy);
+                // Adds current power to total energy
+                status.addConsumedEnergy(processEnergy);
 
-				// Now we have:
-				// CPU energy for JVM process
-				// CPU energy for all processes
-				// We need to calculate energy for each thread
+                // Now we have:
+                // CPU energy for JVM process
+                // CPU energy for all processes
+                // We need to calculate energy for each thread
 //                long totalThreadsCpuTime = updateThreadsCpuTime(methodsStats, threadsCpuTime);
 //                var threadCpuTimePercentages = getThreadsCpuTimePercentage(threadsCpuTime, totalThreadsCpuTime, processEnergy);
 
-				var threadCpuTimePercentages = getThreadsCpuTimePercentage(methodsStats, threadsCpuTime, processEnergy);
+                var threadCpuTimePercentages = getThreadsCpuTimePercentage(methodsStats, threadsCpuTime, processEnergy);
 
-				updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy,
-						Scope.ALL);
-				updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages,
-						status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
+                updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy,
+                        Scope.ALL);
+                updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages,
+                        status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
 
-				// Updating call trees consumption if option is enabled
-				if (this.properties.callTreesConsumption()) {
-					updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages,
-							status::addCallTreeConsumedEnergy);
-					updateCallTreesConsumedEnergy(filteredCallTreeStats, threadCpuTimePercentages,
-							status::addFilteredCallTreeConsumedEnergy);
+                // Updating call trees consumption if option is enabled
+                if (this.properties.callTreesConsumption()) {
+                    updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages,
+                            status::addCallTreeConsumedEnergy);
+                    updateCallTreesConsumedEnergy(filteredCallTreeStats, threadCpuTimePercentages,
+                            status::addFilteredCallTreeConsumedEnergy);
 
-					// Writing runtime call trees power only if option is enabled
-					if (this.properties.saveCallTreesRuntimeData()) {
-						this.saveResults(callTreesStats, threadCpuTimePercentages, new ResultWriterConfiguration(
-								ResultScope.ALL_RUNTIME_CALL_TREE, !this.properties.overwriteCallTreesRuntimeData()));
-						this.saveResults(filteredCallTreeStats, threadCpuTimePercentages,
-								new ResultWriterConfiguration(ResultScope.FILTERED_RUNTIME_CALL_TREE,
-										!this.properties.overwriteCallTreesRuntimeData()));
-					}
-				}
+                    // Writing runtime call trees power only if option is enabled
+                    if (this.properties.saveCallTreesRuntimeData()) {
+                        this.saveResults(callTreesStats, threadCpuTimePercentages, new ResultWriterConfiguration(
+                                ResultScope.ALL_RUNTIME_CALL_TREE, !this.properties.overwriteCallTreesRuntimeData()));
+                        this.saveResults(filteredCallTreeStats, threadCpuTimePercentages,
+                                new ResultWriterConfiguration(ResultScope.FILTERED_RUNTIME_CALL_TREE,
+                                        !this.properties.overwriteCallTreesRuntimeData()));
+                    }
+                }
 
-				// Writing runtime method's power only if option is enabled
-				if (this.properties.savesRuntimeData()) {
-					this.saveResults(methodsStats, threadCpuTimePercentages, new ResultWriterConfiguration(
-							ResultScope.ALL_RUNTIME_METHODS, !this.properties.overwritesRuntimeData()));
-					this.saveResults(methodsStatsFiltered, threadCpuTimePercentages, new ResultWriterConfiguration(
-							ResultScope.FILTERED_RUNTIME_METHODS, !this.properties.overwritesRuntimeData()));
-				}
+                // Writing runtime method's power only if option is enabled
+                if (this.properties.savesRuntimeData()) {
+                    this.saveResults(methodsStats, threadCpuTimePercentages, new ResultWriterConfiguration(
+                            ResultScope.ALL_RUNTIME_METHODS, !this.properties.overwritesRuntimeData()));
+                    this.saveResults(methodsStatsFiltered, threadCpuTimePercentages, new ResultWriterConfiguration(
+                            ResultScope.FILTERED_RUNTIME_METHODS, !this.properties.overwritesRuntimeData()));
+                }
 
-				Thread.sleep(sampleRateMilliseconds);
-			} catch (InterruptedException exception) {
-				Thread.currentThread().interrupt();
-			} catch (IOException exception) {
-				logger.log(Level.SEVERE, "Cannot perform IO \"{0}\"", exception.getMessage());
-				logger.throwing(getClass().getName(), "run", exception);
-				System.exit(1);
-			}
-		}
-	}
+                Thread.sleep(sampleRateMilliseconds);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            } catch (IOException exception) {
+                logger.log(Level.SEVERE, "Cannot perform IO \"{0}\"", exception.getMessage());
+                logger.throwing(getClass().getName(), "run", exception);
+                System.exit(1);
+            }
+        }
+    }
 
-	/**
-	 * Performs the sampling step. Collects a set of stack traces for each thread.
-	 * The sampling step is performed multiple time at the frequecy of
-	 * SAMPLE_RATE_MILLSECONDS, for the duration of SAMPLE_TIME_MILLISECONDS
-	 *
-	 * @return for each Thread, a List of it's the stack traces
-	 */
-	private Map<Thread, List<StackTraceElement[]>> sample() {
-		Map<Thread, List<StackTraceElement[]>> result = new HashMap<>();
-		try {
-			for (int duration = 0; duration < sampleTimeMilliseconds; duration += sampleRateMilliseconds) {
-				for (var entry : Thread.getAllStackTraces().entrySet()) {
-					String threadName = entry.getKey().getName();
-					// Ignoring agent related threads, if option is enabled
-					if (this.properties.hideAgentConsumption() && (threadName.equals(Agent.COMPUTATION_THREAD_NAME))) {
-						continue; // Ignoring the thread
-					}
+    /**
+     * Performs the sampling step. Collects a set of stack traces for each thread.
+     * The sampling step is performed multiple time at the frequency of
+     * SAMPLE_RATE_MILLSECONDS, for the duration of SAMPLE_TIME_MILLISECONDS
+     *
+     * @return for each Thread, a List of its stack traces
+     */
+    private Map<Thread, List<StackTraceElement[]>> sample() {
+        Map<Thread, List<StackTraceElement[]>> result = new HashMap<>();
+        try {
+            for (int duration = 0; duration < sampleTimeMilliseconds; duration += sampleRateMilliseconds) {
+                for (var entry : Thread.getAllStackTraces().entrySet()) {
+                    String threadName = entry.getKey().getName();
+                    // Ignoring agent related threads, if option is enabled
+                    if (this.properties.hideAgentConsumption() && (threadName.equals(Agent.COMPUTATION_THREAD_NAME))) {
+                        continue; // Ignoring the thread
+                    }
 
-					// Only check runnable threads (not waiting or blocked)
-					if (entry.getKey().getState() == Thread.State.RUNNABLE) {
-						var target = result.computeIfAbsent(entry.getKey(), t -> new ArrayList<>(sampleIterations));
-						target.add(entry.getValue());
-					}
-				}
+                    // Only check runnable threads (not waiting or blocked)
+                    if (entry.getKey().getState() == Thread.State.RUNNABLE) {
+                        var target = result.computeIfAbsent(entry.getKey(), t -> new ArrayList<>(sampleIterations));
+                        target.add(entry.getValue());
+                    }
+                }
 
-				Thread.sleep(sampleRateMilliseconds);
-			}
-		} catch (InterruptedException exception) {
-			Thread.currentThread().interrupt();
-		}
+                Thread.sleep(sampleRateMilliseconds);
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	/**
-	 * Writes the results. The filename is partially defined by the given
-	 * parameters.
-	 *
-	 * @param <K>                      The type of key that will be written in the
-	 *                                 file. Must implement the {@code toString()}
-	 *                                 method.
-	 * @param stats                    the data to be written, given under the form
-	 *                                 of a Map<Thread, Map<K>, Double>> where the
-	 *                                 Double is the enrgy consumption.
-	 * @param threadCpuTimePercentages a map of CPU time usage per Thread (PID)
-	 * @param config                   configuration for the writers
-	 * @throws IOException if an I/O error occurs while writing the file
-	 */
-	public <K> void saveResults(Map<Thread, Map<K, Integer>> stats, Map<Long, Double> threadCpuTimePercentages,
-			ResultWriterConfiguration config) throws IOException {
-		for (final ResultWriter resultWriter : resultWriters) {
-			resultWriter.setConfiguration(config);
-		}
+	  /**
+     * Writes the results. The filename is partially defined by the given
+     * parameters.
+     *
+     * @param <K>                      The type of key that will be written in the
+     *                                 file. Must implement the {@code toString()}
+     *                                 method.
+     * @param stats                    the data to be written, given under the form
+     *                                 of a {@code Map<Thread, Map<K>, Double>>} where the
+     *                                 Double is the energy consumption.
+     * @param threadCpuTimePercentages a map of CPU time usage per Thread (PID)
+     * @param config                   configuration for the writers
+     * @throws IOException if an I/O error occurs while writing the file
+     */
+    public <K> void saveResults(Map<Thread, Map<K, Integer>> stats, Map<Long, Double> threadCpuTimePercentages,
+            ResultWriterConfiguration config) throws IOException {
+        for (final ResultWriter resultWriter : resultWriters) {
+            resultWriter.setConfiguration(config);
+        }
 
-		for (var statEntry : stats.entrySet()) {
-			for (var entry : statEntry.getValue().entrySet()) {
-				double power = threadCpuTimePercentages.get(statEntry.getKey().getId()) * (entry.getValue() / 100.0);
-				for (ResultWriter resultWriter : resultWriters) {
-					resultWriter.write(entry.getKey().toString(), power);
-				}
-			}
-		}
+        for (var statEntry : stats.entrySet()) {
+            for (var entry : statEntry.getValue().entrySet()) {
+                double power = threadCpuTimePercentages.get(statEntry.getKey().getId()) * (entry.getValue() / 100.0);
+                for (ResultWriter resultWriter : resultWriters) {
+                    resultWriter.write(entry.getKey().toString(), power);
+                }
+            }
+        }
 
-		for (final ResultWriter resultWriter : resultWriters) {
-			resultWriter.closeTarget();
-		}
-	}
+        for (final ResultWriter resultWriter : resultWriters) {
+            resultWriter.closeTarget();
+        }
+    }
+    
+    /**
+     * Update method's consumed energy.
+     *
+     * @param methodsStats               method's encounters statistics per Thread
+     * @param threadCpuTimePercentages   a map of CPU time usage per PID
+     * @param updateMethodConsumedEnergy an object consumer, used to update all or
+     *                                   only filtered methods
+     * @param scope                      the scope (all methods or only filtered
+     *                                   methods). Used for energy consumption
+     *                                   tracking
+     */
+    private void updateMethodsConsumedEnergy(Map<Thread, Map<String, Integer>> methodsStats,
+                                             Map<Long, Double> threadCpuTimePercentages,
+                                             ObjDoubleConsumer<String> updateMethodConsumedEnergy,
+                                             Scope scope) {
+        for (var threadEntry : methodsStats.entrySet()) {
+            double totalEncounters = threadEntry.getValue().values().stream().mapToDouble(i -> i).sum();
+            for (var methodEntry : threadEntry.getValue().entrySet()) {
+                double methodPower = 0.0;
+                if(totalEncounters >= Double.MIN_VALUE) {
+                    methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId()) * (methodEntry.getValue() / totalEncounters);
+                }
 
-	/**
-	 * Update call trees consumed energy.
-	 *
-	 * @param stats                    call trees encounters statistics per Thread
-	 * @param threadCpuTimePercentages map of CPU time usage per PID
-	 * @param callTreeConsumer         the method used to update the energy
-	 *                                 consumption
-	 */
-	private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats,
-			Map<Long, Double> threadCpuTimePercentages, ObjDoubleConsumer<CallTree> callTreeConsumer) {
-		for (var entry : stats.entrySet()) {
-			double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
+                // Only of consumption evolution tracking is enabled
+                if (this.properties.trackConsumptionEvolution()) {
+                    // computing the UNIX EPOCH timestamp
+                    long unixTimestamp = System.currentTimeMillis() / 1000L;
 
-			for (var callTreeEntry : entry.getValue().entrySet()) {
-				double stackTracePower = 0.0;
-				if (totalEncounters >= Double.MIN_VALUE) {
-					stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId())
-							* (callTreeEntry.getValue() / totalEncounters);
-				}
+                    if (scope == Scope.ALL) {
+                        this.status.trackMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
+                    } else {
+                        this.status.trackFilteredMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
+                    }
+                }
 
-				callTreeConsumer.accept(callTreeEntry.getKey(), stackTracePower);
-			}
-		}
-	}
+                updateMethodConsumedEnergy.accept(methodEntry.getKey(), methodPower);
+            }
+        }
+    }
 
-	/**
-	 * Update method's consumed energy.
-	 *
-	 * @param methodsStats               method's encounters statistics per Thread
-	 * @param threadCpuTimePercentages   a map of CPU time usage per PID
-	 * @param updateMethodConsumedEnergy an object consumer, used to update all or
-	 *                                   only filtered methods
-	 * @param scope                      the scope (all methods or only filtered
-	 *                                   methods). Used for energy consumption
-	 *                                   tracking
-	 */
-	private void updateMethodsConsumedEnergy(Map<Thread, Map<String, Integer>> methodsStats,
-			Map<Long, Double> threadCpuTimePercentages, ObjDoubleConsumer<String> updateMethodConsumedEnergy,
-			Scope scope) {
-		for (var threadEntry : methodsStats.entrySet()) {
-			double totalEncounters = threadEntry.getValue().values().stream().mapToDouble(i -> i).sum();
-			for (var methodEntry : threadEntry.getValue().entrySet()) {
-				double methodPower = 0.0;
-				if (totalEncounters >= Double.MIN_VALUE) {
-					methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId())
-							* (methodEntry.getValue() / totalEncounters);
-				}
+    /**
+     * Update call trees consumed energy.
+     *
+     * @param stats                    call trees encounters statistics per Thread
+     * @param threadCpuTimePercentages map of CPU time usage per PID
+     * @param callTreeConsumer         the method used to update the energy
+     *                                 consumption
+     */
+    private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats,
+            Map<Long, Double> threadCpuTimePercentages, ObjDoubleConsumer<CallTree> callTreeConsumer) {
+        for (var entry : stats.entrySet()) {
+            double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
 
-				// Only of consumption evolution tracking is enabled
-				if (this.properties.trackConsumptionEvolution()) {
-					// computing the UNIX EPOCH timestamp
-					long unixTimestamp = System.currentTimeMillis() / 1000L;
+            for (var callTreeEntry : entry.getValue().entrySet()) {
+                double stackTracePower = 0.0;
+                if (totalEncounters >= Double.MIN_VALUE) {
+                    stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId())
+                            * (callTreeEntry.getValue() / totalEncounters);
+                }
 
-					if (scope == Scope.ALL) {
-						this.status.trackMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
-					} else {
-						this.status.trackFilteredMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
-					}
-				}
-
-				updateMethodConsumedEnergy.accept(methodEntry.getKey(), methodPower);
-			}
-		}
-	}
+                callTreeConsumer.accept(callTreeEntry.getKey(), stackTracePower);
+            }
+        }
+    }
 }

@@ -34,122 +34,119 @@ import com.sun.management.OperatingSystemMXBean;
 
 public class Agent {
 
-	public static final String NAME_THREAD_NAME = "JoularJX Agent Thread";
-	public static final String COMPUTATION_THREAD_NAME = "JoularJX Agent Computation";
-	private static final Logger logger = JoularJXLogging.getLogger();
+    public static final String NAME_THREAD_NAME = "JoularJX Agent Thread";
+    public static final String COMPUTATION_THREAD_NAME = "JoularJX Agent Computation";
+    private static final Logger logger = JoularJXLogging.getLogger();
 
-	/**
-	 * Creates and returns an OperatingSystemMXBean, used to collect CPU and process
-	 * loads.
-	 *
-	 * @param cpu a {@link Cpu} implementation
-	 * @return an OperatingSystemMXBean
-	 */
-	private static OperatingSystemMXBean createOperatingSystemBean(Cpu cpu) {
-		// Get OS MxBean to collect CPU and Process loads
-		OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    /**
+     * JVM hook to statically load the java agent at startup.
+     * After the Java Virtual Machine (JVM) has initialized, the premain method
+     * will be called. Then the real application main method will be called.
+     * @param args command line arguments
+     * @param inst JVM instrumentation
+     */
+    public static void premain(String args, Instrumentation inst) {
+        Thread.currentThread().setName(NAME_THREAD_NAME);
+        AgentProperties properties = new AgentProperties();
+        JoularJXLogging.updateLevel(properties.getLoggerLevel());
 
-		// Loop for a couple of seconds to initialize OSMXBean to get accurate details
-		// (first call will return -1)
-		logger.log(Level.INFO, "Please wait while initializing JoularJX...");
-		for (int i = 0; i < 2; i++) {
-			osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
-			osBean.getProcessCpuLoad();
+        logger.info("+---------------------------------+");
+        logger.info("| JoularJX Agent Version 3.0.1    |");
+        logger.info("+---------------------------------+");
 
-			cpu.initialize();
+        ThreadMXBean threadBean = createThreadBean();
 
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException exception) {
-				Thread.currentThread().interrupt();
-			}
-		}
-		return osBean;
-	}
+        // Get Process ID of current application
+        long appPid = ProcessHandle.current().pid();
 
-	/**
-	 * Creates and returns a ThreadMXBean. Checks if the Thread CPU Time is
-	 * supported by the JVM and enables it if it is disabled.
-	 */
-	private static ThreadMXBean createThreadBean() {
-		ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
-		// Check if CPU Time measurement is supported by the JVM. Quit otherwise
-		if (!threadBean.isThreadCpuTimeSupported()) {
-			logger.log(Level.SEVERE, "Thread CPU Time is not supported on this Java Virtual Machine. Exiting...");
-			System.exit(1);
-		}
+        // Creating the required folders to store the result files generated later on
+        final long currentTime = System.currentTimeMillis();
+        ResultTreeManager resultTreeManager = new ResultTreeManager(properties, appPid, currentTime);
+        if (!resultTreeManager.create()) {
+            logger.log(Level.WARNING, "Error(s) occurred while creating the result folder hierarchy. Some results may not be reported.");
+        }
 
-		// Enable CPU Time measurement if it is disabled
-		if (!threadBean.isThreadCpuTimeEnabled()) {
-			threadBean.setThreadCpuTimeEnabled(true);
-		}
+        Cpu cpu = CpuFactory.getCpu(properties);
 
-		return threadBean;
-	}
+        OperatingSystemMXBean osBean = createOperatingSystemBean(cpu);
+        MonitoringStatus status = new MonitoringStatus();
+        List<ResultWriter> resultWriters = getWriters(properties, appPid, currentTime);
+        MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriters, cpu, status, osBean, threadBean);
+        ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriters, cpu, status, properties);
 
-	/**
-	 * JVM hook to statically load the java agent at startup. After the Java Virtual
-	 * Machine (JVM) has initialized, the {@link #premain(String, Instrumentation)} method will be called. 
-	 * Then the real application {@code main} method will be called.
-	 */
-	public static void premain(String args, Instrumentation inst) {
-		Thread.currentThread().setName(NAME_THREAD_NAME);
-		AgentProperties properties = new AgentProperties();
-		JoularJXLogging.updateLevel(properties.getLoggerLevel());
+        logger.log(Level.INFO, "Initialization finished");
 
-		logger.info("+---------------------------------+");
-		logger.info("| JoularJX Agent Version 3.0.1    |");
-		logger.info("+---------------------------------+");
+        new Thread(monitoringHandler, COMPUTATION_THREAD_NAME).start();
+        Runtime.getRuntime().addShutdownHook(new Thread(shutdownHandler));
+    }
+  
+    /**
+     * Get all output classes from SPI
+     * @param props application properties
+     * @param pid app PID
+     * @param timestamp current timestamp
+     *
+     * @return the initialized implementations to output data
+     */
+    public static List<ResultWriter> getWriters(AgentProperties props, long pid, long timestamp) {
+        List<ResultWriter> services = new ArrayList<>();
+        ServiceLoader<ResultWriter> loader = ServiceLoader.load(ResultWriter.class);
+        loader.forEach(service -> {
+            service.initialize(props, pid, timestamp);
+            services.add(service);
+        });
+        return services;
+    }
 
-		ThreadMXBean threadBean = createThreadBean();
+    /**
+     * Creates and returns a ThreadMXBean. 
+     * Checks if the Thread CPU Time is supported by the JVM and enables it if it is disabled.
+     */
+    private static ThreadMXBean createThreadBean() {
+        ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+        // Check if CPU Time measurement is supported by the JVM. Quit otherwise
+        if (!threadBean.isThreadCpuTimeSupported()) {
+            logger.log(Level.SEVERE, "Thread CPU Time is not supported on this Java Virtual Machine. Exiting...");
+            System.exit(1);
+        }
 
-		// Get Process ID of current application
-		long appPid = ProcessHandle.current().pid();
+        // Enable CPU Time measurement if it is disabled
+        if (!threadBean.isThreadCpuTimeEnabled()) {
+            threadBean.setThreadCpuTimeEnabled(true);
+        }
 
-		// Creating the required folders to store the result files generated later on
-		final long currentTime = System.currentTimeMillis();
-		ResultTreeManager resultTreeManager = new ResultTreeManager(properties, appPid, currentTime);
-		if (!resultTreeManager.create()) {
-			logger.log(Level.WARNING,
-					"Error(s) occurred while creating the result folder hierarchy. Some results may not be reported.");
-		}
+        return threadBean;
+    }
 
-		Cpu cpu = CpuFactory.getCpu(properties);
+    /**
+     * Creates and returns an OperatingSystemMXBean, used to collect CPU and process loads.
+     * @param cpu a {@link Cpu} implementation
+     * @return an OperatingSystemMXBean
+     */
+    private static OperatingSystemMXBean createOperatingSystemBean(Cpu cpu) {
+        // Get OS MxBean to collect CPU and Process loads
+        OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 
-		OperatingSystemMXBean osBean = createOperatingSystemBean(cpu);
-		MonitoringStatus status = new MonitoringStatus();
-		List<ResultWriter> resultWriters = getWriters(properties, appPid, currentTime);
-		MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriters, cpu, status,
-				osBean, threadBean);
-		ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriters, cpu, status, properties);
+        // Loop for a couple of seconds to initialize OSMXBean to get accurate details (first call will return -1)
+        logger.log(Level.INFO, "Please wait while initializing JoularJX...");
+        for (int i = 0; i < 2; i++) {
+            osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
+            osBean.getProcessCpuLoad();
 
-		logger.log(Level.INFO, "Initialization finished");
+            cpu.initialize();
 
-		new Thread(monitoringHandler, COMPUTATION_THREAD_NAME).start();
-		Runtime.getRuntime().addShutdownHook(new Thread(shutdownHandler));
-	}
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        return osBean;
+    }
 
-	/**
-	 * Get all output classes from SPI
-	 * @param props application properties
-	 * @param pid app PID
-	 * @param timestamp current timestamp
-	 *
-	 * @return the initialized implementations to output data
-	 */
-	public static List<ResultWriter> getWriters(AgentProperties props, long pid, long timestamp) {
-		List<ResultWriter> services = new ArrayList<>();
-		ServiceLoader<ResultWriter> loader = ServiceLoader.load(ResultWriter.class);
-		loader.forEach(service -> {
-			service.initialize(props, pid, timestamp);
-			services.add(service);
-		});
-		return services;
-	}
-
-	/**
-	 * Private constructor
-	 */
-	private Agent() {
-	}
+    /**
+     * Private constructor
+     */
+    private Agent() {
+    }
 }

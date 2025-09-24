@@ -44,8 +44,8 @@ public interface ResultWriter {
 	void setConfiguration(ResultWriterConfiguration configuration) throws IOException;
 
 	/**
-	 * Writes a line. {@link #setTarget(String, boolean)} should have been called
-	 * before using this method.
+	 * Writes a line. {@link #setConfiguration(ResultWriterConfiguration)} should
+	 * have been called before using this method.
 	 *
 	 * @param methodName  name of the method
 	 * @param methodPower power consumption of the method
