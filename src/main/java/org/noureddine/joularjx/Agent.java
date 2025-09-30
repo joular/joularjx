@@ -32,10 +32,24 @@ import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import com.sun.management.OperatingSystemMXBean;
 
+/**
+ * Main JoularJX agent class
+ */
 public class Agent {
 
+    /**
+     * JoularJX agent thread name
+     */
     public static final String NAME_THREAD_NAME = "JoularJX Agent Thread";
+
+    /**
+     * JoularJX computation thread name
+     */
     public static final String COMPUTATION_THREAD_NAME = "JoularJX Agent Computation";
+
+    /**
+     * Logger
+     */
     private static final Logger logger = JoularJXLogging.getLogger();
 
     /**
@@ -51,7 +65,7 @@ public class Agent {
         JoularJXLogging.updateLevel(properties.getLoggerLevel());
 
         logger.info("+---------------------------------+");
-        logger.info("| JoularJX Agent Version 3.0.1    |");
+        logger.info("| JoularJX Agent Version 3.1.0    |");
         logger.info("+---------------------------------+");
 
         ThreadMXBean threadBean = createThreadBean();
