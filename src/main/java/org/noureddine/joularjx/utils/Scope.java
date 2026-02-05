@@ -10,7 +10,12 @@
 
 package org.noureddine.joularjx.utils;
 
+/**
+ * High-level scope selection for result outputs.
+ */
 public enum Scope {
+    /** All results. */
     ALL,
+    /** Filtered results (application scope). */
     FILTERED
 }

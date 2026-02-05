@@ -41,6 +41,11 @@ public class JoularCoreCpu implements Cpu {
      */
     private boolean initialized;
 
+    /**
+     * Creates a new Joular Core CPU monitor instance.
+     *
+     * @param programPath path to the Joular Core executable
+     */
     public JoularCoreCpu(final String programPath) {
         if (programPath == null || programPath.isBlank()) {
             logger.severe("Can't start because of missing Joular Core path. Set it in config.properties under the '"

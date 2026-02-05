@@ -23,6 +23,9 @@ import org.noureddine.joularjx.utils.AgentProperties;
 
 import com.google.auto.service.AutoService;
 
+/**
+ * {@link ResultWriter} implementation that writes results to CSV files.
+ */
 @AutoService(ResultWriter.class)
 public class CsvResultWriter implements ResultWriter {
 

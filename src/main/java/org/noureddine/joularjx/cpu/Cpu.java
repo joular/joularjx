@@ -11,13 +11,36 @@
 
 package org.noureddine.joularjx.cpu;
 
+/**
+ * Abstraction for CPU power measurement implementations.
+ */
 public interface Cpu extends AutoCloseable {
 
-    public void initialize();
+    /**
+     * Initializes the CPU monitor implementation.
+     */
+    void initialize();
 
-    public double getInitialPower();
+    /**
+     * Returns the initial power reading for this CPU monitor.
+     *
+     * @return the initial power reading
+     */
+    double getInitialPower();
 
-    public double getCurrentPower(double cpuLoad);
+    /**
+     * Returns the current power reading for the given CPU load.
+     *
+     * @param cpuLoad the current CPU load (0..1 or implementation-specific)
+     * @return the current power reading
+     */
+    double getCurrentPower(double cpuLoad);
 
-    public double getMaxPower(double cpuLoad);
+    /**
+     * Returns the max power reading for the given CPU load when supported.
+     *
+     * @param cpuLoad the current CPU load (0..1 or implementation-specific)
+     * @return the max power reading
+     */
+    double getMaxPower(double cpuLoad);
 }

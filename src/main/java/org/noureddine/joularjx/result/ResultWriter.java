@@ -14,6 +14,9 @@ import java.io.IOException;
 
 import org.noureddine.joularjx.utils.AgentProperties;
 
+/**
+ * Interface for writing JoularJX result data.
+ */
 public interface ResultWriter {
 
 	/**

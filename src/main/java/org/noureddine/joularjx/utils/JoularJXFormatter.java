@@ -19,8 +19,18 @@ import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
+/**
+ * Log formatter producing a timestamped one-line message with an optional stack trace.
+ */
 public class JoularJXFormatter extends Formatter {
     private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
+
+    /**
+     * Creates a new formatter instance.
+     */
+    public JoularJXFormatter() {
+        super();
+    }
 
     @Override
     public String format(LogRecord logRecord) {

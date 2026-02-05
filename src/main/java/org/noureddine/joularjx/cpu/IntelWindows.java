@@ -19,6 +19,9 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * {@link Cpu} implementation for Windows using the external power monitor tool.
+ */
 public class IntelWindows implements Cpu {
 
     private static final Logger logger = JoularJXLogging.getLogger();
@@ -38,6 +41,11 @@ public class IntelWindows implements Cpu {
      */
     private boolean initialized;
 
+    /**
+     * Creates a new Windows power monitor instance.
+     *
+     * @param programPath path to the power monitor executable
+     */
     public IntelWindows(final String programPath) {
         if (programPath == null || programPath.isBlank()) {
             logger.severe("Can't start because of missing power monitor path. Set it in config.properties under the '" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");

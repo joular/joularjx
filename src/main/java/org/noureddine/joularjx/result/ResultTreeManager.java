@@ -102,16 +102,24 @@ public class ResultTreeManager {
 	private static final Logger logger = JoularJXLogging.getLogger();
 
 	// Folders names
+	/** Root directory name for all results. */
 	public final static String GLOBAL_RESULT_DIRECTORY_NAME = "joularjx-result";
+	/** Directory name for "all" scope results. */
 	public final static String ALL_DIRECTORY_NAME = "all";
 
+	/** Directory name for filtered (application) results. */
 	public final static String FILTERED_DIRECTORY_NAME = "app";
+	/** Directory name for runtime results. */
 	public final static String RUNTIME_DIRECTORY_NAME = "runtime";
+	/** Directory name for total results. */
 	public final static String TOTAL_DIRECTORY_NAME = "total";
 
+	/** Directory name for evolution results. */
 	public final static String EVOLUTION_DIRECTORY_NAME = "evolution";
+	/** Directory name for call tree results. */
 	public final static String CALLTREE_DIRECTORY_NAME = "calltrees";
 
+	/** Directory name for method results. */
 	public final static String METHOD_DIRECTORY_NAME = "methods";
 
 	private final AgentProperties properties;

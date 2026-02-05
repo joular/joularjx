@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * {@link Cpu} implementation using Linux RAPL (powercap) counters.
+ */
 public class RaplLinux implements Cpu {
 
     private static final Logger logger = JoularJXLogging.getLogger();

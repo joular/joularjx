@@ -19,7 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A {@link Cpu} implementation using <a href='https://firefox-source-docs.mozilla.org/performance/powermetrics.htm'>powermetrics</a>.
+ * A {@link Cpu} implementation using powermetrics.
  */
 public class PowermetricsMacOS implements Cpu {
     private static final Logger logger = JoularJXLogging.getLogger();
@@ -30,6 +30,13 @@ public class PowermetricsMacOS implements Cpu {
 
     private boolean initialized;
     boolean intelCpu = false;
+
+    /**
+     * Creates a new powermetrics-based CPU monitor.
+     */
+    public PowermetricsMacOS() {
+        super();
+    }
 
     @Override
     public void initialize() {
@@ -100,6 +107,11 @@ public class PowermetricsMacOS implements Cpu {
         return 0.0;
     }
 
+    /**
+     * Returns the current power reading for Apple Silicon (M-series) chips.
+     *
+     * @return power in watts
+     */
     public double getCurrentPowerM() {
         int powerInMilliwatts = 0;
         try {

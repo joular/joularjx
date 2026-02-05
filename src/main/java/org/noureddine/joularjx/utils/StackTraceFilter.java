@@ -14,7 +14,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+/**
+ * Utility for filtering stack trace elements based on their class and method names.
+ */
 public class StackTraceFilter {
+
+    /**
+     * Creates a new StackTraceFilter instance.
+     */
+    public StackTraceFilter() {
+        super();
+    }
 
     /**
      * Filters the elements of a stack trace using the given predicate, based on the class and method names of the elements.
