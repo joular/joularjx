@@ -12,6 +12,7 @@
 package org.noureddine.joularjx.cpu;
 
 import org.noureddine.joularjx.utils.AgentProperties;
+import org.noureddine.joularjx.utils.CommandLineUtils;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
 import java.io.BufferedReader;
@@ -62,7 +63,12 @@ public class IntelWindows implements Cpu {
         }
 
         try {
-            process = Runtime.getRuntime().exec(programPath);
+            final var command = CommandLineUtils.splitCommand(programPath);
+            if (command.isEmpty()) {
+                logger.severe("Can't start because of missing power monitor path. Set it in config.properties under the '" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");
+                System.exit(1);
+            }
+            process = new ProcessBuilder(command).start();
 
             // The first result is not useful
             getCurrentPower(0);

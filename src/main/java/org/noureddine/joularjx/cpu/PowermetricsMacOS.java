@@ -46,7 +46,7 @@ public class PowermetricsMacOS implements Cpu {
 
         try {
             // todo: detect when sudo fails as this currently won't throw an exception
-            process = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 1000");
+            process = new ProcessBuilder("sudo", "powermetrics", "--samplers", "cpu_power", "-i", "1000").start();
             reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             initialized = true;
             readHeader();
