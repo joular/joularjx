@@ -188,7 +188,7 @@ public class MonitoringHandler implements Runnable {
 		// first compute the proportion of cpu time for each thread in the last sampling
 		// period
 		for (Entry<Thread, Map<String, Integer>> threadEntry : methodsStats.entrySet()) {
-			long threadId = threadEntry.getKey().getId();
+			long threadId = threadEntry.getKey().threadId();
 			long currentThreadCpuTime = threadBean.getThreadCpuTime(threadId);
 			long previousThreadCpuTime = threadsCpuTime.getOrDefault(threadId, 0l);
 			if (currentThreadCpuTime < 0) { // thread has quit
@@ -374,7 +374,7 @@ public class MonitoringHandler implements Runnable {
 
         for (var statEntry : stats.entrySet()) {
             for (var entry : statEntry.getValue().entrySet()) {
-                double power = threadCpuTimePercentages.get(statEntry.getKey().getId()) * (entry.getValue() / 100.0);
+                double power = threadCpuTimePercentages.get(statEntry.getKey().threadId()) * (entry.getValue() / 100.0);
                 for (ResultWriter resultWriter : resultWriters) {
                     resultWriter.write(entry.getKey().toString(), power);
                 }
@@ -406,7 +406,7 @@ public class MonitoringHandler implements Runnable {
             for (var methodEntry : threadEntry.getValue().entrySet()) {
                 double methodPower = 0.0;
                 if(totalEncounters >= Double.MIN_VALUE) {
-                    methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId()) * (methodEntry.getValue() / totalEncounters);
+                    methodPower = threadCpuTimePercentages.get(threadEntry.getKey().threadId()) * (methodEntry.getValue() / totalEncounters);
                 }
 
                 // Only of consumption evolution tracking is enabled
@@ -442,7 +442,7 @@ public class MonitoringHandler implements Runnable {
             for (var callTreeEntry : entry.getValue().entrySet()) {
                 double stackTracePower = 0.0;
                 if (totalEncounters >= Double.MIN_VALUE) {
-                    stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId())
+                    stackTracePower = threadCpuTimePercentages.get(entry.getKey().threadId())
                             * (callTreeEntry.getValue() / totalEncounters);
                 }
 
