@@ -59,7 +59,13 @@ public class JoularCoreRingBufferCpu implements Cpu {
         boolean CloseHandle(HANDLE hObject);
     }
 
+    /**
+     * JNA handle type for Windows kernel objects used by {@link Kernel32}.
+     */
     public static class HANDLE extends PointerType {
+        /**
+         * Creates an empty handle instance for JNA to populate.
+         */
         public HANDLE() {
             super();
         }
