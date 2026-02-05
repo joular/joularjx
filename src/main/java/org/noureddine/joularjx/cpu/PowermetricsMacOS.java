@@ -146,21 +146,6 @@ public class PowermetricsMacOS implements Cpu {
         return reader;
     }
 
-    private static int extractPowerInMilliwatts(String line, int powerIndex) {
-        try {
-            if (line.trim().endsWith("mW")) {
-                return Integer.parseInt(line.substring(powerIndex, line.indexOf('m') - 1));
-            } else if (line.trim().endsWith("W")) {
-                return (int) (1000.0 * Double.parseDouble(line.substring(powerIndex, line.indexOf('W'))));
-            } else {
-                logger.log(Level.SEVERE, "Power line does not end with mW or W, ignoring line: " + line);
-            }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Cannot parse power value from line '" + line + "'", e);
-        }
-        return 0;
-    }
-
     @Override
     public void close() {
         if (initialized) {
