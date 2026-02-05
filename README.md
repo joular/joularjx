@@ -23,14 +23,14 @@ Detailed documentation (including user and reference guides) are available at: [
 To build JoularJX, you need Java 11+ and Maven, then just build:
 
 ```
-mvn clean install -DskipTests
+mvn clean install
 ```
 
 Alternatively, you can use the Maven wrapper shipped with the project with the command:
 
 ```
-Linux: ./mvnw clean install -DskipTests
-Windows: ./mvnw.cmd clean install -DskipTests
+Linux: ./mvnw clean install
+Windows: ./mvnw.cmd clean install
 ```
 
 JoularJX gets CPU power reading from various sources, depending on the platform or operating system.
