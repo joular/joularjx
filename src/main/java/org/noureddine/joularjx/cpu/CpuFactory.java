@@ -32,6 +32,7 @@ public class CpuFactory {
 
     /**
      * Select the supported {@link Cpu} implementation
+     * 
      * @param properties the properties passed to the agent
      * @return the selected CPU implementation
      */
@@ -45,12 +46,18 @@ public class CpuFactory {
             logger.info("Initializing for running inside a virtual machine");
             return new VirtualMachine(properties.getVMPowerPath(), properties.getVMPowerFormat());
         }
+        
+        // If Joular Core is enabled, then use instead of other approaches
+        if (properties.isJoularCoreEnabled()) {
+            logger.info("Initializing for Joular Core");
+            return new JoularCoreCpu(properties.getJoularCorePath());
+        }
 
         if (osName.contains("win")) {
             return new IntelWindows(properties.getPowerMonitorPath());
         }
 
-        if(osName.contains("mac os x")) {
+        if (osName.contains("mac os x")) {
             return new PowermetricsMacOS();
         }
 
@@ -85,12 +92,14 @@ public class CpuFactory {
             System.exit(1);
         }
 
-        // Should never reach here because we stop the agent. But the compiler needs the return to compile the code.
+        // Should never reach here because we stop the agent. But the compiler needs the
+        // return to compile the code.
         return null;
     }
 
     /**
      * Get model name of Raspberry Pi
+     * 
      * @param osArch OS Architecture (arm, aarch64)
      * @return Raspberry Pi model name
      */

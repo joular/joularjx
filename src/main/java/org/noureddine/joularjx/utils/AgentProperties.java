@@ -45,6 +45,8 @@ public class AgentProperties {
     private static final String VM_MONITORING_PROPERTY = "vm-monitoring";
     public static final String VM_POWER_PATH_PROPERTY = "vm-power-path";
     private static final String VM_POWER_FORMAT_PROPERTY = "vm-power-format";
+    private static final String JOULAR_CORE_PROPERTY = "joular-core";
+    public static final String JOULAR_CORE_PATH_PROPERTY = "joular-core-path";
 
     /**
      * Loaded configuration properties
@@ -66,9 +68,12 @@ public class AgentProperties {
     private final boolean vmMonitoring;
     private final String vmPowerPath;
     private final String vmPowerFormat;
+    private final boolean joularCore;
+    private final String joularCorePath;
 
     /**
      * Instantiate a new instance which will load the properties
+     * 
      * @param fileSystem file system abstraction for accessing properties
      */
     public AgentProperties(FileSystem fileSystem) {
@@ -89,6 +94,8 @@ public class AgentProperties {
         this.vmMonitoring = loadVMMonitoring();
         this.vmPowerPath = loadVMPowerPath();
         this.vmPowerFormat = loadVMPowerFormat();
+        this.joularCore = loadJoularCore();
+        this.joularCorePath = loadJoularCorePath();
     }
 
     public AgentProperties() {
@@ -136,17 +143,37 @@ public class AgentProperties {
         return this.saveCtRuntimeData;
     }
 
-    public boolean overwriteCallTreesRuntimeData() { return this.overwriteCtRuntimeData; }
+    public boolean overwriteCallTreesRuntimeData() {
+        return this.overwriteCtRuntimeData;
+    }
 
-    public int stackMonitoringSampleRate() { return this.stackMonitoringSampleRate; }
+    public int stackMonitoringSampleRate() {
+        return this.stackMonitoringSampleRate;
+    }
 
-    public boolean isApplicationServer() { return this.applicationServer; }
+    public boolean isApplicationServer() {
+        return this.applicationServer;
+    }
 
-    public boolean isVirtualMachine() { return this.vmMonitoring; }
+    public boolean isVirtualMachine() {
+        return this.vmMonitoring;
+    }
 
-    public String getVMPowerPath() { return this.vmPowerPath; }
+    public String getVMPowerPath() {
+        return this.vmPowerPath;
+    }
 
-    public String getVMPowerFormat() { return this.vmPowerFormat; }
+    public String getVMPowerFormat() {
+        return this.vmPowerFormat;
+    }
+
+    public boolean isJoularCoreEnabled() {
+        return this.joularCore;
+    }
+
+    public String getJoularCorePath() {
+        return this.joularCorePath;
+    }
 
     private Properties loadProperties(FileSystem fileSystem) {
         Properties result = new Properties();
@@ -223,7 +250,7 @@ public class AgentProperties {
     public int loadStackMonitoringSampleRate() {
         String property = properties.getProperty(STACK_MONITORING_SAMPLE_RATE_PROPERTY);
         int value = 10; // default of 10 milliseconds
-        if(property != null) {
+        if (property != null) {
             int parsedValue = Integer.parseInt(property);
             if (parsedValue > 0 && parsedValue <= 1000) {
                 value = parsedValue;
@@ -237,7 +264,7 @@ public class AgentProperties {
 
         if (Files.notExists(path)) {
             logger.log(Level.INFO, "Could not locate config.properties, will use default values");
-           return Optional.empty();
+            return Optional.empty();
         }
 
         return Optional.of(path);
@@ -253,5 +280,13 @@ public class AgentProperties {
 
     public String loadVMPowerFormat() {
         return properties.getProperty(VM_POWER_FORMAT_PROPERTY);
+    }
+
+    public boolean loadJoularCore() {
+        return Boolean.parseBoolean(properties.getProperty(JOULAR_CORE_PROPERTY));
+    }
+
+    public String loadJoularCorePath() {
+        return properties.getProperty(JOULAR_CORE_PATH_PROPERTY);
     }
 }
