@@ -50,7 +50,7 @@ public class CpuFactory {
         // If Joular Core is enabled, then use instead of other approaches
         if (properties.isJoularCoreEnabled()) {
             logger.info("Initializing for Joular Core");
-            return new JoularCoreCpu(properties.getJoularCorePath());
+            return new JoularCoreCpu(properties.getJoularCorePath(), properties.getJoularCoreParameters());
         }
 
         if (osName.contains("win")) {

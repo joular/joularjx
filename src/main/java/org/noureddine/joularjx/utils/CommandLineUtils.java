@@ -49,4 +49,26 @@ public final class CommandLineUtils {
 
         return tokens;
     }
+
+    /**
+     * Builds a command by splitting and concatenating multiple command parts.
+     *
+     * @param parts command parts to split and append
+     * @return list of command tokens
+     */
+    public static List<String> buildCommand(String... parts) {
+        List<String> tokens = new ArrayList<>();
+        if (parts == null) {
+            return tokens;
+        }
+
+        for (String part : parts) {
+            if (part == null || part.isBlank()) {
+                continue;
+            }
+            tokens.addAll(splitCommand(part));
+        }
+
+        return tokens;
+    }
 }

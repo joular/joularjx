@@ -31,6 +31,7 @@ public class JoularCoreCpu implements Cpu {
      * Path for Joular Core
      */
     private final String programPath;
+    private final String programParameters;
 
     /**
      * Process to run Joular Core
@@ -46,14 +47,16 @@ public class JoularCoreCpu implements Cpu {
      * Creates a new Joular Core CPU monitor instance.
      *
      * @param programPath path to the Joular Core executable
+     * @param programParameters Joular Core command line parameters
      */
-    public JoularCoreCpu(final String programPath) {
+    public JoularCoreCpu(final String programPath, final String programParameters) {
         if (programPath == null || programPath.isBlank()) {
             logger.severe("Can't start because of missing Joular Core path. Set it in config.properties under the '"
                     + AgentProperties.JOULAR_CORE_PATH_PROPERTY + "' key.");
             System.exit(1);
         }
         this.programPath = programPath;
+        this.programParameters = programParameters;
     }
 
     @Override
@@ -64,7 +67,7 @@ public class JoularCoreCpu implements Cpu {
         }
 
         try {
-            final var command = CommandLineUtils.splitCommand(programPath);
+            final var command = CommandLineUtils.buildCommand(programPath, programParameters);
             if (command.isEmpty()) {
                 logger.severe("Can't start because of missing Joular Core path. Set it in config.properties under the '"
                         + AgentProperties.JOULAR_CORE_PATH_PROPERTY + "' key.");
@@ -77,7 +80,7 @@ public class JoularCoreCpu implements Cpu {
             
             initialized = true;
         } catch (Exception exception) {
-            logger.log(Level.SEVERE, "Can't start Joular Core \"{0}\". Exiting...", programPath);
+            logger.log(Level.SEVERE, "Can't start Joular Core. Exiting...");
             logger.throwing(getClass().getName(), "initialize", exception);
             System.exit(1);
         }

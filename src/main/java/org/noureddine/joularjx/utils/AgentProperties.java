@@ -56,6 +56,10 @@ public class AgentProperties {
      * Property key for the Joular Core executable path.
      */
     public static final String JOULAR_CORE_PATH_PROPERTY = "joular-core-path";
+    /**
+     * Property key for the Joular Core parameters.
+     */
+    public static final String JOULAR_CORE_PARAMETERS_PROPERTY = "joular-core-parameters";
 
     /**
      * Loaded configuration properties
@@ -79,6 +83,7 @@ public class AgentProperties {
     private final String vmPowerFormat;
     private final boolean joularCore;
     private final String joularCorePath;
+    private final String joularCoreParameters;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -105,6 +110,7 @@ public class AgentProperties {
         this.vmPowerFormat = loadVMPowerFormat();
         this.joularCore = loadJoularCore();
         this.joularCorePath = loadJoularCorePath();
+        this.joularCoreParameters = loadJoularCoreParameters();
     }
 
     /**
@@ -271,6 +277,15 @@ public class AgentProperties {
      */
     public String getJoularCorePath() {
         return this.joularCorePath;
+    }
+
+    /**
+     * Returns the configured Joular Core parameters.
+     *
+     * @return the Joular Core parameters or null if not configured
+     */
+    public String getJoularCoreParameters() {
+        return this.joularCoreParameters;
     }
 
     private Properties loadProperties(FileSystem fileSystem) {
@@ -466,5 +481,14 @@ public class AgentProperties {
      */
     public String loadJoularCorePath() {
         return properties.getProperty(JOULAR_CORE_PATH_PROPERTY);
+    }
+
+    /**
+     * Loads the Joular Core parameters from properties.
+     *
+     * @return the Joular Core parameters or null if not configured
+     */
+    public String loadJoularCoreParameters() {
+        return properties.getProperty(JOULAR_CORE_PARAMETERS_PROPERTY);
     }
 }
