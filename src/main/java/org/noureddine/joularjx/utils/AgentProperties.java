@@ -52,6 +52,7 @@ public class AgentProperties {
     public static final String VM_POWER_PATH_PROPERTY = "vm-power-path";
     private static final String VM_POWER_FORMAT_PROPERTY = "vm-power-format";
     private static final String JOULAR_CORE_PROPERTY = "joular-core";
+    private static final String JOULAR_CORE_RINGBUFFER_PROPERTY = "joular-core-ring-buffer";
     /**
      * Property key for the Joular Core executable path.
      */
@@ -60,6 +61,10 @@ public class AgentProperties {
      * Property key for the Joular Core parameters.
      */
     public static final String JOULAR_CORE_PARAMETERS_PROPERTY = "joular-core-parameters";
+    /**
+     * Property key for the Joular Core ring buffer path.
+     */
+    public static final String JOULAR_CORE_RINGBUFFER_PATH_PROPERTY = "joular-core-ringbuffer-path";
 
     /**
      * Loaded configuration properties
@@ -82,8 +87,10 @@ public class AgentProperties {
     private final String vmPowerPath;
     private final String vmPowerFormat;
     private final boolean joularCore;
+    private final boolean joularCoreRingBuffer;
     private final String joularCorePath;
     private final String joularCoreParameters;
+    private final String joularCoreRingBufferPath;
 
     /**
      * Instantiate a new instance which will load the properties
@@ -109,8 +116,10 @@ public class AgentProperties {
         this.vmPowerPath = loadVMPowerPath();
         this.vmPowerFormat = loadVMPowerFormat();
         this.joularCore = loadJoularCore();
+        this.joularCoreRingBuffer = loadJoularCoreRingBuffer();
         this.joularCorePath = loadJoularCorePath();
         this.joularCoreParameters = loadJoularCoreParameters();
+        this.joularCoreRingBufferPath = loadJoularCoreRingBufferPath();
     }
 
     /**
@@ -271,6 +280,15 @@ public class AgentProperties {
     }
 
     /**
+     * Indicates whether Joular Core ring buffer reading is enabled.
+     *
+     * @return true if ring buffer reading is enabled, false otherwise
+     */
+    public boolean isJoularCoreRingBufferEnabled() {
+        return this.joularCoreRingBuffer;
+    }
+
+    /**
      * Returns the configured Joular Core path.
      *
      * @return the Joular Core path or null if not configured
@@ -286,6 +304,15 @@ public class AgentProperties {
      */
     public String getJoularCoreParameters() {
         return this.joularCoreParameters;
+    }
+
+    /**
+     * Returns the configured Joular Core ring buffer path.
+     *
+     * @return the ring buffer path or null if not configured
+     */
+    public String getJoularCoreRingBufferPath() {
+        return this.joularCoreRingBufferPath;
     }
 
     private Properties loadProperties(FileSystem fileSystem) {
@@ -475,6 +502,15 @@ public class AgentProperties {
     }
 
     /**
+     * Loads the Joular Core ring buffer flag from properties.
+     *
+     * @return true if ring buffer reading is enabled, false otherwise
+     */
+    public boolean loadJoularCoreRingBuffer() {
+        return Boolean.parseBoolean(properties.getProperty(JOULAR_CORE_RINGBUFFER_PROPERTY));
+    }
+
+    /**
      * Loads the Joular Core path from properties.
      *
      * @return the Joular Core path or null if not configured
@@ -490,5 +526,14 @@ public class AgentProperties {
      */
     public String loadJoularCoreParameters() {
         return properties.getProperty(JOULAR_CORE_PARAMETERS_PROPERTY);
+    }
+
+    /**
+     * Loads the Joular Core ring buffer path from properties.
+     *
+     * @return the ring buffer path or null if not configured
+     */
+    public String loadJoularCoreRingBufferPath() {
+        return properties.getProperty(JOULAR_CORE_RINGBUFFER_PATH_PROPERTY);
     }
 }

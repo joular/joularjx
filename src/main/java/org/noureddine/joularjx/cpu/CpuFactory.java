@@ -49,6 +49,12 @@ public class CpuFactory {
         
         // If Joular Core is enabled, then use instead of other approaches
         if (properties.isJoularCoreEnabled()) {
+            String ringBufferPath = properties.getJoularCoreRingBufferPath();
+            if (properties.isJoularCoreRingBufferEnabled() && ringBufferPath != null && !ringBufferPath.isBlank()) {
+                logger.info("Initializing for Joular Core ring buffer");
+                return new JoularCoreRingBufferCpu(ringBufferPath);
+            }
+
             logger.info("Initializing for Joular Core");
             return new JoularCoreCpu(properties.getJoularCorePath(), properties.getJoularCoreParameters());
         }
