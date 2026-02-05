@@ -188,7 +188,7 @@ public class MonitoringHandler implements Runnable {
 		// first compute the proportion of cpu time for each thread in the last sampling
 		// period
 		for (Entry<Thread, Map<String, Integer>> threadEntry : methodsStats.entrySet()) {
-			long threadId = threadEntry.getKey().getId();
+			long threadId = threadEntry.getKey().getId(); // Is dprecated in Java 19, use threadId() instead
 			long currentThreadCpuTime = threadBean.getThreadCpuTime(threadId);
 			long previousThreadCpuTime = threadsCpuTime.getOrDefault(threadId, 0l);
 			if (currentThreadCpuTime < 0) { // thread has quit
@@ -242,8 +242,7 @@ public class MonitoringHandler implements Runnable {
                     filteredCallTreeStats = extractCallTreesStats(samples, properties::filtersMethod);
                 }
 
-                double cpuLoad = osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use
-                                                            // getCpuLoad() instead
+                double cpuLoad = osBean.getSystemCpuLoad(); // If Java >= 14 is available, use the new getCpuLoad() instead
                 double processCpuLoad = osBean.getProcessCpuLoad();
 
                 double energyAfter = cpu.getCurrentPower(cpuLoad);

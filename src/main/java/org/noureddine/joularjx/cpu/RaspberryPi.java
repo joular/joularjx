@@ -11,6 +11,9 @@
 
 package org.noureddine.joularjx.cpu;
 
+/**
+ * {@link Cpu} implementation for Raspberry Pi models using regression models.
+ */
 public class RaspberryPi implements Cpu {
 
     /**
@@ -18,6 +21,11 @@ public class RaspberryPi implements Cpu {
      */
     private final RaspberryPiModels rpiModel;
 
+    /**
+     * Creates a new Raspberry Pi CPU monitor instance.
+     *
+     * @param rpiModel Raspberry Pi model identifier
+     */
     public RaspberryPi(final RaspberryPiModels rpiModel) {
         this.rpiModel = rpiModel;
     }

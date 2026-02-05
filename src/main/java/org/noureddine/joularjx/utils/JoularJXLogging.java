@@ -15,6 +15,9 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Centralized logging setup for JoularJX.
+ */
 public class JoularJXLogging {
 
     private static final JoularJXLogging instance = new JoularJXLogging();
@@ -22,11 +25,21 @@ public class JoularJXLogging {
     private final Logger logger;
     private final ConsoleHandler consoleHandler;
 
+    /**
+     * Updates the logging level for the shared logger and console handler.
+     *
+     * @param loggerLevel the desired logging level
+     */
     public static void updateLevel(Level loggerLevel) {
         instance.logger.setLevel(loggerLevel);
         instance.consoleHandler.setLevel(loggerLevel);
     }
 
+    /**
+     * Returns the shared JoularJX logger instance.
+     *
+     * @return the logger
+     */
     public static Logger getLogger() {
         return instance.logger;
     }

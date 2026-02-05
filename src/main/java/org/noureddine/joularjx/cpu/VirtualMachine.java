@@ -20,6 +20,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.FileSystem;
 import java.util.logging.Level;
 
+/**
+ * {@link Cpu} implementation for reading power data from a shared file in virtualized environments.
+ */
 public class VirtualMachine implements Cpu {
     
     private static final Logger logger = JoularJXLogging.getLogger();
@@ -32,12 +35,23 @@ public class VirtualMachine implements Cpu {
 
     private final FileSystem fileSystem;
 
+    /**
+     * Creates a new virtual machine CPU monitor using the default filesystem.
+     *
+     * @param VMPowerPath   path to the shared power file
+     * @param VMPowerFormat format of the power data (e.g. "watts" or "powerjoular")
+     */
     public VirtualMachine(String VMPowerPath, String VMPowerFormat) {
         this(FileSystems.getDefault());
         VM_POWER_PATH_NAME = VMPowerPath;
         VM_POWER_FORMAT = VMPowerFormat;
     }
 
+    /**
+     * Creates a new virtual machine CPU monitor with a custom filesystem.
+     *
+     * @param fileSystem filesystem used to read the shared power file
+     */
     public VirtualMachine(final FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }

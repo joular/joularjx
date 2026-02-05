@@ -53,18 +53,38 @@ public final class ResultWriterConfiguration {
 		this.methodName = methodName;
 	}
 
+	/**
+	 * Returns the method name associated with this configuration.
+	 *
+	 * @return the method name or null if not set
+	 */
 	public String getMethodName() {
 		return methodName;
 	}
 
+	/**
+	 * Returns the result scope associated with this configuration.
+	 *
+	 * @return the scope
+	 */
 	public ResultScope getScope() {
 		return scope;
 	}
 
+	/**
+	 * Indicates whether the output should overwrite existing data.
+	 *
+	 * @return true if overwrite is enabled, false otherwise
+	 */
 	public boolean isOverwrite() {
 		return overwrite;
 	}
 
+	/**
+	 * Indicates whether the output should be timestamped.
+	 *
+	 * @return true if timestamped, false otherwise
+	 */
 	public boolean isTimestamped() {
 		return timestamped;
 	}

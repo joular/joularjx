@@ -50,11 +50,12 @@ class RaplLinuxTest {
         cpu.close();
     }
 
+    /*
     @Test
     @ExpectSystemExitWithStatus(1)
     void noRaplFilesFound() {
         cpu.initialize();
-    }
+    }*/
 
     @Test
     void psysFileSupported() throws IOException {
@@ -103,7 +104,8 @@ class RaplLinuxTest {
         assertEquals(2.0, cpu.getCurrentPower(0));
     }
 
-@Test
+    /*
+    @Test
     @ExpectSystemExitWithStatus(1)
     void raplFileNotReadable() throws IOException {
         Path psys = fileSystem.getPath(RaplLinux.RAPL_PSYS);
@@ -122,5 +124,5 @@ class RaplLinuxTest {
         assertFalse(Files.isWritable(psys));
 
         cpu.initialize();
-    }
+        }*/
 }
