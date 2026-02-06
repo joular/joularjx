@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the
  * GNU General Public License v3.0 only (GPL-3.0-only)
@@ -80,7 +80,7 @@ public class MonitoringStatus {
 
     /**
      * Adds the given energy consumption to the given call tree.
-     * @param callTree a CallTree, the call tree to which the consumption is mapped
+     * @param callTree a {@link CallTree} the call tree to which the consumption is mapped
      * @param delta a double, the amount of energy to be added
      */
     public void addCallTreeConsumedEnergy(CallTree callTree, double delta) {
@@ -89,7 +89,7 @@ public class MonitoringStatus {
 
     /**
      * Adds the given energy consumption to the given filtered call tree
-     * @param callTree a CallTree, the call tree to which the consumption is mapped
+     * @param callTree a {@link CallTree}, the call tree to which the consumption is mapped
      * @param delta a double, the amount of energy to be added
      */
     public void addFilteredCallTreeConsumedEnergy(CallTree callTree, double delta) {
@@ -101,11 +101,11 @@ public class MonitoringStatus {
      * Creates or update the needed data structures.
      * @param methodName a String, the name of the method
      * @param timestamp a long representing an UNIX timestamp
-     * @param energy a double, the method energy consomption
+     * @param energy a double, the method energy consumption
      */
     public void trackMethodConsumption(String methodName, long timestamp, double energy) {
         if (!this.methodsConsumptionEvolution.containsKey(methodName)) {
-            //Creating a new map for tracking the method's energy consumption over the time
+            // Creating a new map for tracking the method's energy consumption over the time
             Map<Long, Double> methodEnergyTrackMap = new ConcurrentHashMap<>();
             methodEnergyTrackMap.put(timestamp, energy);
 
@@ -120,7 +120,7 @@ public class MonitoringStatus {
      * Creates or update the needed data structures.
      * @param methodName a String, the name of the method
      * @param timestamp a long representing an UNIX timestamp
-     * @param energy a double, the method energy consomption
+     * @param energy a double, the method energy consumption
      */
     public void trackFilteredMethodConsumption(String methodName, long timestamp, double energy) {
         if (!this.filteredMethodsConsumptionEvolution.containsKey(methodName)) {
@@ -145,7 +145,7 @@ public class MonitoringStatus {
 
     /**
      * Returns the energy consumed by each method.
-     * @return a Map<String, Double> mapping method's name to their respective energy consumption.
+     * @return a {@code Map<String, Double>} mapping method's name to their respective energy consumption.
      */
     public Map<String, Double> getMethodsConsumedEnergy() {
         return Collections.unmodifiableMap(methodsConsumedEnergy);
@@ -153,7 +153,7 @@ public class MonitoringStatus {
 
     /**
      * Returns the energy consumed by each filtered method.
-     * @return a Map<String, Double> mapping filtered method's name to their respective energy consumption.
+     * @return a {@code Map<String, Double>} mapping filtered method's name to their respective energy consumption.
      */
     public Map<String, Double> getFilteredMethodsConsumedEnergy() {
         return Collections.unmodifiableMap(filteredMethodsConsumedEnergy);
@@ -161,7 +161,8 @@ public class MonitoringStatus {
 
     /**
      * Returns the energy consumption evolution of each method.
-     * @return a Map<String, Map<Long,Double>> mapping each method's name to their consumption evolution. Consumption evolution is stored as a Map<Long,Double> mapping UNIX timestamps to energy consumption.
+     * @return a {@code Map<String, Map<Long,Double>>} mapping each method's name to their consumption evolution. 
+     * Consumption evolution is stored as a {@code Map<Long,Double>} mapping UNIX timestamps to energy consumption.
      */
     public Map<String, Map<Long, Double>> getMethodsConsumptionEvolution(){
         return this.methodsConsumptionEvolution;
@@ -169,7 +170,8 @@ public class MonitoringStatus {
 
     /**
      * Returns the energy consumption evolution of each filtered method.
-     * @return a Map<String, Map<Long,Double>> mapping each filtered method's name to their consumption evolution. Consumption evolution is stored as a Map<Long,Double> mapping UNIX timestamps to energy consumption.
+     * @return a {@code Map<String, Map<Long,Double>>} mapping each filtered method's name to their consumption evolution. 
+     * Consumption evolution is stored as a {@code Map<Long,Double>} mapping UNIX timestamps to energy consumption.
      */
     public Map<String, Map<Long, Double>> getFilteredMethodsConsumptionEvolution(){
         return this.filteredMethodsConsumptionEvolution;
@@ -177,7 +179,7 @@ public class MonitoringStatus {
 
     /**
      * Returns the energy consumption of each call tree.
-     * @return a Map<CallTree, Double> mapping each call tree to their total energy consumption.
+     * @return a {@code Map<CallTree, Double>} mapping each call tree to their total energy consumption.
      */
     public Map<CallTree, Double> getCallTreesConsumedEnergy() {
         return this.callTreesConsumption;
@@ -185,7 +187,7 @@ public class MonitoringStatus {
 
     /**
      * Returns the energy consumption of each filtered call tree.
-     * @return a Map<CallTree, Double> mapping each filtered call tree to their total energy consumption.
+     * @return a {@code Map<CallTree, Double>} mapping each filtered call tree to their total energy consumption.
      */
     public Map<CallTree, Double> getFilteredCallTreesConsumedEnergy() {
         return this.filteredCallTreesConsumption;

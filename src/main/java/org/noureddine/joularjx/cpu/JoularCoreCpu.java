@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * Copyright (c) 2026, Adel Noureddine
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the
  * GNU General Public License v3.0 only (GPL-3.0-only)
@@ -21,19 +21,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link Cpu} implementation for Windows using the external power monitor tool.
+ * CPU implementation for Joular Core
  */
-public class IntelWindows implements Cpu {
+public class JoularCoreCpu implements Cpu {
 
     private static final Logger logger = JoularJXLogging.getLogger();
 
     /**
-     * Path for our power monitor program on Windows
+     * Path for Joular Core
      */
     private final String programPath;
+    private final String programParameters;
 
     /**
-     * Process to run power monitor on Windows
+     * Process to run Joular Core
      */
     private Process process;
 
@@ -43,16 +44,19 @@ public class IntelWindows implements Cpu {
     private boolean initialized;
 
     /**
-     * Creates a new Windows power monitor instance.
+     * Creates a new Joular Core CPU monitor instance.
      *
-     * @param programPath path to the power monitor executable
+     * @param programPath path to the Joular Core executable
+     * @param programParameters Joular Core command line parameters
      */
-    public IntelWindows(final String programPath) {
+    public JoularCoreCpu(final String programPath, final String programParameters) {
         if (programPath == null || programPath.isBlank()) {
-            logger.severe("Can't start because of missing power monitor path. Set it in config.properties under the '" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");
+            logger.severe("Can't start because of missing Joular Core path. Set it in config.properties under the '"
+                    + AgentProperties.JOULAR_CORE_PATH_PROPERTY + "' key.");
             System.exit(1);
         }
         this.programPath = programPath;
+        this.programParameters = programParameters;
     }
 
     @Override
@@ -63,19 +67,20 @@ public class IntelWindows implements Cpu {
         }
 
         try {
-            final var command = CommandLineUtils.splitCommand(programPath);
+            final var command = CommandLineUtils.buildCommand(programPath, programParameters);
             if (command.isEmpty()) {
-                logger.severe("Can't start because of missing power monitor path. Set it in config.properties under the '" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");
+                logger.severe("Can't start because of missing Joular Core path. Set it in config.properties under the '"
+                        + AgentProperties.JOULAR_CORE_PATH_PROPERTY + "' key.");
                 System.exit(1);
             }
             process = new ProcessBuilder(command).start();
-
+            
             // The first result is not useful
             getCurrentPower(0);
-
+            
             initialized = true;
         } catch (Exception exception) {
-            logger.log(Level.SEVERE, "Can't start power monitor \"{0}\" on Windows. Exiting...", programPath);
+            logger.log(Level.SEVERE, "Can't start Joular Core. Exiting...");
             logger.throwing(getClass().getName(), "initialize", exception);
             System.exit(1);
         }
@@ -84,21 +89,18 @@ public class IntelWindows implements Cpu {
     @Override
     public double getCurrentPower(final double cpuLoad) {
         try {
-            // Should not be closed since it closes the process
+            // Should not be closed since it closes the process stream
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = input.readLine();
-            return Double.parseDouble(line);
+            if (line != null && !line.isBlank()) {
+                return Double.parseDouble(line);
+            }
         } catch (Exception exception) {
             logger.throwing(getClass().getName(), "getCurrentPower", exception);
         }
         return 0;
     }
 
-    /**
-     * The power is returned every second, so it does not need an offset.
-     *
-     * @return 0
-     */
     @Override
     public double getInitialPower() {
         return 0;
@@ -106,14 +108,12 @@ public class IntelWindows implements Cpu {
 
     @Override
     public void close() {
-        if (initialized) {
+        if (initialized && process != null) {
             process.destroy();
         }
     }
 
-    /**
-     * Nothing to do here. Method only useful for RAPL
-     */
+    @Override
     public double getMaxPower(final double cpuLoad) {
         return 0;
     }

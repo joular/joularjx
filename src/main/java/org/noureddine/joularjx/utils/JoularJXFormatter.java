@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the
  * GNU General Public License v3.0 only (GPL-3.0-only)
@@ -19,8 +19,18 @@ import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
+/**
+ * Log formatter producing a timestamped one-line message with an optional stack trace.
+ */
 public class JoularJXFormatter extends Formatter {
     private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
+
+    /**
+     * Creates a new formatter instance.
+     */
+    public JoularJXFormatter() {
+        super();
+    }
 
     @Override
     public String format(LogRecord logRecord) {

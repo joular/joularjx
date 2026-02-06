@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the
  * GNU General Public License v3.0 only (GPL-3.0-only)
@@ -19,7 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A {@link Cpu} implementation using <a href='https://firefox-source-docs.mozilla.org/performance/powermetrics.htm'>powermetrics</a>.
+ * A {@link Cpu} implementation using powermetrics.
  */
 public class PowermetricsMacOS implements Cpu {
     private static final Logger logger = JoularJXLogging.getLogger();
@@ -31,6 +31,13 @@ public class PowermetricsMacOS implements Cpu {
     private boolean initialized;
     boolean intelCpu = false;
 
+    /**
+     * Creates a new powermetrics-based CPU monitor.
+     */
+    public PowermetricsMacOS() {
+        super();
+    }
+
     @Override
     public void initialize() {
         if (initialized) {
@@ -39,7 +46,7 @@ public class PowermetricsMacOS implements Cpu {
 
         try {
             // todo: detect when sudo fails as this currently won't throw an exception
-            process = Runtime.getRuntime().exec("sudo powermetrics --samplers cpu_power -i 1000");
+            process = new ProcessBuilder("sudo", "powermetrics", "--samplers", "cpu_power", "-i", "1000").start();
             reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             initialized = true;
             readHeader();
@@ -100,6 +107,11 @@ public class PowermetricsMacOS implements Cpu {
         return 0.0;
     }
 
+    /**
+     * Returns the current power reading for Apple Silicon (M-series) chips.
+     *
+     * @return power in watts
+     */
     public double getCurrentPowerM() {
         int powerInMilliwatts = 0;
         try {
@@ -128,24 +140,10 @@ public class PowermetricsMacOS implements Cpu {
 
     /**
      * Override point for testing.
+     * @return the reader getting outputs of the powermetrics tool
      */
     protected BufferedReader getReader() {
         return reader;
-    }
-
-    private static int extractPowerInMilliwatts(String line, int powerIndex) {
-        try {
-            if (line.trim().endsWith("mW")) {
-                return Integer.parseInt(line.substring(powerIndex, line.indexOf('m') - 1));
-            } else if (line.trim().endsWith("W")) {
-                return (int) (1000.0 * Double.parseDouble(line.substring(powerIndex, line.indexOf('W'))));
-            } else {
-                logger.log(Level.SEVERE, "Power line does not end with mW or W, ignoring line: " + line);
-            }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Cannot parse power value from line '" + line + "'", e);
-        }
-        return 0;
     }
 
     @Override

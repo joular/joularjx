@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the
  * GNU General Public License v3.0 only (GPL-3.0-only)
@@ -11,6 +11,9 @@
 
 package org.noureddine.joularjx.cpu;
 
+/**
+ * {@link Cpu} implementation for Raspberry Pi models using regression models.
+ */
 public class RaspberryPi implements Cpu {
 
     /**
@@ -18,6 +21,11 @@ public class RaspberryPi implements Cpu {
      */
     private final RaspberryPiModels rpiModel;
 
+    /**
+     * Creates a new Raspberry Pi CPU monitor instance.
+     *
+     * @param rpiModel Raspberry Pi model identifier
+     */
     public RaspberryPi(final RaspberryPiModels rpiModel) {
         this.rpiModel = rpiModel;
     }

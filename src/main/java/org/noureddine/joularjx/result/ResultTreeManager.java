@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, Adel Noureddine, Université de Pau et des Pays de l'Adour.
+ * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the
  * GNU General Public License v3.0 only (GPL-3.0-only)
@@ -11,8 +11,14 @@
 package org.noureddine.joularjx.result;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,209 +26,258 @@ import org.noureddine.joularjx.utils.AgentProperties;
 import org.noureddine.joularjx.utils.JoularJXLogging;
 
 /**
- * The ResultTreeManager provides a method to create the required folder hierarchy, enabling the agent to write data in files later on.
- * This class also provides methods that return the proper filepath depending on the type (method, call-tree, ...) and granularity (all, filtered) of the data.
+ * The ResultTreeManager provides a method to create the required folder
+ * hierarchy, enabling the agent to write data in files later on. This class
+ * also provides methods that return the proper filepath depending on the type
+ * (method, call-tree, ...) and granularity (all, filtered) of the data.
  */
 public class ResultTreeManager {
 
-    private static final Logger logger = JoularJXLogging.getLogger();
+	/**
+	 * Builder for creating a {@link Path} object based on the specified attributes.
+	 */
+	public class PathBuilder {
 
-    // Folders names
-    public final static String GLOBAL_RESULT_DIRECTORY_NAME = "joularjx-result";
+		private boolean timestamp;
+		private final ResultScope scope;
+		private String methodName;
 
-    public final static String ALL_DIRECTORY_NAME = "all";
-    public final static String FILTERED_DIRECTORY_NAME = "app";
+		/**
+		 * Constructor with argument. Since scope is mandatory, it makes sense to impose
+		 * it as a constructor argument.
+		 *
+		 * @param scope the scope
+		 */
+		public PathBuilder(ResultScope scope) {
+			this.scope = scope;
+		}
 
-    public final static String RUNTIME_DIRECTORY_NAME = "runtime";
-    public final static String TOTAL_DIRECTORY_NAME = "total";
-    public final static String EVOLUTION_DIRECTORY_NAME = "evolution";
+		/**
+		 * Builds the {@link Path} based on the current state of the builder.
+		 *
+		 * @return a constructed {@link Path} instance
+		 */
+		public Path build() {
+			final StringJoiner joiner = new StringJoiner("-", "joularJX-", "");
+			joiner.add(String.valueOf(pid));
+			if (timestamp) {
+				joiner.add(String.valueOf(System.currentTimeMillis()));
+			}
+			if (Objects.nonNull(methodName)) {
+				joiner.add(methodName);
+			}
+			if (!scope.getScope().isBlank()) {
+				// Handle edge case for evolution scopes
+				joiner.add(scope.getScope());
+			}
+			joiner.add(scope.getSuffix());
 
-    public final static String CALLTREE_DIRECTORY_NAME = "calltrees";
-    public final static String METHOD_DIRECTORY_NAME = "methods";
+			final String fileName = joiner.toString();
+			return leafPaths.get(scope).resolve(fileName);
+		}
 
-    private AgentProperties properties;
+		/**
+		 * Sets the method name
+		 *
+		 * @param methodName the method name
+		 * @return this builder instance
+		 */
+		public PathBuilder withMethodName(String methodName) {
+			this.methodName = methodName;
+			return this;
+		}
 
-    //The directory where the result of the current execution will be written
-    private String runDirectoryPath;
+		/**
+		 * Sets whether to include the current timestamp.
+		 *
+		 * @param timestamp true to include timestamp, false otherwise
+		 * @return this builder instance
+		 */
+		public PathBuilder withTimestamp(boolean timestamp) {
+			this.timestamp = timestamp;
+			return this;
+		}
+	}
 
-    //All leaf directory paths
-    private String allTotalMethodsPath;
-    private String filteredTotalMethodsPath;
-    private String allRuntimeMethodsPath;
-    private String filteredRuntimeMethodsPath;
+	private static final Logger logger = JoularJXLogging.getLogger();
 
-    private String allRuntimeCallTreePath;
-    private String filteredRuntimeCallTreePath;
-    private String allTotalCallTreePath;
-    private String filteredTotalCallTreePath;
+	// Folders names
+	/** Root directory name for all results. */
+	public final static String GLOBAL_RESULT_DIRECTORY_NAME = "joularjx-result";
+	/** Directory name for "all" scope results. */
+	public final static String ALL_DIRECTORY_NAME = "all";
 
-    private String allEvolutionPath;
-    private String filteredEvolutionPath;
+	/** Directory name for filtered (application) results. */
+	public final static String FILTERED_DIRECTORY_NAME = "app";
+	/** Directory name for runtime results. */
+	public final static String RUNTIME_DIRECTORY_NAME = "runtime";
+	/** Directory name for total results. */
+	public final static String TOTAL_DIRECTORY_NAME = "total";
 
-    /**
-     * Creates a new ResultTreeManager. All the filepaths will be initialized (but not created yet!) with the informations provided by the given configuration properties.
-     * @param properties the agent's configuration properties
-     * @param pid the application PID
-     * @param startTimestamp the timestamp at which the creation has been initialized
-     */
-    public ResultTreeManager(AgentProperties properties, long pid, long startTimestamp) {
-        this.properties = properties;
-        
-        //Building the path of all the directories
-        this.runDirectoryPath =  GLOBAL_RESULT_DIRECTORY_NAME + "/" + String.format("%d-%d", pid, startTimestamp);
+	/** Directory name for evolution results. */
+	public final static String EVOLUTION_DIRECTORY_NAME = "evolution";
+	/** Directory name for call tree results. */
+	public final static String CALLTREE_DIRECTORY_NAME = "calltrees";
 
-        String allDirectoryPath      = runDirectoryPath + "/" + ALL_DIRECTORY_NAME;
-        String filteredDirectoryPath = runDirectoryPath + "/" + FILTERED_DIRECTORY_NAME;
+	/** Directory name for method results. */
+	public final static String METHOD_DIRECTORY_NAME = "methods";
 
-        
-        this.allTotalMethodsPath        = allDirectoryPath + "/" + TOTAL_DIRECTORY_NAME + "/" + METHOD_DIRECTORY_NAME;
-        this.filteredTotalMethodsPath   = filteredDirectoryPath + "/" + TOTAL_DIRECTORY_NAME + "/" + METHOD_DIRECTORY_NAME;
-        this.allRuntimeMethodsPath      = allDirectoryPath + "/" + RUNTIME_DIRECTORY_NAME + "/" + METHOD_DIRECTORY_NAME;
-        this.filteredRuntimeMethodsPath = filteredDirectoryPath + "/" + RUNTIME_DIRECTORY_NAME + "/" + METHOD_DIRECTORY_NAME;
+	private final AgentProperties properties;
 
-        this.allRuntimeCallTreePath      = allDirectoryPath + "/" + RUNTIME_DIRECTORY_NAME + "/" + CALLTREE_DIRECTORY_NAME;
-        this.filteredRuntimeCallTreePath = filteredDirectoryPath + "/" + RUNTIME_DIRECTORY_NAME + "/" + CALLTREE_DIRECTORY_NAME;
-        this.allTotalCallTreePath        = allDirectoryPath + "/" + TOTAL_DIRECTORY_NAME + "/" + CALLTREE_DIRECTORY_NAME;
-        this.filteredTotalCallTreePath   = filteredDirectoryPath + "/" + TOTAL_DIRECTORY_NAME + "/" + CALLTREE_DIRECTORY_NAME;
+	private final long pid;
 
-        this.allEvolutionPath      = allDirectoryPath + "/" + EVOLUTION_DIRECTORY_NAME;
-        this.filteredEvolutionPath = filteredDirectoryPath + "/" + EVOLUTION_DIRECTORY_NAME;
+	// The directory where the result of the current execution will be written
+	private final Path runDirectoryPath;
+	// All leaf directory paths
+	private final Map<ResultScope, Path> leafPaths;
 
-    }
+	/**
+	 * Creates a new ResultTreeManager. All the filepaths will be initialized (but
+	 * not created yet!) with the informations provided by the given configuration
+	 * properties.
+	 *
+	 * @param properties     the agent's configuration properties
+	 * @param pid            the application PID
+	 * @param startTimestamp the timestamp at which the creation has been
+	 *                       initialized
+	 */
+	public ResultTreeManager(AgentProperties properties, long pid, long startTimestamp) {
+		this.properties = properties;
+		this.pid = pid;
+		this.leafPaths = new HashMap<>(ResultScope.values().length);
 
-    /**
-     * Creates the tree hierarchy. Creates the required folder, if they do not exists yet.
-     * Only the necessary folders are created, depending on the provided configuration properties.
-     * @return a boolean indicating werther an error occurs while creating the folder hierarchy (false), or no (true).
-     */
-    public boolean create() {
-        //This boolean acts as a check. If an error occurs during the intialization of the file hierarchy, the method will continue its execution, as other directories may be created sucessfully, but this boolean will be set to false, to indicate that an error occured.
-        boolean verif = true; 
+		// Building the path of all the directories
+		this.runDirectoryPath = Paths.get(GLOBAL_RESULT_DIRECTORY_NAME, String.format("%d-%d", pid, startTimestamp));
 
-        logger.log(Level.INFO, String.format("Results will be stored in %s/", this.runDirectoryPath));
+		final Path allDirectoryPath = runDirectoryPath.resolve(ALL_DIRECTORY_NAME);
+		final Path filteredDirectoryPath = runDirectoryPath.resolve(FILTERED_DIRECTORY_NAME);
 
-        //List of all the directories that will be created
-        List<String> directoriesToCreate = new ArrayList<>();
+		leafPaths.put(ResultScope.ALL_TOTAL_METHODS,
+				allDirectoryPath.resolve(TOTAL_DIRECTORY_NAME).resolve(METHOD_DIRECTORY_NAME));
+		leafPaths.put(ResultScope.FILTERED_TOTAL_METHODS,
+				filteredDirectoryPath.resolve(TOTAL_DIRECTORY_NAME).resolve(METHOD_DIRECTORY_NAME));
+		leafPaths.put(ResultScope.ALL_RUNTIME_METHODS,
+				allDirectoryPath.resolve(RUNTIME_DIRECTORY_NAME).resolve(METHOD_DIRECTORY_NAME));
+		leafPaths.put(ResultScope.FILTERED_RUNTIME_METHODS,
+				filteredDirectoryPath.resolve(RUNTIME_DIRECTORY_NAME).resolve(METHOD_DIRECTORY_NAME));
 
-        //Mandatory directories (directories that do not depend of configuration properties)
-        directoriesToCreate.add(this.allTotalMethodsPath);
-        directoriesToCreate.add(this.filteredTotalMethodsPath);
+		leafPaths.put(ResultScope.ALL_RUNTIME_CALL_TREE,
+				allDirectoryPath.resolve(RUNTIME_DIRECTORY_NAME).resolve(CALLTREE_DIRECTORY_NAME));
+		leafPaths.put(ResultScope.FILTERED_RUNTIME_CALL_TREE,
+				filteredDirectoryPath.resolve(RUNTIME_DIRECTORY_NAME).resolve(CALLTREE_DIRECTORY_NAME));
+		leafPaths.put(ResultScope.ALL_TOTAL_CALL_TREE,
+				allDirectoryPath.resolve(TOTAL_DIRECTORY_NAME).resolve(CALLTREE_DIRECTORY_NAME));
+		leafPaths.put(ResultScope.FILTERED_TOTAL_CALL_TREE,
+				filteredDirectoryPath.resolve(TOTAL_DIRECTORY_NAME).resolve(CALLTREE_DIRECTORY_NAME));
 
-        //Optional directories (directories that depends of configuration properties)
-        //Runtime
-        if (properties.savesRuntimeData()) {
-            directoriesToCreate.add(this.allRuntimeMethodsPath);
-            directoriesToCreate.add(this.filteredRuntimeMethodsPath);
-        }
+		leafPaths.put(ResultScope.ALL_EVOLUTION, allDirectoryPath.resolve(EVOLUTION_DIRECTORY_NAME));
+		leafPaths.put(ResultScope.FILTERED_EVOLUTION, filteredDirectoryPath.resolve(EVOLUTION_DIRECTORY_NAME));
+	}
 
-        //Call trees
-        if (properties.callTreesConsumption()) {
-            //Runtime
-            if (properties.saveCallTreesRuntimeData()) {
-                directoriesToCreate.add(this.allRuntimeCallTreePath);
-                directoriesToCreate.add(this.filteredRuntimeCallTreePath);
-            }
-            //Total
-            directoriesToCreate.add(this.allTotalCallTreePath);
-            directoriesToCreate.add(this.filteredTotalCallTreePath);
-        }
+	/**
+	 * Creates the tree hierarchy. Creates the required folders, if they do not
+	 * exist yet. Only the necessary folders are created, depending on the provided
+	 * configuration properties.
+	 *
+	 * @return a boolean indicating whether an error occurs while creating the
+	 *         folder hierarchy (false), or not (true).
+	 */
+	public boolean create() {
+		// This boolean acts as a check. If an error occurs during the initialization of
+		// the file hierarchy, the method will
+		// continue its execution, as other directories may be created successfully, but
+		// this boolean will be set to false,
+		// to indicate that an error occurred.
+		boolean verif = true;
 
-        //Methods consumption evolution
-        if (properties.trackConsumptionEvolution()) {
-            directoriesToCreate.add(this.allEvolutionPath);
-            directoriesToCreate.add(this.filteredEvolutionPath);
-        }
+		logger.log(Level.INFO, String.format("Results will be stored in %s%s", this.runDirectoryPath, File.separator));
 
-        //Creating all the directories
-        for (String dirPath : directoriesToCreate) {
-            File dir = new File(dirPath);
-            if (!dir.exists() && !dir.mkdirs()) {
-                logger.log(Level.WARNING, String.format("Failed to create directory %s", dirPath));
-                verif = false;
-            }
-        }
+		// List of all the directories that will be created
+		final List<Path> directoriesToCreate = new ArrayList<>();
 
-        return verif;
-    }
+		// Mandatory directories (directories that do not depend of configuration
+		// properties)
+		directoriesToCreate.add(this.leafPaths.get(ResultScope.ALL_TOTAL_METHODS));
+		directoriesToCreate.add(this.leafPaths.get(ResultScope.FILTERED_TOTAL_METHODS));
 
-    /**
-     * Returns the path to the methods runtime consumption folder
-     * @return the path to the methods runtime consumption folder
-     */
-    public String getAllRuntimeMethodsPath() {
-        return this.allRuntimeMethodsPath;
-    }
+		// Optional directories (directories that depends of configuration properties)
+		// Runtime
+		if (properties.savesRuntimeData()) {
+			directoriesToCreate.add(this.leafPaths.get(ResultScope.ALL_RUNTIME_METHODS));
+			directoriesToCreate.add(this.leafPaths.get(ResultScope.FILTERED_RUNTIME_METHODS));
+		}
 
-    /**
-     * Returns the path to the methods total consumption folder
-     * @return the path to the methods total consumption folder
-     */
-    public String getAllTotalMethodsPath() {
-        return this.allTotalMethodsPath;
-    }
+		// Call trees
+		if (properties.callTreesConsumption()) {
+			// Runtime
+			if (properties.saveCallTreesRuntimeData()) {
+				directoriesToCreate.add(this.leafPaths.get(ResultScope.ALL_RUNTIME_CALL_TREE));
+				directoriesToCreate.add(this.leafPaths.get(ResultScope.FILTERED_RUNTIME_CALL_TREE));
+			}
+			// Total
+			directoriesToCreate.add(this.leafPaths.get(ResultScope.ALL_TOTAL_CALL_TREE));
+			directoriesToCreate.add(this.leafPaths.get(ResultScope.FILTERED_TOTAL_CALL_TREE));
+		}
 
-    /**
-     * Returns the path to the filtered methods runtime consumption folder
-     * @return the path to the filtered methods runtime consumption folder
-     */
-    public String getFilteredRuntimeMethodsPath() {
-        return this.filteredRuntimeMethodsPath;
-    }
+		// Methods consumption evolution
+		if (properties.trackConsumptionEvolution()) {
+			directoriesToCreate.add(this.leafPaths.get(ResultScope.ALL_EVOLUTION));
+			directoriesToCreate.add(this.leafPaths.get(ResultScope.FILTERED_EVOLUTION));
+		}
 
-    /**
-     * Returns the path to the filtered methods total consumption folder
-     * @return the path to the filtered methods total consumption folder
-     */
-    public String getFilteredTotalMethodsPath() {
-        return this.filteredTotalMethodsPath;
-    }
+		// Creating all the directories
+		for (final Path dirPath : directoriesToCreate) {
+			final File dir = dirPath.toFile();
+			if (!dir.exists() && !dir.mkdirs()) {
+				logger.log(Level.WARNING, String.format("Failed to create directory %s", dirPath));
+				verif = false;
+			}
+		}
 
-    /**
-     * Returns the path to the call trees runtime consumption folder
-     * @return the path to the call trees runtime consumption folder
-     */
-    public String getAllRuntimeCallTreePath() {
-        return this.allRuntimeCallTreePath;
-    }
+		return verif;
+	}
 
-    /**
-     * Returns the path to the call trees total consumption folder
-     * @return the path to the call trees total consumption folder
-     */
-    public String getAllTotalCallTreePath() {
-        return this.allTotalCallTreePath;
-    }
+	/**
+	 * Returns the path to the methods consumption evolution folder
+	 *
+	 * @param methodName name of the method being tracked
+	 *
+	 * @return the path to the methods consumption evolution folder
+	 */
+	Path getAllEvolutionPath(String methodName) {
+		return new PathBuilder(ResultScope.ALL_EVOLUTION).withMethodName(methodName).build();
+	}
 
-    /**
-     * Returns the path to the filtered call trees runtime consumption folder
-     * @return the path to the filtered call trees runtime consumption folder
-     */
-    public String getFilteredRuntimeCallTreePath() {
-        return this.filteredRuntimeCallTreePath;
-    }
+	/**
+	 * Get a {@link PathBuilder} ready to use
+	 *
+	 * @param scope scope to use
+	 * @return the initialized builder
+	 */
+	public PathBuilder getBuilder(ResultScope scope) {
+		return new PathBuilder(scope);
+	}
 
-    /**
-     * Returns the path to the filtered call trees total consumption folder
-     * @return the path to the filtered call trees total consumption folder
-     */
-    public String getFilteredTotalCallTreePath() {
-        return this.filteredTotalCallTreePath;
-    }
+	/**
+	 * Returns the path to the filtered methods consumption evolution folder
+	 *
+	 * @param methodName name of the method under study
+	 *
+	 * @return the path to the filtered methods consumption evolution folder
+	 */
+	Path getFilteredEvolutionPath(String methodName) {
+		return new PathBuilder(ResultScope.FILTERED_EVOLUTION).withMethodName(methodName).build();
+	}
 
-    /**
-     * Returns the path to the methods consumption evolution folder
-     * @return the path to the methods consumption evolution folder
-     */
-    public String getAllEvolutionPath() {
-        return this.allEvolutionPath;
-    }
+	/**
+	 * Generic path getter, wraps around the {@link PathBuilder} Useful for the
+	 * cases where just the scope is enough
+	 *
+	 * @param scope scope of the result
+	 * @return the corresponding Path
+	 */
+	Path getPath(ResultScope scope) {
+		return new PathBuilder(scope).build();
+	}
 
-    /**
-     * Returns the path to the filtered methods consumption evolution folder
-     * @return the path to the filtered methods consumption evolution folder
-     */
-    public String getFilteredEvolutionPath() {
-        return this.filteredEvolutionPath;
-    }
-    
 }
