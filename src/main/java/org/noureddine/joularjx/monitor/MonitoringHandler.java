@@ -188,7 +188,7 @@ public class MonitoringHandler implements Runnable {
 		// first compute the proportion of cpu time for each thread in the last sampling
 		// period
 		for (Entry<Thread, Map<String, Integer>> threadEntry : methodsStats.entrySet()) {
-			long threadId = threadEntry.getKey().getId(); // Is dprecated in Java 19, use threadId() instead
+			long threadId = threadEntry.getKey().getId(); // Is deprecated in Java 19, use threadId() instead
 			long currentThreadCpuTime = threadBean.getThreadCpuTime(threadId);
 			long previousThreadCpuTime = threadsCpuTime.getOrDefault(threadId, 0l);
 			if (currentThreadCpuTime < 0) { // thread has quit
