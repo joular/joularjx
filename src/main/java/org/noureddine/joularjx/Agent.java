@@ -56,6 +56,7 @@ public class Agent {
      * JVM hook to statically load the java agent at startup.
      * After the Java Virtual Machine (JVM) has initialized, the premain method
      * will be called. Then the real application main method will be called.
+     * 
      * @param args command line arguments
      * @param inst JVM instrumentation
      */
@@ -77,7 +78,8 @@ public class Agent {
         final long currentTime = System.currentTimeMillis();
         ResultTreeManager resultTreeManager = new ResultTreeManager(properties, appPid, currentTime);
         if (!resultTreeManager.create()) {
-            logger.log(Level.WARNING, "Error(s) occurred while creating the result folder hierarchy. Some results may not be reported.");
+            logger.log(Level.WARNING,
+                    "Error(s) occurred while creating the result folder hierarchy. Some results may not be reported.");
         }
 
         Cpu cpu = CpuFactory.getCpu(properties);
@@ -85,7 +87,8 @@ public class Agent {
         OperatingSystemMXBean osBean = createOperatingSystemBean(cpu);
         MonitoringStatus status = new MonitoringStatus();
         List<ResultWriter> resultWriters = getWriters(properties, appPid, currentTime);
-        MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriters, cpu, status, osBean, threadBean);
+        MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriters, cpu, status,
+                osBean, threadBean);
         ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriters, cpu, status, properties);
 
         logger.log(Level.INFO, "Initialization finished");
@@ -93,11 +96,12 @@ public class Agent {
         new Thread(monitoringHandler, COMPUTATION_THREAD_NAME).start();
         Runtime.getRuntime().addShutdownHook(new Thread(shutdownHandler));
     }
-  
+
     /**
      * Get all output classes from SPI
-     * @param props application properties
-     * @param pid app PID
+     * 
+     * @param props     application properties
+     * @param pid       app PID
      * @param timestamp current timestamp
      *
      * @return the initialized implementations to output data
@@ -113,8 +117,9 @@ public class Agent {
     }
 
     /**
-     * Creates and returns a ThreadMXBean. 
-     * Checks if the Thread CPU Time is supported by the JVM and enables it if it is disabled.
+     * Creates and returns a ThreadMXBean.
+     * Checks if the Thread CPU Time is supported by the JVM and enables it if it is
+     * disabled.
      */
     private static ThreadMXBean createThreadBean() {
         ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
@@ -133,7 +138,9 @@ public class Agent {
     }
 
     /**
-     * Creates and returns an OperatingSystemMXBean, used to collect CPU and process loads.
+     * Creates and returns an OperatingSystemMXBean, used to collect CPU and process
+     * loads.
+     * 
      * @param cpu a {@link Cpu} implementation
      * @return an OperatingSystemMXBean
      */
@@ -141,13 +148,14 @@ public class Agent {
         // Get OS MxBean to collect CPU and Process loads
         OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 
-        // Loop for a couple of seconds to initialize OSMXBean to get accurate details (first call will return -1)
+        // Loop for a couple of seconds to initialize OSMXBean to get accurate details
+        // (first call will return -1)
         logger.log(Level.INFO, "Please wait while initializing JoularJX...");
+        cpu.initialize();
+
         for (int i = 0; i < 2; i++) {
             osBean.getSystemCpuLoad(); // In future when Java 17 becomes widely deployed, use getCpuLoad() instead
             osBean.getProcessCpuLoad();
-
-            cpu.initialize();
 
             try {
                 Thread.sleep(500);

@@ -43,13 +43,15 @@ public class RaplLinux implements Cpu {
     static final String RAPL_DRAM_MAX = "/sys/class/powercap/intel-rapl/intel-rapl:0/intel-rapl:0:2/max_energy_range_uj";
 
     /**
-     * RAPL files existing on the current system. All files in this list will be used for reading the
+     * RAPL files existing on the current system. All files in this list will be
+     * used for reading the
      * energy values.
      */
     private final List<Path> raplFilesToRead = new ArrayList<>(3);
 
     /**
-     * RAPL max values files existing on the current system. All files in this list will be used for reading the energy values.
+     * RAPL max values files existing on the current system. All files in this list
+     * will be used for reading the energy values.
      */
     private final List<Path> maxRaplFilesToRead = new ArrayList<>(3);
 
@@ -59,14 +61,16 @@ public class RaplLinux implements Cpu {
     private final FileSystem fileSystem;
 
     /**
-     * Create a new energy measurement via RAPL. The files will be read from the default filesystem.
+     * Create a new energy measurement via RAPL. The files will be read from the
+     * default filesystem.
      */
     public RaplLinux() {
         this(FileSystems.getDefault());
     }
 
     /**
-     * Create a new energy measurement via RAPL. The files will be read from the passed filesystem.
+     * Create a new energy measurement via RAPL. The files will be read from the
+     * passed filesystem.
      *
      * @param fileSystem The filesystem to use for reading the RAPL files
      */
@@ -75,7 +79,8 @@ public class RaplLinux implements Cpu {
     }
 
     /**
-     * Check which RAPL files are available on the system to read the energy values from.
+     * Check which RAPL files are available on the system to read the energy values
+     * from.
      */
     @Override
     public void initialize() {
@@ -88,11 +93,13 @@ public class RaplLinux implements Cpu {
                 if (Files.isReadable(psysMaxFile)) {
                     maxRaplFilesToRead.add(psysMaxFile);
                 } else {
-                    logger.log(Level.SEVERE, "Failed to get read" + psysMaxFile + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
+                    logger.log(Level.SEVERE, "Failed to get read " + psysMaxFile
+                            + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
                     System.exit(1);
                 }
             } else {
-                logger.log(Level.SEVERE, "Failed to get RAPL energy readings from" + psysFile + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
+                logger.log(Level.SEVERE, "Failed to get RAPL energy readings from " + psysFile
+                        + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
                 System.exit(1);
             }
         } else {
@@ -105,11 +112,13 @@ public class RaplLinux implements Cpu {
                     if (Files.isReadable(pkgMaxFile)) {
                         maxRaplFilesToRead.add(pkgMaxFile);
                     } else {
-                        logger.log(Level.SEVERE, "Failed to get read" + pkgMaxFile + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
+                        logger.log(Level.SEVERE, "Failed to get read " + pkgMaxFile
+                                + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
                         System.exit(1);
                     }
                 } else {
-                    logger.log(Level.SEVERE, "Failed to get RAPL energy readings from" + pkgFile + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
+                    logger.log(Level.SEVERE, "Failed to get RAPL energy readings from " + pkgFile
+                            + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
                     System.exit(1);
                 }
 
@@ -121,11 +130,13 @@ public class RaplLinux implements Cpu {
                         if (Files.isReadable(dramMaxFile)) {
                             maxRaplFilesToRead.add(dramMaxFile);
                         } else {
-                            logger.log(Level.SEVERE, "Failed to get read" + dramMaxFile + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
+                            logger.log(Level.SEVERE, "Failed to get read " + dramMaxFile
+                                    + " file. Exiting... Did you run JoularJX with elevated privileges (sudo)?");
                             System.exit(1);
                         }
                     } else {
-                        logger.log(Level.WARNING, "Failed to get RAPL energy readings from" + dramFile + " file. Continuing without it.");
+                        logger.log(Level.WARNING, "Failed to get RAPL energy readings from " + dramFile
+                                + " file. Continuing without it.");
                     }
                 }
             }
@@ -139,7 +150,9 @@ public class RaplLinux implements Cpu {
 
     /**
      * Get energy readings from RAPL through powercap
-     * Calculates the best energy reading as supported by CPU (psys, or pkg+dram, or pkg)
+     * Calculates the best energy reading as supported by CPU (psys, or pkg+dram, or
+     * pkg)
+     * 
      * @return Energy readings from RAPL
      */
     @Override
@@ -160,6 +173,7 @@ public class RaplLinux implements Cpu {
 
     /**
      * Get max energy value of RAPL interface through powercap
+     * 
      * @return Maximum energy value of RAPL interface
      */
     @Override

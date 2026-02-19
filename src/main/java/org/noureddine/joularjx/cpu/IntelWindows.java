@@ -37,6 +37,10 @@ public class IntelWindows implements Cpu {
      */
     private Process process;
 
+    private Thread readerThread;
+
+    private volatile double currentPower = 0.0;
+
     /**
      * If the monitoring process was initialized
      */
@@ -49,7 +53,8 @@ public class IntelWindows implements Cpu {
      */
     public IntelWindows(final String programPath) {
         if (programPath == null || programPath.isBlank()) {
-            logger.severe("Can't start because of missing power monitor path. Set it in config.properties under the '" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");
+            logger.severe("Can't start because of missing power monitor path. Set it in config.properties under the '"
+                    + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");
             System.exit(1);
         }
         this.programPath = programPath;
@@ -65,13 +70,14 @@ public class IntelWindows implements Cpu {
         try {
             final var command = CommandLineUtils.splitCommand(programPath);
             if (command.isEmpty()) {
-                logger.severe("Can't start because of missing power monitor path. Set it in config.properties under the '" + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");
+                logger.severe(
+                        "Can't start because of missing power monitor path. Set it in config.properties under the '"
+                                + AgentProperties.POWER_MONITOR_PATH_PROPERTY + "' key.");
                 System.exit(1);
             }
             process = new ProcessBuilder(command).start();
 
-            // The first result is not useful
-            getCurrentPower(0);
+            startReaderThread();
 
             initialized = true;
         } catch (Exception exception) {
@@ -81,17 +87,36 @@ public class IntelWindows implements Cpu {
         }
     }
 
+    private void startReaderThread() {
+        readerThread = new Thread(() -> {
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                boolean isFirst = true;
+                while ((line = input.readLine()) != null) {
+                    if (!line.isBlank()) {
+                        try {
+                            double power = Double.parseDouble(line);
+                            if (isFirst) {
+                                isFirst = false; // first result is not useful
+                            } else {
+                                currentPower = power;
+                            }
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                }
+            } catch (Exception exception) {
+                logger.throwing(getClass().getName(), "startReaderThread", exception);
+            }
+        });
+        readerThread.setDaemon(true);
+        readerThread.setName("IntelWindows-Reader");
+        readerThread.start();
+    }
+
     @Override
     public double getCurrentPower(final double cpuLoad) {
-        try {
-            // Should not be closed since it closes the process
-            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line = input.readLine();
-            return Double.parseDouble(line);
-        } catch (Exception exception) {
-            logger.throwing(getClass().getName(), "getCurrentPower", exception);
-        }
-        return 0;
+        return currentPower;
     }
 
     /**
@@ -107,7 +132,12 @@ public class IntelWindows implements Cpu {
     @Override
     public void close() {
         if (initialized) {
-            process.destroy();
+            if (readerThread != null) {
+                readerThread.interrupt();
+            }
+            if (process != null) {
+                process.destroy();
+            }
         }
     }
 

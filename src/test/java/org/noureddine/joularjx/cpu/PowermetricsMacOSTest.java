@@ -24,14 +24,17 @@ public class PowermetricsMacOSTest {
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
             protected BufferedReader getReader() {
-                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-m1max.txt")));
+                return new BufferedReader(
+                        new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-m1max.txt")));
             }
         };
         cpu.intelCpu = false;
+        cpu.processStream(cpu.getReader()); // synchronously parse the mock file to EOF
 
-
-        // the ??-Cluster and Combined lines are to be ignored, hence do not count the 359mW
+        // the ??-Cluster and Combined lines are to be ignored, hence do not count the
+        // 359mW
         assertEquals(0.211d + 0.147d + 0d /* +0.359d */, cpu.getCurrentPower(0), 0.0001d);
+        cpu.close();
     }
 
     @Test
@@ -39,13 +42,17 @@ public class PowermetricsMacOSTest {
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
             protected BufferedReader getReader() {
-                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-monterey-m2.txt")));
+                return new BufferedReader(
+                        new InputStreamReader(getClass().getResourceAsStream("/powermetrics-monterey-m2.txt")));
             }
         };
         cpu.intelCpu = false;
+        cpu.processStream(cpu.getReader());
 
-        // the ??-Cluster and Combined lines are to be ignored, hence do not count the 6mW
-        assertEquals(/*0.006d*/ + 0d + 0.019d + 0.036d + 0.010d + 0d + 0.025d , cpu.getCurrentPower(0), 0.0001d);
+        // the ??-Cluster and Combined lines are to be ignored, hence do not count the
+        // 6mW
+        assertEquals(/* 0.006d */ +0d + 0.019d + 0.036d + 0.010d + 0d + 0.025d, cpu.getCurrentPower(0), 0.0001d);
+        cpu.close();
     }
 
     @Test
@@ -53,27 +60,34 @@ public class PowermetricsMacOSTest {
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
             protected BufferedReader getReader() {
-                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-intel.txt")));
+                return new BufferedReader(
+                        new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-intel.txt")));
             }
         };
 
         cpu.intelCpu = true;
+        cpu.processStream(cpu.getReader());
 
-        assertEquals(4.87d + 3.43d + 3.38d + 4.21d + 3.21d , cpu.getCurrentPower(0), 0.0001d);
+        // The background thread logic now correctly parses discrete blocks and
+        // publishes the latest block reading.
+        // The last block in the mock file has a power of 3.21W.
+        assertEquals(3.21d, cpu.getCurrentPower(0), 0.0001d);
+        cpu.close();
     }
-
 
     @Test
     void parseHeaderIntel() throws IOException {
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
             protected BufferedReader getReader() {
-                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-intel.txt")));
+                return new BufferedReader(
+                        new InputStreamReader(getClass().getResourceAsStream("/powermetrics-sonoma-intel.txt")));
             }
         };
 
         cpu.readHeader();
         assertTrue(cpu.intelCpu);
+        cpu.close();
     }
 
     @Test
@@ -81,16 +95,19 @@ public class PowermetricsMacOSTest {
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
             protected BufferedReader getReader() {
-                return new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/powermetrics-monterey-m2.txt")));
+                return new BufferedReader(
+                        new InputStreamReader(getClass().getResourceAsStream("/powermetrics-monterey-m2.txt")));
             }
         };
 
         cpu.readHeader();
         assertFalse(cpu.intelCpu);
+        cpu.close();
     }
 
     /**
      * Test if the reader returns whenever there are results.
+     * 
      * @throws IOException
      */
     @Test
@@ -101,9 +118,12 @@ public class PowermetricsMacOSTest {
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
         BufferedReader reader = new BufferedReader(new InputStreamReader(intermittentInputStream));
 
-        // create the content blocks including headers
-        final String contents1 = "\n".repeat(10) + "CPU Power: 742 mW\n".repeat(2);
-        final String contents2 = "\n".repeat(10) + "CPU Power: 1200 mW\n".repeat(2);
+        // Note: The processor only publishes results on the next block marker ("***")
+        // or EOF.
+        // We simulate a stream that outputs markers continuously.
+        final String contents1 = "*** Sampled system activity ***\n" + "CPU Power: 742 mW\n".repeat(2)
+                + "*** Next Sample ***\n";
+        final String contents2 = "CPU Power: 1200 mW\n".repeat(2);
 
         PowermetricsMacOS cpu = new PowermetricsMacOS() {
             @Override
@@ -111,41 +131,39 @@ public class PowermetricsMacOSTest {
                 return reader;
             }
         };
+        cpu.intelCpu = false;
+
+        // Start async logic
+        cpu.startReaderThread();
 
         // nothing written yet, so expect 0
         assertEquals(0d, cpu.getCurrentPower(0), 0.0001d);
 
-        Thread writerBlock1 = createWriter(writer, contents1);
-        writerBlock1.start();
-        writerBlock1.join();
-        assertEquals(2*0.742d, cpu.getCurrentPower(0), 0.0001d);
+        // Write block 1
+        writer.write(contents1);
+        writer.flush();
 
-        Thread writerBlock2 = createWriter(writer, contents2);
-        writerBlock2.start();
-        writerBlock2.join();
-        assertEquals(2*1.2d, cpu.getCurrentPower(0), 0.0001d);
+        // Let CPU thread process it. It will see "*** Next Sample ***" and update
+        // currentPower.
+        Thread.sleep(100);
+        assertEquals(2 * 0.742d, cpu.getCurrentPower(0), 0.0001d);
+
+        // Write block 2
+        writer.write(contents2);
+        writer.flush();
+
+        // At this point, no new block marker has been sent, so the power shouldn't be
+        // updated yet!
+        assertEquals(2 * 0.742d, cpu.getCurrentPower(0), 0.0001d);
+
+        // Now close the stream to trigger EOF flush.
+        writer.close();
+        Thread.sleep(100);
+
+        assertEquals(2 * 1.2d, cpu.getCurrentPower(0), 0.0001d);
+
+        // Clean up
+        cpu.close();
     }
-
-    /**
-     * Create a thread that writes the contents to the writer, simulating the actual process.
-     * @param writer the writer to write to
-     * @param contents the contents to write
-     * @return a thread
-     */
-    private static Thread createWriter(BufferedWriter writer, String contents) {
-        Thread writerBlock1 = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    writer.write(contents);
-                    writer.flush();
-                } catch(Exception e)  {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
-        return writerBlock1;
-    }
-
 
 }

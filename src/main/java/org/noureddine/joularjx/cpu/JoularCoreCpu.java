@@ -38,6 +38,10 @@ public class JoularCoreCpu implements Cpu {
      */
     private Process process;
 
+    private Thread readerThread;
+
+    private volatile double currentPower = 0.0;
+
     /**
      * If the monitoring process was initialized
      */
@@ -46,7 +50,7 @@ public class JoularCoreCpu implements Cpu {
     /**
      * Creates a new Joular Core CPU monitor instance.
      *
-     * @param programPath path to the Joular Core executable
+     * @param programPath       path to the Joular Core executable
      * @param programParameters Joular Core command line parameters
      */
     public JoularCoreCpu(final String programPath, final String programParameters) {
@@ -74,10 +78,9 @@ public class JoularCoreCpu implements Cpu {
                 System.exit(1);
             }
             process = new ProcessBuilder(command).start();
-            
-            // The first result is not useful
-            getCurrentPower(0);
-            
+
+            startReaderThread();
+
             initialized = true;
         } catch (Exception exception) {
             logger.log(Level.SEVERE, "Can't start Joular Core. Exiting...");
@@ -86,19 +89,36 @@ public class JoularCoreCpu implements Cpu {
         }
     }
 
+    private void startReaderThread() {
+        readerThread = new Thread(() -> {
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                boolean isFirst = true;
+                while ((line = input.readLine()) != null) {
+                    if (!line.isBlank()) {
+                        try {
+                            double power = Double.parseDouble(line);
+                            if (isFirst) {
+                                isFirst = false; // first result is not useful
+                            } else {
+                                currentPower = power;
+                            }
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                }
+            } catch (Exception exception) {
+                logger.throwing(getClass().getName(), "startReaderThread", exception);
+            }
+        });
+        readerThread.setDaemon(true);
+        readerThread.setName("JoularCore-Reader");
+        readerThread.start();
+    }
+
     @Override
     public double getCurrentPower(final double cpuLoad) {
-        try {
-            // Should not be closed since it closes the process stream
-            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line = input.readLine();
-            if (line != null && !line.isBlank()) {
-                return Double.parseDouble(line);
-            }
-        } catch (Exception exception) {
-            logger.throwing(getClass().getName(), "getCurrentPower", exception);
-        }
-        return 0;
+        return currentPower;
     }
 
     @Override
@@ -108,8 +128,13 @@ public class JoularCoreCpu implements Cpu {
 
     @Override
     public void close() {
-        if (initialized && process != null) {
-            process.destroy();
+        if (initialized) {
+            if (readerThread != null) {
+                readerThread.interrupt();
+            }
+            if (process != null) {
+                process.destroy();
+            }
         }
     }
 

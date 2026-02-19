@@ -21,10 +21,11 @@ import java.nio.file.FileSystem;
 import java.util.logging.Level;
 
 /**
- * {@link Cpu} implementation for reading power data from a shared file in virtualized environments.
+ * {@link Cpu} implementation for reading power data from a shared file in
+ * virtualized environments.
  */
 public class VirtualMachine implements Cpu {
-    
+
     private static final Logger logger = JoularJXLogging.getLogger();
 
     private static String VM_POWER_PATH_NAME;
@@ -70,19 +71,23 @@ public class VirtualMachine implements Cpu {
     }
 
     /**
-     * Check that the passed file can be read by the program. Log error message and exit if reading the file is not
+     * Check that the passed file can be read by the program. Log error message and
+     * exit if reading the file is not
      * possible.
+     * 
      * @param file the file to check the read access
      */
     private void checkFileReadable(final Path file) {
         if (!Files.isReadable(file)) {
-            logger.log(Level.SEVERE, "Failed to read the shared VM power file. Please check you have permissions to read it.");
+            logger.log(Level.SEVERE,
+                    "Failed to read the shared VM power file. Please check you have permissions to read it.");
             System.exit(1);
         }
     }
 
     /**
-     * The power is approximated based on the CPU load, so it does not need an offset.
+     * The power is approximated based on the CPU load, so it does not need an
+     * offset.
      *
      * @return 0
      */
@@ -95,24 +100,27 @@ public class VirtualMachine implements Cpu {
     public double getCurrentPower(double cpuLoad) {
         double powerData = 0.0;
 
-
         try {
             if (VM_POWER_FORMAT.equals("watts")) {
                 powerData = Double.parseDouble(Files.readString(VM_POWER_PATH));
             } else if (VM_POWER_FORMAT.equals("powerjoular")) {
                 String[] powerDataInfo = Files.readString(VM_POWER_PATH).split(",");
                 // Get 3rd column (index 2) for power consumption
-                powerData = Double.parseDouble(powerDataInfo[2]);
+                if (powerDataInfo.length >= 3) {
+                    powerData = Double.parseDouble(powerDataInfo[2]);
+                } else {
+                    logger.log(Level.WARNING, "Insufficient data in VM power file: " + VM_POWER_PATH);
+                }
             } else {
                 logger.log(Level.WARNING, "Power data format for VM not supported. Returning 0.");
             }
-        } catch (IOException exception) {
+        } catch (IOException | NumberFormatException exception) {
             logger.throwing(getClass().getName(), "getCurrentPower", exception);
         }
 
         return powerData;
     }
-    
+
     /**
      * Nothing to do here. Method only useful for RAPL
      */
@@ -120,10 +128,10 @@ public class VirtualMachine implements Cpu {
     public double getMaxPower(double cpuLoad) {
         return 0;
     }
-    
+
     @Override
     public void close() {
         // Nothing to do for virtual machines
     }
-    
+
 }
