@@ -1,3 +1,4 @@
+// Features proposed by Rushin Dipak Makwana under supervision of Dr. Denis Pankratov and Dr. Yann-Gael Gueheneuc
 /*
  * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
@@ -87,7 +88,27 @@ public class CsvResultWriter implements ResultWriter {
 		if (Objects.isNull(writer)) {
 			throw new IllegalStateException("Please call ResultWriter#setTarget(String) first");
 		}
-
-		writer.write(String.format(Locale.US, "%s,%.4f%n", methodName, methodPower));
+        String escapedMethod = methodName.startsWith("\"") ? methodName : "\"" + methodName + "\"";
+		writer.write(String.format(Locale.US, "%s,%.4f%n", escapedMethod, methodPower));
 	}
+    /** {@inheritDoc} */
+    @Override
+    public void write(String methodName, double selfEnergy, double totalEnergy) throws IOException {
+        final BufferedWriter writer = this.writer.get();
+        if (Objects.isNull(writer)) {
+            throw new IllegalStateException("Please call ResultWriter#setTarget(String) first");
+        }
+        String escapedMethod = methodName.startsWith("\"") ? methodName : "\"" + methodName + "\"";
+        writer.write(String.format(Locale.US, "%s,%.8e,%.8e%n", escapedMethod, selfEnergy, totalEnergy));
+    }
+    /** {@inheritDoc} */
+    @Override
+    public void writeString(String str) throws IOException {
+        final BufferedWriter writer = this.writer.get();
+        if (Objects.isNull(writer)) {
+            throw new IllegalStateException("Please call ResultWriter#setTarget(String) first");
+        }
+
+        writer.write(String.format(Locale.US, "%s\n", str));
+    }
 }

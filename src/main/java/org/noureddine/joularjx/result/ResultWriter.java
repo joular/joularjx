@@ -1,3 +1,4 @@
+// Features proposed by Rushin Dipak Makwana under supervision of Dr. Denis Pankratov and Dr. Yann-Gael Gueheneuc
 /*
  * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
@@ -55,4 +56,24 @@ public interface ResultWriter {
 	 * @throws IOException in case of error
 	 */
 	void write(String methodName, double methodPower) throws IOException;
+    /**
+     * Writes a line. {@link #setConfiguration(ResultWriterConfiguration)} should
+     * have been called before using this method.
+     *
+     * @param methodName  name of the method
+     * @param selfEnergy power consumption of the method
+     * @param totalEnergy total energy consumption of the method
+     * @throws IOException in case of error
+     */
+    void write(String methodName, double selfEnergy, double totalEnergy) throws IOException;
+
+    /**
+     * Writes header. {@link #setConfiguration(ResultWriterConfiguration)} should
+     * have been called before using this method.
+     *
+     * @param str  any string values to write
+     * @throws IOException in case of error
+     */
+    void writeString(String str ) throws IOException;
+
 }
