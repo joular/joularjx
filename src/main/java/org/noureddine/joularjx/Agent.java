@@ -1,3 +1,4 @@
+// Features proposed by Rushin Dipak Makwana under supervision of Dr. Denis Pankratov and Dr. Yann-Gael Gueheneuc
 /*
  * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
@@ -87,6 +88,8 @@ public class Agent {
         List<ResultWriter> resultWriters = getWriters(properties, appPid, currentTime);
         MonitoringHandler monitoringHandler = new MonitoringHandler(appPid, properties, resultWriters, cpu, status, osBean, threadBean);
         ShutdownHandler shutdownHandler = new ShutdownHandler(appPid, resultWriters, cpu, status, properties);
+
+        logger.info("Collection per thread is enabled: " + properties.getStatusPerThread() );
 
         logger.log(Level.INFO, "Initialization finished");
 

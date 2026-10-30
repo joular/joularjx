@@ -1,3 +1,4 @@
+// Features proposed by Rushin Dipak Makwana under supervision of Dr. Denis Pankratov and Dr. Yann-Gael Gueheneuc
 /*
  * Copyright (c) 2021-2026, Adel Noureddine, Université de Pau et des Pays de l'Adour.
  * All rights reserved. This program and the accompanying materials
@@ -51,9 +52,11 @@ public class MonitoringHandler implements Runnable {
 	private final MonitoringStatus status;
 	private final OperatingSystemMXBean osBean;
 	private final ThreadMXBean threadBean;
-	private final long sampleTimeMilliseconds = 1000;
-	private final long sampleRateMilliseconds;
-	private final int sampleIterations;
+	private final long sampleTimeMilliseconds = Long.getLong("joularjx.sampleTime", 1000L); // sample period
+	private final long sampleRateMilliseconds; // subsample period
+	private final int sampleIterations; // number of subsamples in a sample
+	private final boolean statusPerThread;
+	private int currentCycleActualIterations;
 
 	/**
 	 * Creates a new MonitoringHandler.
@@ -79,6 +82,8 @@ public class MonitoringHandler implements Runnable {
 		this.threadBean = threadBean;
 		this.sampleRateMilliseconds = properties.stackMonitoringSampleRate();
 		this.sampleIterations = (int) (sampleTimeMilliseconds / sampleRateMilliseconds);
+		this.statusPerThread = properties.getStatusPerThread(); //New! Feature #2
+		this.currentCycleActualIterations = 0;
 	}
 
 	/**
@@ -146,7 +151,7 @@ public class MonitoringHandler implements Runnable {
 	 *         last monitoring loop
 	 */
 	private Map<Thread, Map<String, Integer>> extractStats(Map<Thread, List<StackTraceElement[]>> samples,
-			Predicate<String> covers) {
+			Predicate<String> covers, boolean totalVersion) {
 		Map<Thread, Map<String, Integer>> stats = new HashMap<>();
 
 		for (var entry : samples.entrySet()) {
@@ -154,11 +159,19 @@ public class MonitoringHandler implements Runnable {
 			stats.put(entry.getKey(), target);
 
 			for (StackTraceElement[] stackTrace : entry.getValue()) {
+                java.util.Set<String> seenInSample = totalVersion ? new java.util.HashSet<>() : null;
 				for (StackTraceElement stackTraceElement : stackTrace) {
-					String methodName = stackTraceElement.getClassName() + "." + stackTraceElement.getMethodName();
+                    // To uniquely identify overloaded methods (Feature #3)
+					String methodName = org.noureddine.joularjx.utils.BytecodeMethodResolver.resolve(stackTraceElement);
 					if (covers.test(methodName)) {
-						target.merge(methodName, 1, Integer::sum);
-						break;
+						if (totalVersion) {
+							if (seenInSample.add(methodName)) {
+								target.merge(methodName, 1, Integer::sum);
+							}
+						} else {
+							target.merge(methodName, 1, Integer::sum);
+							break;
+						}
 					}
 				}
 			}
@@ -188,21 +201,25 @@ public class MonitoringHandler implements Runnable {
 		// first compute the proportion of cpu time for each thread in the last sampling
 		// period
 		for (Entry<Thread, Map<String, Integer>> threadEntry : methodsStats.entrySet()) {
-			long threadId = threadEntry.getKey().getId(); // Is deprecated in Java 19, use threadId() instead
+			long threadId = threadEntry.getKey().getId(); // Is dprecated in Java 19, use threadId() instead
 			long currentThreadCpuTime = threadBean.getThreadCpuTime(threadId);
 			long previousThreadCpuTime = threadsCpuTime.getOrDefault(threadId, 0l);
 			if (currentThreadCpuTime < 0) { // thread has quit
-				// TODO ignore last sampling period??
-				long jump = this.sampleRateMilliseconds / 10;
-				currentThreadCpuTime = previousThreadCpuTime + jump; // assume interval of 1 millisecond
-				logger.info("Thread CPU time negative, taking previous time + " + jump + " : " + currentThreadCpuTime
-						+ " for thread: " + threadId);
+				// Previous Logic
+				// long jump = this.sampleRateMilliseconds / 10;
+				// currentThreadCpuTime = previousThreadCpuTime + jump; // assume interval of 1 millisecond
+				// logger.info("Thread CPU time negative, taking previous time + " + jump + " : " + currentThreadCpuTime
+				// 		+ " for thread: " + threadId);
+
+				// New proportion-based estimation: Feature #4
+				long jump = this.currentCycleActualIterations * this.sampleRateMilliseconds * 1_000_000L;
+				currentThreadCpuTime = previousThreadCpuTime + jump;
 			}
 
 			threadsCpuTime.put(threadId, currentThreadCpuTime);
 			long delta = currentThreadCpuTime - previousThreadCpuTime;
 			double adjustedThreadCpuTime = delta * threadEntry.getValue().values().stream().mapToDouble(i -> i).sum()
-					/ sampleIterations;
+					/ (this.currentCycleActualIterations > 0 ? this.currentCycleActualIterations : 1);
 			totalThreadsCpuTime += adjustedThreadCpuTime;
 			actualThreadsCpuTime.put(threadId, adjustedThreadCpuTime);
 		}
@@ -231,8 +248,11 @@ public class MonitoringHandler implements Runnable {
                 double energyBefore = cpu.getInitialPower();
 
                 var samples = sample();
-                var methodsStats = extractStats(samples, methodName -> true);
-                var methodsStatsFiltered = extractStats(samples, properties::filtersMethod);
+                var methodsStats = extractStats(samples, methodName -> true, false);
+                var methodsStatsFiltered = extractStats(samples, properties::filtersMethod, false);
+
+                var methodsStatsTotal = extractStats(samples, methodName -> true, true);
+                var methodsStatsFilteredTotal = extractStats(samples, properties::filtersMethod, true);
 
                 // Collecting call trees stats only if the option is enabled
                 Map<Thread, Map<CallTree, Integer>> callTreesStats = null;
@@ -275,18 +295,38 @@ public class MonitoringHandler implements Runnable {
 //                var threadCpuTimePercentages = getThreadsCpuTimePercentage(threadsCpuTime, totalThreadsCpuTime, processEnergy);
 
                 var threadCpuTimePercentages = getThreadsCpuTimePercentage(methodsStats, threadsCpuTime, processEnergy);
+                //New - To distiguish between the self energy and total energy (Feature #2)
+                Map<Thread, Double> totalSelfEncountersPerThread = new HashMap<>();
+                for (var threadEntry : methodsStats.entrySet()) {
+                     double totalSelfEncounters = threadEntry.getValue().values().stream().mapToDouble(i -> i).sum();
+                     totalSelfEncountersPerThread.put(threadEntry.getKey(), totalSelfEncounters);
 
-                updateMethodsConsumedEnergy(methodsStats, threadCpuTimePercentages, status::addMethodConsumedEnergy,
-                        Scope.ALL);
-                updateMethodsConsumedEnergy(methodsStatsFiltered, threadCpuTimePercentages,
-                        status::addFilteredMethodConsumedEnergy, Scope.FILTERED);
+                }
+                // If the option is enabled, we also store the energy consumption per thread in the status object (Feature #2)
+                if (this.statusPerThread) {
+                    for (var threadEntry : methodsStats.entrySet()) {
+                        double threadEnergy = threadCpuTimePercentages.getOrDefault(threadEntry.getKey().getId(), 0.0);
+                        status.addConsumedEnergyPerThread(threadEntry.getKey(), threadEnergy);
+                    }
+                }
+
+                updateMethodsConsumedEnergy(methodsStats, totalSelfEncountersPerThread, threadCpuTimePercentages, status::addMethodConsumedEnergy,
+                        Scope.ALL, false);
+                updateMethodsConsumedEnergy(methodsStatsFiltered,totalSelfEncountersPerThread, threadCpuTimePercentages,
+                        status::addFilteredMethodConsumedEnergy, Scope.FILTERED, false);
+
+                updateMethodsConsumedEnergy(methodsStatsTotal,totalSelfEncountersPerThread, threadCpuTimePercentages, status::addTotalMethodConsumedEnergy,
+                        Scope.ALL, true);
+                updateMethodsConsumedEnergy(methodsStatsFilteredTotal, totalSelfEncountersPerThread, threadCpuTimePercentages,
+                        status::addTotalFilteredMethodConsumedEnergy, Scope.FILTERED, true);
+
 
                 // Updating call trees consumption if option is enabled
                 if (this.properties.callTreesConsumption()) {
                     updateCallTreesConsumedEnergy(callTreesStats, threadCpuTimePercentages,
-                            status::addCallTreeConsumedEnergy);
+                            status::addCallTreeConsumedEnergy, Scope.ALL);
                     updateCallTreesConsumedEnergy(filteredCallTreeStats, threadCpuTimePercentages,
-                            status::addFilteredCallTreeConsumedEnergy);
+                            status::addFilteredCallTreeConsumedEnergy, Scope.FILTERED);
 
                     // Writing runtime call trees power only if option is enabled
                     if (this.properties.saveCallTreesRuntimeData()) {
@@ -326,8 +366,12 @@ public class MonitoringHandler implements Runnable {
      */
     private Map<Thread, List<StackTraceElement[]>> sample() {
         Map<Thread, List<StackTraceElement[]>> result = new HashMap<>();
+        //This is used for the last sampling window, to estimate the CPU time of dead threads. It is reset at each sampling cycle.
+        // (Feature 4)
+        this.currentCycleActualIterations = 0;
         try {
             for (int duration = 0; duration < sampleTimeMilliseconds; duration += sampleRateMilliseconds) {
+                this.currentCycleActualIterations++;
                 for (var entry : Thread.getAllStackTraces().entrySet()) {
                     String threadName = entry.getKey().getName();
                     // Ignoring agent related threads, if option is enabled
@@ -396,27 +440,55 @@ public class MonitoringHandler implements Runnable {
      *                                   methods). Used for energy consumption
      *                                   tracking
      */
-    private void updateMethodsConsumedEnergy(Map<Thread, Map<String, Integer>> methodsStats,
+    private void updateMethodsConsumedEnergy(Map<Thread, Map<String, Integer>> methodsStats, Map<Thread, Double> totalSelfEncountersPerThread,
                                              Map<Long, Double> threadCpuTimePercentages,
                                              ObjDoubleConsumer<String> updateMethodConsumedEnergy,
-                                             Scope scope) {
+                                             Scope scope, boolean totalVersion) {
         for (var threadEntry : methodsStats.entrySet()) {
-            double totalEncounters = threadEntry.getValue().values().stream().mapToDouble(i -> i).sum();
+            double totalSelfEncounters = totalSelfEncountersPerThread.getOrDefault(threadEntry.getKey(), 0.0);
             for (var methodEntry : threadEntry.getValue().entrySet()) {
                 double methodPower = 0.0;
-                if(totalEncounters >= Double.MIN_VALUE) {
-                    methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId()) * (methodEntry.getValue() / totalEncounters);
+                if(totalSelfEncounters >= Double.MIN_VALUE) {
+                    methodPower = threadCpuTimePercentages.get(threadEntry.getKey().getId()) * (methodEntry.getValue() / totalSelfEncounters);
                 }
 
-                // Only of consumption evolution tracking is enabled
-                if (this.properties.trackConsumptionEvolution()) {
-                    // computing the UNIX EPOCH timestamp
-                    long unixTimestamp = System.currentTimeMillis() / 1000L;
+                if (!totalVersion) {
+                    // Only of consumption evolution tracking is enabled
+                    if (this.properties.trackConsumptionEvolution()) {
+                        // computing the UNIX EPOCH timestamp
+                        long unixTimestamp = System.currentTimeMillis() / 1000L;
 
-                    if (scope == Scope.ALL) {
-                        this.status.trackMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
+                        if (scope == Scope.ALL) {
+                            this.status.trackMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
+                        } else {
+                            this.status.trackFilteredMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
+                        }
+                    }
+                }
+
+                if (this.statusPerThread) {
+                    Thread thread = threadEntry.getKey();
+                    String methodName = methodEntry.getKey();
+                    if (!totalVersion) {
+                        if (scope == Scope.ALL) {
+                            status.addMethodConsumedEnergyPerThread(thread, methodName, methodPower);
+                            if (this.properties.trackConsumptionEvolution()) {
+                                long unixTimestamp = System.currentTimeMillis() / 1000L;
+                                status.trackMethodConsumptionPerThread(thread, methodName, unixTimestamp, methodPower);
+                            }
+                        } else {
+                            status.addFilteredMethodConsumedEnergyPerThread(thread, methodName, methodPower);
+                            if (this.properties.trackConsumptionEvolution()) {
+                                long unixTimestamp = System.currentTimeMillis() / 1000L;
+                                status.trackFilteredMethodConsumptionPerThread(thread, methodName, unixTimestamp, methodPower);
+                            }
+                        }
                     } else {
-                        this.status.trackFilteredMethodConsumption(methodEntry.getKey(), unixTimestamp, methodPower);
+                        if (scope == Scope.ALL) {
+                            status.addTotalMethodConsumedEnergyPerThread(thread, methodName, methodPower);
+                        } else {
+                            status.addTotalFilteredMethodConsumedEnergyPerThread(thread, methodName, methodPower);
+                        }
                     }
                 }
 
@@ -424,6 +496,7 @@ public class MonitoringHandler implements Runnable {
             }
         }
     }
+
 
     /**
      * Update call trees consumed energy.
@@ -434,7 +507,7 @@ public class MonitoringHandler implements Runnable {
      *                                 consumption
      */
     private void updateCallTreesConsumedEnergy(Map<Thread, Map<CallTree, Integer>> stats,
-            Map<Long, Double> threadCpuTimePercentages, ObjDoubleConsumer<CallTree> callTreeConsumer) {
+            Map<Long, Double> threadCpuTimePercentages, ObjDoubleConsumer<CallTree> callTreeConsumer, Scope scope) {
         for (var entry : stats.entrySet()) {
             double totalEncounters = entry.getValue().values().stream().mapToDouble(i -> i).sum();
 
@@ -443,6 +516,14 @@ public class MonitoringHandler implements Runnable {
                 if (totalEncounters >= Double.MIN_VALUE) {
                     stackTracePower = threadCpuTimePercentages.get(entry.getKey().getId())
                             * (callTreeEntry.getValue() / totalEncounters);
+                }
+
+                if (this.statusPerThread) {
+                    if (scope == Scope.ALL) {
+                        this.status.addCallTreeConsumedEnergyPerThread(entry.getKey(), callTreeEntry.getKey(), stackTracePower);
+                    } else {
+                        this.status.addFilteredCallTreeConsumedEnergyPerThread(entry.getKey(), callTreeEntry.getKey(), stackTracePower);
+                    }
                 }
 
                 callTreeConsumer.accept(callTreeEntry.getKey(), stackTracePower);
